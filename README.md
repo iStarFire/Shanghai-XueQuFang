@@ -19,7 +19,6 @@
 每个课题对应 `analysis/` 下一个中文子目录（一个课题一个目录），结论有网页版（GitHub Pages）与本地 `分析报告.md` 双形态。
 
 - [徐汇区公办初中名额分配到校分析](https://istarfire.github.io/Shanghai-XueQuFang/analysis/%E5%BE%90%E6%B1%87%E5%8C%BA%E5%85%AC%E5%8A%9E%E5%88%9D%E4%B8%AD%E5%90%8D%E9%A2%9D%E5%88%86%E9%85%8D%E5%88%B0%E6%A0%A1%E5%88%86%E6%9E%90/index.html)
-  （本地：[分析报告.md](analysis/徐汇区公办初中名额分配到校分析/分析报告.md) · [index.html](analysis/徐汇区公办初中名额分配到校分析/index.html)）
 
 > 新增课题后，在 `analysis/` 下建目录并跑 `工具/build_html.py`，本列表与站点入口页会自动更新对应卡片。
 
