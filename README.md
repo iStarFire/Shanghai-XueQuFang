@@ -21,6 +21,8 @@ Shanghai-XueQuFang/
 ├── README.md              # 本文件
 ├── AGENTS.md              # 面向 AI 助手的项目须知
 ├── .gitignore
+├── .nojekyll              # 关闭 GitHub Pages 的 Jekyll 处理
+├── index.html             # 站点入口页（GitHub Pages），自动汇总 analysis/ 下的课题
 ├── data/                  # 唯一的项目数据目录（按行政区隔离）
 │   ├── README.md          # 数据目录规范
 │   ├── 徐汇区/
@@ -30,6 +32,14 @@ Shanghai-XueQuFang/
 │   │   └── 来源.md        # 数据来源登记表（必须维护）
 │   ├── 普陀区/
 │   └── _全市/             # 跨行政区的市级文件
+├── analysis/              # 分析产物（一个课题一个中文子目录）
+│   └── 徐汇区公办初中水平分析/
+│       ├── index.html     # 结论网页版（由 分析报告.md 生成，勿手改）
+│       ├── 宽表-*.csv      # 核心交付物
+│       ├── 分析报告.md     # 结论的**唯一事实来源**，改这里再重跑生成
+│       ├── 分析方法-*.md   # 可复用方法
+│       ├── 剔除清单.md     # 被排除的对象与理由
+│       └── 工具/           # 可复跑脚本（构建 / 独立复算 / 生成网页）
 └── .trellis/              # 工作流、项目规范、任务记录（不含业务数据）
     ├── workflow.md        # 数据分析工作流（核心）
     ├── spec/              # 项目规范
@@ -41,6 +51,25 @@ Shanghai-XueQuFang/
     ├── workspace/         # 会话日志
     └── scripts/           # Trellis 脚本
 ```
+
+---
+
+## 结论网页（GitHub Pages）
+
+分析结论有网页版，移动端可读，发布后可直接分享给他人：
+
+```
+https://istarfire.github.io/Shanghai-XueQuFang/
+```
+
+- 站点由 `analysis/<课题>/工具/build_html.py` 生成：**只读 `分析报告.md`**，
+  转成响应式 HTML（CSS 内联、零外部依赖、含深色模式与表格横向滚动）。
+  ⇒ **改结论只改 `分析报告.md`，然后重跑脚本**，不要手改 `index.html`。
+- 根 `index.html` 是入口页，自动扫描 `analysis/*/index.html` 生成课题卡片；
+  新增课题后重跑脚本即可自动出现。
+- `.nojekyll` 必须保留：`data/_全市/` 以 `_` 开头，Jekyll 会忽略它。
+- 首次发布需在仓库 Settings → Pages 里把 Source 设为
+  **Deploy from a branch → `main` → `/ (root)`**。
 
 ---
 
