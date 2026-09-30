@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/quality/data-validation.md", "reason": "2.2 校验七维度与阈值：本任务需按完整性/唯一性/值域/一致性/交叉一致/回源抽查/别名完整性逐项留证"}
+{"file": ".trellis/spec/analysis/conclusion-verification.md", "reason": "2.4 结论可靠性验证的九维度与门禁规则，S8 依据"}
+{"file": ".trellis/spec/analysis/method-guidelines.md", "reason": "2.3 分析规范：口径声明、事实与推断分离、反向证据要求"}
+{"file": ".trellis/tasks/09-30-xuhui-junior-high-level/prd.md", "reason": "验收标准与两条门禁的判定标准原文，校验时逐条对照"}
+{"file": ".trellis/tasks/09-30-xuhui-junior-high-level/design.md", "reason": "口径与算法定义，用于独立重算关键指标（4 校基线均分、平均名次、时间加权排名）"}
+{"file": "data/徐汇区/学校/来源.md", "reason": "核对提取结果是否与已登记的来源、页数、MD5 一致；防止原始文件被静默替换"}

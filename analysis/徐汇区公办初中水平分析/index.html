@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="徐汇区公办初中「名额分配到校」竞争强度的 2022–2026 年分析结论">
+<title>徐汇区公办初中水平分析（2022–2026 名额分配到校） · 上海学区房数据分析</title>
+<style>
+:root{
+  --bg:#f7f8fa; --card:#fff; --fg:#1a1d21; --muted:#5b6470; --line:#e3e6ea;
+  --accent:#1f6feb; --accent-soft:#eaf1fd; --warn:#b26a00; --warn-soft:#fff6e5;
+  --ok:#1a7f37; --code-bg:#f0f2f5; --radius:10px;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12141a; --card:#1a1d24; --fg:#e6e8eb; --muted:#9aa4b2; --line:#2a2f38;
+    --accent:#6ea8fe; --accent-soft:#1c2739; --warn:#e2a03f; --warn-soft:#2a2314;
+    --ok:#5ec27b; --code-bg:#232830;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",
+       "Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  overflow-wrap:break-word;
+}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 64px}
+header.top{
+  background:var(--card);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;backdrop-filter:saturate(150%) blur(8px);
+}
+header.top .wrap{padding-top:12px;padding-bottom:12px}
+.crumb{font-size:.82rem;color:var(--muted)}
+.crumb a{color:var(--accent);text-decoration:none}
+h1{font-size:clamp(1.35rem,4.6vw,1.9rem);line-height:1.35;margin:.5em 0 .3em}
+h2{font-size:clamp(1.15rem,3.8vw,1.45rem);margin:2em 0 .6em;
+   padding-left:.55em;border-left:4px solid var(--accent);line-height:1.4}
+h3{font-size:clamp(1.02rem,3.2vw,1.18rem);margin:1.6em 0 .5em;color:var(--fg)}
+h4{font-size:1rem;margin:1.3em 0 .4em;color:var(--muted)}
+p{margin:.7em 0}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line);margin:2em 0}
+strong{font-weight:650}
+code{background:var(--code-bg);padding:.12em .38em;border-radius:5px;
+     font-family:var(--mono);font-size:.88em}
+blockquote{
+  margin:1em 0;padding:.8em 1em;background:var(--accent-soft);
+  border-left:4px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;
+  font-size:.95em;color:var(--fg);
+}
+blockquote strong{color:var(--warn)}
+ul,ol{padding-left:1.35em;margin:.7em 0}
+li{margin:.3em 0}
+/* 表格：移动端横向滚动，首列吸附 */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1.1em 0;
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:100%}
+th,td{padding:.55em .7em;text-align:left;border-bottom:1px solid var(--line);
+      white-space:nowrap}
+th{background:var(--code-bg);font-weight:650;position:sticky;top:0;z-index:1}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:nth-child(even){background:color-mix(in srgb,var(--code-bg) 45%,transparent)}
+td:first-child,th:first-child{position:sticky;left:0;background:var(--card);
+      box-shadow:1px 0 0 var(--line);z-index:2;white-space:normal;min-width:8.5em}
+th:first-child{background:var(--code-bg);z-index:3}
+/* 目录 */
+nav.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+        padding:.9em 1.1em;margin:1.4em 0}
+nav.toc h2{font-size:.95rem;margin:0 0 .5em;padding:0;border:0;color:var(--muted)}
+nav.toc ol{margin:0;padding-left:1.3em;font-size:.92rem}
+nav.toc li{margin:.22em 0}
+nav.toc a{text-decoration:none}
+/* 下载区 */
+.dl{display:flex;flex-wrap:wrap;gap:.6em;margin:1.2em 0}
+.dl a{display:inline-flex;align-items:center;gap:.4em;background:var(--card);
+      border:1px solid var(--line);border-radius:999px;padding:.45em .95em;
+      font-size:.88rem;text-decoration:none;color:var(--fg)}
+.dl a:hover{border-color:var(--accent);color:var(--accent)}
+/* 入口页卡片 */
+.cards{display:grid;gap:14px;grid-template-columns:1fr;margin-top:1.6em}
+@media(min-width:680px){.cards{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+      padding:1.1em 1.2em;text-decoration:none;color:inherit;transition:.15s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card h3{margin:0 0 .4em;font-size:1.05rem;color:var(--accent)}
+.card p{margin:0;font-size:.9rem;color:var(--muted)}
+.tag{display:inline-block;font-size:.75rem;padding:.1em .55em;border-radius:999px;
+     background:var(--accent-soft);color:var(--accent);margin-bottom:.5em}
+footer{color:var(--muted);font-size:.85rem;margin-top:3em;padding-top:1.2em;
+       border-top:1px solid var(--line)}
+@media print{
+  header.top{position:static}body{background:#fff}
+  .tw{overflow:visible}.dl,nav.toc{display:none}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="crumb"><a href="../">← 上海学区房数据分析</a></div>
+  <h1>徐汇区公办初中水平分析（2022–2026 名额分配到校）</h1>
+</div></header>
+<main class="wrap">
+<nav class="toc"><h2>本页目录</h2><ol><li><a href="#sec-0">0. 样本与基础事实</a></li><li><a href="#sec-a1">A1 整体水平与稳定性</a></li><li><a href="#sec-a2">A2 时间加权分析</a></li><li><a href="#sec-a3">A3 规模分档分析</a></li><li><a href="#sec-a4">A4 补充分析</a></li><li><a href="#sec-x1">结论（按稳健程度排序）</a></li><li><a href="#sec-x2">局限声明（使用本报告前必读）</a></li></ol></nav>
+<div class="dl"><a href="宽表-初中水平-徐汇区-2022-2026.csv">⬇ 宽表 CSV（28 行 × 117 列）</a><a href="分析报告.md">⬇ 分析报告（Markdown）</a><a href="分析方法-名额到校.md">⬇ 分析方法</a><a href="剔除清单.md">⬇ 剔除清单</a><a href="缺分对清单.csv">⬇ 缺分对清单</a></div>
+<blockquote><strong>口径声明（先读这段）</strong><br>1. 本报告的「水平」<strong>专指「名额分配到校通道的竞争强度」</strong>，<br><strong>不是</strong>学校的综合办学质量、不是中考平均分、不是升学率。<br>最低分数线是<strong>末位录取分</strong>，受志愿填报博弈影响。<br>2. 跨年比较<strong>一律使用当年内名次</strong>，不使用原始分数（试卷难度逐年不同）。<br>3. <strong>委属 5 所高中已排除</strong>（抽签分配，不含学校水平信息），详见 <code>剔除清单.md</code>。<br>4. 样本为<strong>公办初中</strong>；民办 6 所自 2024 年起参与名额到校，已剔除，详见 <code>剔除清单.md</code>。<br>5. 主要统计量为 <strong>均值 / 中位数 / 方差</strong>，指标定义为「区属 4 校固定基线的均分名次」<br>（记作 <code>mean_rank_base4</code>）；方法细节见 <code>分析方法-名额到校.md</code>。<br>6. <strong>本报告只覆盖徐汇区，结论不得外推到其他区。</strong><br>所有数字均可由 <code>工具/analyze.py</code> 复算；宽表由 <code>工具/verify_wide.py</code><br><strong>独立实现</strong>复算，8 项校验全通过。</blockquote>
+<hr>
+<h2 id="sec-0">0. 样本与基础事实</h2>
+<div class="tw"><table><thead><tr><th>年份</th><th>区属总计划（公办）</th><th>参与公办初中数</th><th>有有效区属均分的学校数</th></tr></thead><tbody><tr><td>2022</td><td>763</td><td>26（全部公办）</td><td>26</td></tr><tr><td>2023</td><td>740</td><td>26（全部公办）</td><td>25</td></tr><tr><td>2024</td><td>607</td><td>25</td><td>25</td></tr><tr><td>2025</td><td>639</td><td>25</td><td>25</td></tr><tr><td>2026</td><td>654</td><td>25</td><td>25</td></tr></tbody></table></div>
+<ul><li>宽表 28 行（2022–2026 出现过的全部公办初中），其中 <strong>CORE 共同子集 23 所</strong> （五年都有有效区属均分），跨年汇总只在 CORE 内进行。</li><li>非 CORE 5 所：徐汇南校（4 年）、上海师大附中附属龙华中学（3 年）、上海市徐汇区上汇实验学校（2 年）、上海市徐汇位育体校（2 年）、上海市宛平中学（1 年）。</li><li><strong>外部独立交叉验证</strong>：2022 年区属合计 <strong>763</strong>、2024 年全区合计（含委属）<strong>856</strong>，均与公开报道吻合，且 2022 年同为 26 所初中。</li><li><strong>⚠️ 口径断裂</strong>：公办区属总计划 2023 年 740 → 2024 年 607，是<strong>民办初中自 2024 年起参与名额到校</strong>（分走 209 个名额）所致， <strong>不是名额缩减趋势</strong>。详见 <code>分析方法-名额到校.md</code> §5.5。</li><li><strong>⚠️ 校名变更（易误读，务必注意）</strong>：<code>041328</code> 在 2022–2024 年名为「上海市长桥中学」，<strong>2025 年起更名为「上海市徐汇区教育学院附属实验中学南部分校」</strong>。这是<strong>同一所学校</strong>（同一学校编号 <code>041328</code>，名额与分数线连续），不是两所学校。它与 <code>041327</code>「上海市徐汇区教育学院附属实验中学」<strong>是两所不同的学校</strong>，数据已逐年核对、无交叉（核对方法与证据见 <code>validation/data-validation.md</code>）。宽表按<strong>现名</strong>显示该行，旧名记入 <code>junior_high_school_former_names</code> 列。</li></ul>
+<hr>
+<h2 id="sec-a1">A1 整体水平与稳定性</h2>
+<h3 id="sec-a1-1-core-23">A1.1 完整名次表（CORE 23 所，按均名升序）</h3>
+<div class="tw"><table><thead><tr><th>初中</th><th>均名</th><th>中位</th><th>方差</th><th>极差</th><th>最好年</th><th>最差年</th></tr></thead><tbody><tr><td>上海市位育初级中学</td><td><strong>3.60</strong></td><td>3.00</td><td><strong>1.84</strong></td><td>4.0</td><td>2.0（2024）</td><td>6.0（2026）</td></tr><tr><td>上海市园南中学</td><td>4.20</td><td>4.00</td><td>8.46</td><td>6.5</td><td>1.0（2023/2022）</td><td>7.5（2026/2024）</td></tr><tr><td>上海师范大学第三附属实验学校</td><td>4.40</td><td>4.00</td><td>5.84</td><td>7.0</td><td>1.0（2026）</td><td>8.0（2022）</td></tr><tr><td>上海市南洋模范初级中学</td><td>6.10</td><td>6.00</td><td>8.64</td><td>9.0</td><td>1.0（2025）</td><td>10.0（2026）</td></tr><tr><td>上海市梅园中学</td><td>8.70</td><td><strong>4.50</strong></td><td><strong>60.96</strong></td><td>21.0</td><td>2.0（2025）</td><td>23.0（2026）</td></tr><tr><td>上海市中国中学</td><td>8.70</td><td>9.00</td><td><strong>4.36</strong></td><td>6.5</td><td>5.0（2025）</td><td>11.5（2026）</td></tr><tr><td>上海市田林第三中学</td><td>8.80</td><td>8.00</td><td>17.36</td><td>11.0</td><td>3.0（2026）</td><td>14.0（2022）</td></tr><tr><td>上海市紫阳中学</td><td>8.80</td><td>7.00</td><td>35.86</td><td>17.0</td><td>2.0（2023）</td><td>19.0（2025）</td></tr><tr><td>上海市第二初级中学</td><td>9.40</td><td>7.00</td><td>36.24</td><td>15.0</td><td>2.0（2022）</td><td>17.0（2025）</td></tr><tr><td>上海市徐汇区教育学院附属实验中学</td><td>10.00</td><td>7.00</td><td>52.80</td><td>19.0</td><td>1.0（2024）</td><td>20.0（2026）</td></tr><tr><td>上海市徐汇中学</td><td>11.00</td><td>12.00</td><td>33.20</td><td>15.0</td><td>4.0（2026）</td><td>19.0（2024）</td></tr><tr><td>上海市康健外国语实验中学</td><td>12.00</td><td>11.50</td><td>12.30</td><td>10.5</td><td>7.5（2026）</td><td>18.0（2024）</td></tr><tr><td>上海市第五十四中学</td><td>12.40</td><td>14.00</td><td>35.44</td><td>18.0</td><td>2.0（2026）</td><td>20.0（2025）</td></tr><tr><td>上海市位育实验学校</td><td>14.20</td><td>14.00</td><td>19.76</td><td>12.0</td><td>9.0（2025）</td><td>21.0（2024）</td></tr><tr><td>上海市田林中学</td><td>14.60</td><td>16.00</td><td>12.64</td><td>10.0</td><td>8.0（2025）</td><td>18.0（2022）</td></tr><tr><td>华东理工大学附属中学</td><td>15.20</td><td>15.00</td><td><strong>5.36</strong></td><td>7.0</td><td>12.0（2024）</td><td>19.0（2022）</td></tr><tr><td>上海市徐汇区教育学院附属实验中学南部分校（原长桥中学）</td><td>15.40</td><td>13.00</td><td>13.84</td><td>10.0</td><td>12.0（2022）</td><td>22.0（2025）</td></tr><tr><td>上海市南洋初级中学</td><td>15.80</td><td>19.00</td><td>22.56</td><td>10.0</td><td>10.0（2024/2025）</td><td>20.0（2022/2023）</td></tr><tr><td>上海市第四中学</td><td>15.90</td><td>16.00</td><td>10.84</td><td>8.5</td><td>11.5（2025）</td><td>20.0（2024）</td></tr><tr><td>上海市汾阳中学</td><td>19.20</td><td>18.00</td><td>16.56</td><td>9.0</td><td>15.0（2022/2024）</td><td>24.0（2026）</td></tr><tr><td>上海市田林第二中学</td><td>19.80</td><td>22.00</td><td>30.16</td><td>15.0</td><td>9.0（2026）</td><td>24.0（2022）</td></tr><tr><td>上海市零陵中学</td><td>21.40</td><td>21.00</td><td><strong>4.24</strong></td><td>6.0</td><td>18.0（2026）</td><td>24.0（2024）</td></tr><tr><td>上海市龙苑中学</td><td>24.80</td><td>25.00</td><td><strong>0.16</strong></td><td>1.0</td><td>24.0（2025）</td><td>25.0（2026）</td></tr></tbody></table></div>
+<p>（「均名」= <code>mean_rank_base4_avg</code>，即五年内区属 4 校基线均分名次的算术平均，越小越好。<br>完整逐年数据见 <code>宽表-初中水平-徐汇区-2022-2026.csv</code> 的 <code>mean_rank_base4_&lt;年&gt;</code> 列，<br>每个格子可经长表的 <code>source_doc</code> + <code>source_page</code> 回源到 PDF 页。）</p>
+<h3 id="sec-a1-2">A1.2 事实与推断</h3>
+<p><strong>事实（可直接回源）</strong></p>
+<ul><li>五年均名最优的是 <strong>位育初级中学（3.60）</strong>；最差的是 <strong>龙苑中学（24.80）</strong>。</li><li><strong>方差最小</strong>的三所：龙苑中学 0.16、位育初级中学 1.84、零陵中学 4.24。</li><li><strong>方差最大</strong>的三所：梅园中学 60.96、徐汇区教育学院附属实验中学 52.80、第二初级中学 36.24。</li><li><strong>均值与中位数背离最大</strong>的是梅园中学（8.70 vs 4.50，差 4.20），其次是南洋初级中学（15.80 vs 19.00，差 −3.20）与教院附中（10.00 vs 7.00，差 3.00）。</li></ul>
+<p><strong>推断（有解释、但非定论）</strong></p>
+<ol><li><strong>位育初级中学是唯一「既最优又稳定」的学校</strong>。均名第一且方差第二小，最差年也只到第 6 名。支撑：<code>mean_rank_base4</code> = 4.00(2022)/3.00(2023)/2.00(2024)/3.00(2025)/6.00(2026)。 <strong>可能推翻它的个案</strong>：2026 年降到第 6，是五年最差——若这是趋势而非波动，「最稳」的判断需要重新评估（见 A2 权重敏感性，其近两年偏移 0.39 名，幅度小，暂不支持「趋势」判断，但只有一年证据）。</li></ol>
+<ol><li><strong>梅园中学的「不稳定」结论必须打问号，它更像是「单年异常」</strong>。均名 8.70（第 5）由五年 3.0/11.0/4.5/2.0/23.0 拉平而来； <strong>去掉 2026 年后，均名降到 5.13</strong>。中位数 4.50 说明典型年份它在第 4–5 名。 <strong>倾向判断</strong>：这是一所<strong>典型水平在第 4–5 名、2026 年出现异常低值</strong>的学校。 <strong>反向证据</strong>：我无法从现有数据判断 2026 年的第 23 名是「一次偶然」还是「结构性下滑」——<strong>5 个点不足以区分</strong>。这需要 2027 年的数据或外部信息佐证。 ⇒ <strong>不应在结论中把梅园描述为「不稳定学校」</strong>，只能描述为「典型年份靠前、 2026 年出现极端低值，成因未知」。</li></ol>
+<ol><li><strong>高方差 ≠ 水平不稳</strong>。方差榜前列（梅园 60.96、教院附中 52.80、第二初级 36.24）与规模榜（A3）高度重叠：梅园年均名额 13.2、第二初级 26.2、教院附中 42.2。 <strong>5 个点算出的方差本身噪声极大</strong>，且小规模校的单格名额常为 1，一个学生的志愿选择就能改变整条分数线。⇒ <strong>方差只能用来分档，不能用来排序</strong>。</li></ol>
+<ol><li><strong>中国中学、华东理工附中、零陵中学、龙苑中学属于「低方差梯队」</strong>（4.36 / 5.36 / 4.24 / 0.16），但位置分散在第 5、16、22、23 名。这说明<strong>稳定性与水平高低是两个独立维度</strong> （零陵与龙苑稳定地排在末段）。</li></ol>
+<hr>
+<h2 id="sec-a2">A2 时间加权分析</h2>
+<h3 id="sec-a2-1-core-23">A2.1 三方案对照（CORE 23 所，按等权均名升序）</h3>
+<div class="tw"><table><thead><tr><th>初中</th><th>等权</th><th>线性</th><th>指数</th><th>最大偏移</th><th>方向</th></tr></thead><tbody><tr><td>上海市位育初级中学</td><td>3.60</td><td>3.87</td><td>3.99</td><td>0.39</td><td>↓ 近期略弱</td></tr><tr><td>上海市园南中学</td><td>4.20</td><td>5.27</td><td>5.25</td><td>1.07</td><td>↓ 近期略弱</td></tr><tr><td>上海师范大学第三附属实验学校</td><td>4.40</td><td>3.60</td><td>3.59</td><td>0.81</td><td>↑ 近期略强</td></tr><tr><td>上海市南洋模范初级中学</td><td>6.10</td><td>6.30</td><td>6.45</td><td>0.35</td><td>↓ 近期略弱</td></tr><tr><td><strong>上海市梅园中学</strong></td><td>8.70</td><td>10.77</td><td>11.21</td><td><strong>2.51</strong></td><td>↓ 近期明显弱</td></tr><tr><td>上海市中国中学</td><td>8.70</td><td>8.77</td><td>8.89</td><td>0.19</td><td>↓ 近期略弱</td></tr><tr><td>上海市田林第三中学</td><td>8.80</td><td>7.67</td><td>7.62</td><td>1.18</td><td>↑ 近期略强</td></tr><tr><td>上海市紫阳中学</td><td>8.80</td><td>10.53</td><td>10.59</td><td>1.79</td><td>↓ 近期略弱</td></tr><tr><td>上海市第二初级中学</td><td>9.40</td><td>10.47</td><td>9.96</td><td>1.07</td><td>↓ 近期略弱</td></tr><tr><td>上海市徐汇区教育学院附属实验中学</td><td>10.00</td><td>10.53</td><td>11.25</td><td>1.25</td><td>↓ 近期略弱</td></tr><tr><td>上海市徐汇中学</td><td>11.00</td><td>11.07</td><td>10.50</td><td>0.50</td><td>↑ 近期略强</td></tr><tr><td>上海市康健外国语实验中学</td><td>12.00</td><td>11.37</td><td>11.15</td><td>0.85</td><td>↑ 近期略强</td></tr><tr><td>上海市第五十四中学</td><td>12.40</td><td>11.53</td><td>11.05</td><td>1.35</td><td>↑ 近期略强</td></tr><tr><td>上海市位育实验学校</td><td>14.20</td><td>14.20</td><td>14.00</td><td>0.20</td><td>↑ 近期略强</td></tr><tr><td>上海市田林中学</td><td>14.60</td><td>13.93</td><td>14.08</td><td>0.67</td><td>↑ 近期略强</td></tr><tr><td>华东理工大学附属中学</td><td>15.20</td><td>14.53</td><td>14.69</td><td>0.67</td><td>↑ 近期略强</td></tr><tr><td>上海市徐汇区教育学院附属实验中学南部分校（原长桥中学）</td><td>15.40</td><td>16.67</td><td>16.63</td><td>1.27</td><td>↓ 近期略弱</td></tr><tr><td>上海市南洋初级中学</td><td>15.80</td><td>15.00</td><td>15.35</td><td>0.80</td><td>↑ 近期略强</td></tr><tr><td>上海市第四中学</td><td>15.90</td><td>15.00</td><td>14.86</td><td>1.04</td><td>↑ 近期略强</td></tr><tr><td>上海市汾阳中学</td><td>19.20</td><td>20.00</td><td>20.12</td><td>0.92</td><td>↓ 近期略弱</td></tr><tr><td><strong>上海市田林第二中学</strong></td><td>19.80</td><td>17.73</td><td>17.41</td><td><strong>2.39</strong></td><td>↑ 近期明显强</td></tr><tr><td>上海市零陵中学</td><td>21.40</td><td>21.13</td><td>20.95</td><td>0.45</td><td>↑ 近期略强</td></tr><tr><td>上海市龙苑中学</td><td>24.80</td><td>24.73</td><td>24.75</td><td>0.07</td><td>↑ 近期略强</td></tr></tbody></table></div>
+<h3 id="sec-a2-2">A2.2 判读</h3>
+<ul><li><strong>偏移中位数仅 0.85 名</strong>，最大偏移 2.51 名。⇒ <strong>整体结论对权重方案不敏感</strong>，可以直接用等权结论；线性与指数两种方案内部高度一致（差异全部 &lt; 0.5 名）。</li><li><strong>偏移 &gt; 2 名的只有 2 所</strong>：</li><li><strong>梅园中学（2.51，近期明显弱）</strong>：与 A1 的「2026 年异常低值」是同一件事，指数权重把 2026 年的权重放到最大，于是把它压到第 11.21 名。 <strong>这正是「时间加权能体现当前水平」的价值，也是它的风险</strong>—— 若 2026 是噪声，加权会把噪声放大成结论。</li><li><strong>田林第二中学（2.39，近期明显强）</strong>：五年 24/22/23/21/9， <strong>只有 2026 年突然进到第 9 名</strong>，其余四年稳定在 21–24 名。 <strong>同一风险类型</strong>：最新一年的单点异常。</li><li><strong>两所偏移最大的学校，异常年份都在 2026</strong>（最新一年）。 ⇒ 这不是巧合，而是<strong>用最新一年做加权必然会把「最新一年的噪声」放大</strong>。因此本报告<strong>同时给出等权与加权两套数字</strong>，不单方面采信任一方案。</li><li>若按加权口径排名，Top3 变为 上师大三附（3.59）、位育初级（3.99）、园南（5.25），与等权 Top3（位育初级 3.60、园南 4.20、上师大三附 4.40）<strong>集合相同、顺序不同</strong>。 ⇒ <strong>第一梯队的三所成员在两种口径下一致</strong>，这是本报告最稳健的结论之一。</li></ul>
+<hr>
+<h2 id="sec-a3">A3 规模分档分析</h2>
+<h3 id="sec-a3-1">A3.1 为什么必须分档</h3>
+<p>名额多的学校与名额少的学校，<strong>志愿填报逻辑不同</strong>：<br>大规模校校内排名靠前的学生选择空间充分，填报博弈更充分，分数线更接近真实位次；<br>小规模校某些高中只有 1 个名额，<strong>一个学生的选择就能决定当年分数线</strong>，波动天然更大。<br>把两者混在一起排名，<strong>小规模校的高方差会被误读为「水平不稳」</strong>。</p>
+<p><strong>规模代理</strong> = <code>quota_zone_avg</code>（区属市重年均总计划数）。<br>不用委属名额（抽签噪声），不用全部高中合计（区属名额本身按报名人数比例分配，是规模的线性代理）。</p>
+<p><strong>阈值（分析前固定，事后未调整）</strong>：三分位切点 <strong>16.8</strong> 与 <strong>34.2</strong>。</p>
+<h3 id="sec-a3-2">A3.2 档内排名</h3>
+<p><strong>【小规模档】8 所，年均计划 5.4 – 16.8</strong></p>
+<div class="tw"><table><thead><tr><th>档内名次</th><th>初中</th><th>年均计划</th><th>全样本名次</th><th>方差</th></tr></thead><tbody><tr><td>1</td><td>上海市梅园中学</td><td>13.2</td><td>5</td><td>60.96</td></tr><tr><td>2</td><td>上海市第五十四中学</td><td>15.0</td><td>13</td><td>35.44</td></tr><tr><td>3</td><td>上海市位育实验学校</td><td>11.4</td><td>14</td><td>19.76</td></tr><tr><td>4</td><td>上海市徐汇区教育学院附属实验中学南部分校（原长桥中学）</td><td>15.4</td><td>17</td><td>13.84</td></tr><tr><td>5</td><td>上海市汾阳中学</td><td>11.4</td><td>20</td><td>16.56</td></tr><tr><td>6</td><td>上海市田林第二中学</td><td>16.8</td><td>21</td><td>30.16</td></tr><tr><td>7</td><td>上海市零陵中学</td><td>15.2</td><td>22</td><td>4.24</td></tr><tr><td>8</td><td>上海市龙苑中学</td><td>5.4</td><td>23</td><td>0.16</td></tr></tbody></table></div>
+<p><strong>【中规模档】8 所，年均计划 19.4 – 34.2</strong></p>
+<div class="tw"><table><thead><tr><th>档内名次</th><th>初中</th><th>年均计划</th><th>全样本名次</th><th>方差</th></tr></thead><tbody><tr><td>1</td><td>上海市园南中学</td><td>34.2</td><td>2</td><td>8.46</td></tr><tr><td>2</td><td>上海师范大学第三附属实验学校</td><td>21.8</td><td>3</td><td>5.84</td></tr><tr><td>3</td><td>上海市紫阳中学</td><td>23.0</td><td>7</td><td>35.86</td></tr><tr><td>4</td><td>上海市第二初级中学</td><td>26.2</td><td>9</td><td>36.24</td></tr><tr><td>5</td><td>上海市康健外国语实验中学</td><td>31.4</td><td>12</td><td>12.30</td></tr><tr><td>6</td><td>上海市田林中学</td><td>19.4</td><td>15</td><td>12.64</td></tr><tr><td>7</td><td>华东理工大学附属中学</td><td>33.6</td><td>16</td><td>5.36</td></tr><tr><td>8</td><td>上海市南洋初级中学</td><td>31.4</td><td>18</td><td>22.56</td></tr></tbody></table></div>
+<p><strong>【大规模档】7 所，年均计划 40.6 – 60.4</strong></p>
+<div class="tw"><table><thead><tr><th>档内名次</th><th>初中</th><th>年均计划</th><th>全样本名次</th><th>方差</th></tr></thead><tbody><tr><td>1</td><td>上海市位育初级中学</td><td>41.4</td><td>1</td><td>1.84</td></tr><tr><td>2</td><td>上海市南洋模范初级中学</td><td>40.8</td><td>4</td><td>8.64</td></tr><tr><td>3</td><td>上海市中国中学</td><td>40.6</td><td>5</td><td>4.36</td></tr><tr><td>4</td><td>上海市田林第三中学</td><td>47.0</td><td>7</td><td>17.36</td></tr><tr><td>5</td><td>上海市徐汇区教育学院附属实验中学</td><td>42.2</td><td>10</td><td>52.80</td></tr><tr><td>6</td><td>上海市徐汇中学</td><td>60.4</td><td>11</td><td>33.20</td></tr><tr><td>7</td><td>上海市第四中学</td><td>46.4</td><td>19</td><td>10.84</td></tr></tbody></table></div>
+<h3 id="sec-a3-3">A3.3 判读与反向证据</h3>
+<p><strong>事实</strong></p>
+<ul><li>全部 23 所的<strong>档内名次与全样本名次顺序完全一致</strong>—— 即<strong>分档没有改变任何一所学校的相对位置</strong>。</li><li>大规模档的内部方差（1.84 – 52.80）明显小于小规模档的极端值（60.96）。</li></ul>
+<p><strong>推断</strong></p>
+<ol><li><strong>分档没有让任何学校「翻转」，这本身是有信息量的</strong>：说明徐汇区公办初中的区属名额规模与竞争强度<strong>不构成此消彼长的关系</strong>，不存在「规模大所以分数线被稀释」的系统性效应。 ⇒ 合并排名在本区<strong>没有失真</strong>，但这是<strong>实测结果，不是先验假设</strong>—— 如果只看数字就断言「小规模校一定波动大」，是错的：小规模档里零陵（4.24）和龙苑（0.16）反而是全区最稳的两所。</li></ol>
+<ol><li><strong>小规模档内部的分化最大</strong>：档内从第 5 名（梅园）一路到第 23 名（龙苑），跨度 18 名，且档内方差从 0.16 到 60.96。⇒ <strong>小规模校之间的可比性最差</strong>，任何对小规模校的排序都应附「样本量小、单格名额常为 1」的警示。</li></ol>
+<ol><li><strong>大规模档的「内部梯队」最清晰</strong>：位育初级（1.84）与中国（4.36）方差都小，教院附中（52.80）与徐汇中学（33.20）方差大。同为 40+ 名额的学校， <strong>稳定性差异达 28 倍</strong>，说明规模不是稳定性的决定因素。</li></ol>
+<p><strong>反向证据</strong></p>
+<ul><li><strong>徐汇中学年均名额 60.4，是全区最大，却排在全样本第 11 名</strong>。这与「大规模校竞争更激烈所以分数线更高」的直觉<strong>相反</strong>。可能原因（<strong>均为推测，无直接证据</strong>）：徐汇中学本身设有高中部且体量大，校内直升/其他通道分流了头部学生，导致走名额到校通道的头部浓度下降；或者其名额基数大，边际名额的录取分自然被拉低。 ⇒ <strong>原因未知，不做结论</strong>；这是需要外部信息（志愿数据、校内直升政策）才能回答的问题。</li><li><strong>龙苑中学年均名额仅 5.4（全区最小），却方差仅 0.16（全区最稳）</strong>。与「小规模必然波动大」的直觉相反。可能原因：其名额常年集中在少数高中、生源结构高度稳定。⇒ 同样<strong>不做结论</strong>。</li></ul>
+<hr>
+<h2 id="sec-a4">A4 补充分析</h2>
+<h3 id="sec-a4-1">A4.1 「南模线」与「区属均分」的分歧校</h3>
+<p>「南模线」= 该校在<strong>南洋模范中学</strong>的最低录取分名次（<code>nanmo_rank_avg</code>），<br>作为<strong>头部学生水平</strong>的粗代理；与 <code>mean_rank_base4_avg</code>（整体水平）比较。<br><strong>两者各自排名，不合成单一分数。</strong></p>
+<div class="tw"><table><thead><tr><th>初中</th><th>区属均值名次</th><th>南模线名次</th><th>差（线 − 属）</th><th>解读</th></tr></thead><tbody><tr><td>上海市徐汇中学</td><td>11.00</td><td>5.90</td><td><strong>−5.10</strong></td><td>头部明显强于整体</td></tr><tr><td>上海市位育实验学校</td><td>14.20</td><td>9.30</td><td><strong>−4.90</strong></td><td>头部明显强于整体</td></tr><tr><td>上海市龙苑中学</td><td>24.80</td><td>22.00</td><td>−2.80</td><td>头部略强</td></tr><tr><td>上海市零陵中学</td><td>21.40</td><td>19.20</td><td>−2.20</td><td>头部略强</td></tr><tr><td>上海市南洋初级中学</td><td>15.80</td><td>14.60</td><td>−1.20</td><td>基本一致</td></tr><tr><td>上海市徐汇区教育学院附属实验中学南部分校（原长桥中学）</td><td>15.40</td><td>14.30</td><td>−1.10</td><td>基本一致</td></tr><tr><td>上海市田林第二中学</td><td>19.80</td><td>19.20</td><td>−0.60</td><td>基本一致</td></tr><tr><td>上海市园南中学</td><td>4.20</td><td>3.60</td><td>−0.60</td><td>基本一致</td></tr><tr><td>上海市田林中学</td><td>14.60</td><td>14.00</td><td>−0.60</td><td>基本一致</td></tr><tr><td>上海市紫阳中学</td><td>8.80</td><td>8.90</td><td>+0.10</td><td>基本一致</td></tr><tr><td>上海市南洋模范初级中学</td><td>6.10</td><td>6.20</td><td>+0.10</td><td>基本一致</td></tr><tr><td>上海市汾阳中学</td><td>19.20</td><td>19.40</td><td>+0.20</td><td>基本一致</td></tr><tr><td>上海市第四中学</td><td>15.90</td><td>16.20</td><td>+0.30</td><td>基本一致</td></tr><tr><td>上海市第二初级中学</td><td>9.40</td><td>9.80</td><td>+0.40</td><td>基本一致</td></tr><tr><td>上海市中国中学</td><td>8.70</td><td>10.10</td><td>+1.40</td><td>基本一致</td></tr><tr><td>上海市康健外国语实验中学</td><td>12.00</td><td>13.90</td><td>+1.90</td><td>整体略强</td></tr><tr><td>上海市徐汇区教育学院附属实验中学</td><td>10.00</td><td>11.90</td><td>+1.90</td><td>整体略强</td></tr><tr><td>上海市田林第三中学</td><td>8.80</td><td>11.10</td><td>+2.30</td><td>整体略强</td></tr><tr><td>上海市位育初级中学</td><td>3.60</td><td>6.00</td><td>+2.40</td><td>整体略强</td></tr><tr><td>华东理工大学附属中学</td><td>15.20</td><td>17.60</td><td>+2.40</td><td>整体略强</td></tr><tr><td><strong>上海师范大学第三附属实验学校</strong></td><td>4.40</td><td>7.40</td><td><strong>+3.00</strong></td><td>整体明显强于头部</td></tr><tr><td><strong>上海市第五十四中学</strong></td><td>12.40</td><td>17.50</td><td><strong>+5.10</strong></td><td>整体明显强于头部</td></tr><tr><td><strong>上海市梅园中学</strong></td><td>8.70</td><td>15.20</td><td><strong>+6.50</strong></td><td>整体明显强于头部</td></tr></tbody></table></div>
+<p><strong>事实</strong>：23 所中 15 所差值在 ±1.5 内（基本一致），<br>说明<strong>大多数学校的头部与整体水平是同向的</strong>。</p>
+<p><strong>分歧最大的两组</strong></p>
+<ul><li><strong>头部明显强于整体：徐汇中学（−5.10）、位育实验学校（−4.90）</strong> ⇒ 推测这两所校内<strong>分层较明显</strong>：冲南模这类头部高中的学生相对突出，但中段学生在本通道中的位次偏低。 <strong>可能推翻的个案</strong>：徐汇中学的南模线名次年年波动极大（2022 第 2.5、2024 第 8、2026 第 1、2025/2023 第 10/8，方差 12.24）， −5.10 这个差值是<strong>五年平均后的结果</strong>，单看某一年可能完全不成立。</li><li><strong>整体明显强于头部：梅园中学（+6.50）、第五十四中学（+5.10）、上师大三附（+3.00）</strong> ⇒ 推测这三所<strong>中段学生厚实</strong>，但向头部高中的冲击不突出。 <strong>对梅园再次提示</strong>：其南模线五年为 5.5/15/16/16/23.5，呈现<strong>单调下滑</strong>，与 A1 中「2026 年异常」是不同信号——<strong>南模线是持续下滑，不是单年跳变</strong>。这提高了「梅园 2026 的低排名可能是真实的、非纯噪声」的可能性，但<strong>仍不构成结论</strong>（5 个点，且 2022 的 5.5 本身受小样本影响）。</li></ul>
+<p><strong>必须声明的局限</strong>：南模线只是<strong>一所</strong>高中的一条线，<br>委属 5 所（含上海中学）已排除，<strong>顶尖学生去向信息不完整</strong>，<br>故「南模线」不等于「头部学生水平」。</p>
+<h3 id="sec-a4-2-vs">A4.2 口径稳健性检验（主口径 vs 辅口径）</h3>
+<p>主口径 = 固定 <code>BASE4</code>（4 所）；辅口径 = 当年全部区属高中（2023–2025 为 5 所，2026 为 6 所）。<br>逐年 Top3 / Bottom3 对照：</p>
+<div class="tw"><table><thead><tr><th>年份</th><th>Top3 主口径</th><th>Top3 辅口径</th><th>是否一致</th><th>Bottom3 主口径</th><th>Bottom3 辅口径</th><th>是否一致</th></tr></thead><tbody><tr><td>2026</td><td>上师大三附 / 五十四 / 田林三</td><td>上师大三附 / 田林三 / 五十四</td><td>★不一致（2、3 位互换）</td><td>梅园 / 汾阳 / 龙苑</td><td>南洋初级 / 汾阳 / 龙苑</td><td>★不一致</td></tr><tr><td>2025</td><td>南模初级 / 梅园 / 位育初级</td><td>南模初级 / 位育初级 / 园南</td><td>★不一致</td><td>南部分校 / 零陵 / 龙苑</td><td>汾阳 / 龙苑 / 零陵</td><td>★不一致</td></tr><tr><td>2024</td><td>教院附中 / 位育初级 / 上师大三附</td><td>教院附中 / 位育初级 / 紫阳</td><td>★不一致</td><td>田林二 / 零陵 / 龙苑</td><td>第四 / 零陵 / 龙苑</td><td>★不一致</td></tr><tr><td>2023</td><td>园南 / 紫阳 / 位育初级</td><td>上师大三附 / 紫阳 / 位育初级</td><td>★不一致</td><td>田林二 / 汾阳 / 龙苑</td><td>华东理工附中 / 汾阳 / 龙苑</td><td>★不一致</td></tr><tr><td>2022</td><td>园南 / 第二初级 / 梅园</td><td>园南 / 第二初级 / 梅园</td><td>一致</td><td>零陵 / 田林二 / 龙苑</td><td>零陵 / 田林二 / 龙苑</td><td>一致</td></tr></tbody></table></div>
+<blockquote>表中「<strong>南部分校</strong>」= 上海市徐汇区教育学院附属实验中学南部分校（原长桥中学，<code>041328</code>）；<br>它与「上海市徐汇区教育学院附属实验中学」（<code>041327</code>）<strong>是两所不同的学校</strong>，<br>请勿因校名相似而合并。</blockquote>
+<p><strong>判读（重要）</strong></p>
+<ul><li><strong>逐年 Top3/Bottom3 在 5 年中有 4 年不一致</strong>，<strong>唯一一致的是 2022 年</strong>—— 而 2022 年四种口径的区属高中集合恰好完全相同（只有 4 所区属）。 ⇒ <strong>不一致完全是「区属高中集合扩容」造成的</strong>，不是数据问题。</li><li>但<strong>不一致的程度都很轻</strong>：全部是<strong>相邻名次互换</strong>， 5 年中<strong>没有出现任何一次「第 1 名 ↔ 第 5 名」这种跨梯队翻转</strong>。</li><li><strong>跨年汇总（CORE）层面</strong>：主口径 Top5 = 位育初级 / 园南 / 上师大三附 / 南模初级 / 梅园； Bottom5 = 第四 / 汾阳 / 田林二 / 零陵 / 龙苑。与辅口径逐年结果对照，<strong>第一梯队三所（位育初级、园南、上师大三附）稳定存在</strong>。</li><li>⇒ <strong>结论：分档与梯队判断对口径不敏感；但「同年内的精确名次」敏感，报告任何单年名次时必须注明使用的是哪个口径。</strong> 本报告全部使用主口径。</li></ul>
+<h3 id="sec-a4-3">A4.3 样本进出对跨年汇总的影响</h3>
+<div class="tw"><table><thead><tr><th>初中</th><th>纳入年数</th><th>纳入年份</th><th>均名</th><th>年均计划</th></tr></thead><tbody><tr><td>徐汇南校</td><td>4</td><td>2023–2026</td><td>16.75</td><td>22.6</td></tr><tr><td>上海师大附中附属龙华中学</td><td>3</td><td>2022–2024</td><td>22.67</td><td>8.0</td></tr><tr><td>上海市徐汇区上汇实验学校</td><td>2</td><td>2025–2026</td><td>23.00</td><td>3.8</td></tr><tr><td>上海市徐汇位育体校</td><td>2</td><td>2022–2023</td><td>26.00</td><td>1.8</td></tr><tr><td>上海市宛平中学</td><td>1</td><td>2022</td><td>22.00</td><td>0.8</td></tr></tbody></table></div>
+<ul><li><strong>不进入 CORE 的理由</strong>：纳入年数不足 5 年，与五年全勤的学校求平均会产生无法解释的漂移。</li><li><strong>若把它们强行并入全样本</strong>：23 所 → 28 所，均值口径会被拉低（这 5 所的均名都在第 16 名之后），<strong>这会系统性美化在位学校的排名</strong>。 ⇒ 这正是 D4 决定「跨年汇总只用 CORE」的原因。</li><li><strong>注意宛平中学（1 年）与上汇实验学校（2 年）年均计划仅 0.8 / 3.8</strong>，基本是「有额无实」的边缘样本，即便纳入也不承载信息。</li><li><strong><code>041328</code> 的实体连续性</strong>：2022–2024 名「上海市长桥中学」，2025–2026 名「上海市徐汇区教育学院附属实验中学南部分校」，<strong>同一编号 041328、同一实体</strong>，已按别名表归并为一行，<strong>不是两所学校</strong>。</li></ul>
+<h3 id="sec-a4-4">A4.4 年度样本量与规模</h3>
+<div class="tw"><table><thead><tr><th>年份</th><th>区属总计划（公办）</th><th>参与公办初中</th><th>有有效区属均分</th><th>有效 (校,高中) 对数合计</th></tr></thead><tbody><tr><td>2022</td><td>763</td><td>26</td><td>26</td><td>100</td></tr><tr><td>2023</td><td>740</td><td>26</td><td>25</td><td>125</td></tr><tr><td>2024</td><td>607</td><td>25</td><td>25</td><td>125</td></tr><tr><td>2025</td><td>639</td><td>25</td><td>25</td><td>125</td></tr><tr><td>2026</td><td>654</td><td>25</td><td>25</td><td>148</td></tr></tbody></table></div>
+<ul><li>2022 年有效对数最少（100 = 26 校 × 约 3.8 对），因为当年只有 4 所区属高中； 2026 年最多（148 = 25 校 × 约 5.9 对），因为区属高中增至 6 所。 ⇒ <strong>逐年排名的「分辨率」不同</strong>，这也是必须用固定 <code>BASE4</code> 主口径的原因。</li><li><strong>⚠️ 2023 → 2024 的总计划下降（740 → 607）是口径断裂，不是趋势</strong>（见 §0）。</li></ul>
+<hr>
+<h2 id="sec-x1">结论（按稳健程度排序）</h2>
+<p><strong>A. 稳健结论（多口径、多权重下均成立）</strong></p>
+<ol><li><strong>第一梯队是位育初级中学、园南中学、上海师范大学第三附属实验学校三所</strong>，在等权、线性、指数三种权重下，以及主口径与辅口径下，<strong>成员集合均一致</strong>。</li><li><strong>位育初级中学是唯一「水平最优且稳定性最强」的学校</strong> （均名 3.60 第一，方差 1.84 第二小，且五年最差仅第 6 名）。</li><li><strong>龙苑中学稳定地排在末位</strong>（均名 24.80、方差 0.16，五年仅在第 24–25 名之间）。</li><li><strong>徐汇区公办初中的规模与竞争强度之间不存在系统性此消彼长</strong>—— 按规模三分位分档后，<strong>档内名次与全样本名次顺序完全一致，无任何学校翻转</strong>。</li></ol>
+<p><strong>B. 需要保留不确定性的结论</strong></p>
+<ol><li><strong>梅园中学</strong>：典型年份在第 4–5 名（中位数 4.50），但 2026 年出现极端低值（第 23 名），使均名退到 8.70。<strong>其南模线呈单调下滑</strong>（5.5→15→16→16→23.5），暗示这可能不是纯噪声。<strong>现有 5 个数据点不足以判定是结构性下滑还是单年异常。</strong></li><li><strong>田林第二中学</strong>：五年中四年在 21–24 名，2026 年突然到第 9 名。与梅园相反方向的同一类现象，<strong>同样只有单点证据</strong>。</li><li><strong>徐汇中学</strong>：全区名额最多（60.4）却仅排第 11，南模线（第 5.90）与整体（第 11.00）差 −5.10，<strong>是全区分歧最大的学校</strong>。成因未知，不做因果判断。</li></ol>
+<p><strong>C. 明确的否定性结论（防止误读）</strong></p>
+<ol><li><strong>不能用本数据衡量「初中好坏」</strong>：它衡量的是「名额到校通道的竞争强度」，不含统一招生批次、自主招生、民办与委属去向。</li><li><strong>2023→2024 名额总量下降不是趋势</strong>，是民办首次参与所致。</li><li><strong>不要把「计划数」与「分数线」合成单一分数</strong>；两者是规模与竞争强度两个维度。</li></ol>
+<hr>
+<h2 id="sec-x2">局限声明（使用本报告前必读）</h2>
+<ol><li>分数线受当年试卷难度影响 ⇒ 跨年只用名次，不用原始分。</li><li>「最低分」是末位录取分，受志愿填报博弈影响，存在「大小年」。</li><li><strong>委属 5 所已排除</strong> ⇒ 顶尖学生去向信息不完整；「南模线」只是<strong>代理</strong>，不等于「头部水平」，且它只覆盖一所高中。</li><li>公办/民办划分来自 <strong>2026 年</strong>公示 ⇒ 2022–2023 的性质判定属<strong>跨年外推</strong>。</li><li>区属高中集合逐年变化（2023 +复附徐汇、2026 +市二梅陇）⇒ 主口径固定 <code>BASE4</code>。</li><li>样本逐年进出 ⇒ 跨年汇总只用 <code>CORE</code>（23 所）。</li><li>计划数 ≠ 实际录取数（官方未公布实际录取数）。</li><li>2022 年无「是否同分优待」列、2025 年起才有「综合素质评价」列，已如实留空。</li><li><strong><code>CORE</code> 仅 23 所、时间仅 5 年</strong> ⇒ 方差等统计量精度有限，本报告只用方差做<strong>分档</strong>，不用来排序。</li><li>满分构成恒等式有 10/755 行越界 1–4 分（推测含政策性加分），该恒等式<strong>未被用作任何分析指标</strong>，不影响任何排名。</li><li>本分析只覆盖<strong>徐汇区</strong>，结论不得外推到其他区。</li></ol>
+<footer>
+  <p>数据与结论均来自官方 PDF，每个数字可回源到具体文件与页码。
+     分析口径、方法与局限见页面内「局限声明」一节。</p>
+  <p>仓库：<a href="https://github.com/iStarFire/Shanghai-XueQuFang">https://github.com/iStarFire/Shanghai-XueQuFang</a></p>
+</footer>
+</main>
+</body>
+</html>

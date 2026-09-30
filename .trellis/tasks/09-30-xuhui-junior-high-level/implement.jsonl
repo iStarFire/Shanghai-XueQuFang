@@ -1,0 +1,7 @@
+{"file": ".trellis/tasks/09-30-xuhui-junior-high-level/design.md", "reason": "本轮核心口径与算法：字段定义、区属/委属分层、均分与排名公式、宽表 117 列结构、中止条件。实现前必读"}
+{"file": ".trellis/tasks/09-30-xuhui-junior-high-level/implement.md", "reason": "有序执行清单 S0-S9 与每步判定标准、门禁、回滚点"}
+{"file": ".trellis/spec/data/field-conventions.md", "reason": "名额到校与最低分数线的既有字段名与口径陷阱；新增 high_school_tier 等字段须遵循其新增流程"}
+{"file": ".trellis/spec/data/directory-structure.md", "reason": "业务数据目录与命名约定；本轮新增 CSV 与原始文件的落盘位置依据"}
+{"file": ".trellis/spec/data/source-registry.md", "reason": "来源.md 登记表的字段与写法，本轮新增 5 份录入文件须同步登记"}
+{"file": ".trellis/spec/quality/data-validation.md", "reason": "2.2 数据正确性校验的维度与判定阈值，S5 门禁依据"}
+{"file": "data/徐汇区/学校/来源.md", "reason": "10 份源 PDF 的来源 URL、MD5、页数与跨年版式差异（含 2024 份 /Rotate 90 渲染注意）"}
