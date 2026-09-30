@@ -177,6 +177,13 @@ def md_to_html(md):
                 not re.match(r'^-{3,}$', lines[i].strip()):
             buf.append(lines[i].strip())
             i += 1
+        if not buf:
+            # 以 | 开头但下一行不是表格分隔行的「孤立行」（如正文中的
+            # 「|x|」绝对值记号出现在行首）：上面的段落循环不吸收它，
+            # 若不在此推进 i，外层 while 会死循环（A6 曾触发过）。
+            # 处置：按普通段落吸收该行。
+            buf.append(lines[i].strip())
+            i += 1
         out.append('<p>' + inline_multi(buf) + '</p>')
 
     return '\n'.join(out), toc
