@@ -1,0 +1,64 @@
+# ============================================================
+# 上海学区房数据分析项目 - 忽略规则
+# ============================================================
+# 原则：data/ 下的数据是要提交的，不要忽略。
+# 只忽略临时文件、中间产物、系统文件与本地个人配置。
+# ============================================================
+
+# ---------- 操作系统 / 编辑器 ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# VS Code / JetBrains 本地配置
+.vscode/settings.json
+.idea/
+
+# ---------- Excel / WPS 临时文件 ----------
+# 以 ~$ 开头的文件是 Office 打开表格时产生的锁文件，不属于数据
+~$*.xlsx
+~$*.xls
+~$*.csv
+*.xlsx#
+.~lock.*#
+
+# ---------- 数据处理的临时与中间产物 ----------
+# 这些是过程文件，不是数据本体。数据本体放 data/<行政区>/<主题>/
+*.tmp
+*.temp
+*.log
+tmp/
+temp/
+output/
+scratch/
+*.bak
+*.orig
+*.part
+
+# ---------- Python / 脚本临时产物 ----------
+# 允许用脚本辅助校验与分析，但脚本产物不入库
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---------- Trellis 会话级本地文件 ----------
+# .trellis/.gitignore 已覆盖大部分；此处兜底
+.trellis/.developer
+.trellis/.runtime/
+.trellis/.current-task
+.trellis/**/*.tmp
+.trellis/**/*.new
+
+# ---------- 本地个人笔记 ----------
+# 与项目无关的私人草稿，不要提交
+notes.local.md
+*.local.md
