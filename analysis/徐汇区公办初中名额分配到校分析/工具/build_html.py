@@ -7,7 +7,7 @@
 - **移动端优先**：viewport 元标签、流式字号、表格横向滚动容器、深色模式。
 
 产物：
-  analysis/徐汇区公办初中水平分析/index.html   （报告页）
+  analysis/徐汇区公办初中名额分配到校分析/index.html   （报告页）
   index.html                                    （站点入口页，扫描全部课题）
 """
 import html
@@ -16,7 +16,7 @@ import re
 import sys
 
 ROOT = "/Users/ivan/workspace/github/Shanghai-XueQuFang"
-TOPIC = f"{ROOT}/analysis/徐汇区公办初中水平分析"
+TOPIC = f"{ROOT}/analysis/徐汇区公办初中名额分配到校分析"
 REPORT = f"{TOPIC}/分析报告.md"
 OUT_PAGE = f"{TOPIC}/index.html"
 OUT_HOME = f"{ROOT}/index.html"
@@ -394,10 +394,10 @@ def main():
         p = f'{adir}/{name}'
         if not os.path.isdir(p) or not os.path.exists(f'{p}/index.html'):
             continue
-        t = topic_meta() if name == '徐汇区公办初中水平分析' else name
-        sub = {'徐汇区公办初中水平分析':
+        t = topic_meta() if name == '徐汇区公办初中名额分配到校分析' else name
+        sub = {'徐汇区公办初中名额分配到校分析':
                '2022–2026 年名额分配到校计划数与最低分数线，'
-               '整理为 117 列初中宽表，给出公办初中水平与稳定性结论'}.get(name, '')
+               '整理为 117 列初中宽表，给出「名额到校通道竞争强度」的排名与稳定性结论'}.get(name, '')
         cards.append(
             f'<a class="card" href="analysis/{name}/index.html">'
             f'<span class="tag">徐汇区</span><h3>{html.escape(t)}</h3>'

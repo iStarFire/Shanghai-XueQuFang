@@ -4,13 +4,13 @@
 §4（高中分层）、§5（指标）、§6（宽表结构）。
 
 输出：
-  analysis/徐汇区公办初中水平分析/宽表-初中水平-徐汇区-2022-2026.csv
+  analysis/徐汇区公办初中名额分配到校分析/宽表-初中水平-徐汇区-2022-2026.csv
 """
 import csv, statistics as st
 
 ROOT = "/Users/ivan/workspace/github/Shanghai-XueQuFang"
 D = f"{ROOT}/data/徐汇区/学校"
-OUT = f"{ROOT}/analysis/徐汇区公办初中水平分析"
+OUT = f"{ROOT}/analysis/徐汇区公办初中名额分配到校分析"
 YEARS = [2022, 2023, 2024, 2025, 2026]
 
 # ---- design.md §4 高中分层 ----

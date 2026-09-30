@@ -1,4 +1,4 @@
-"""徐汇区公办初中水平分析的计算部分（S7）。
+"""徐汇区公办初中名额分配到校分析的计算部分（S7）。
 
 读取宽表，输出 A1–A4 四个维度所需的全部数字。
 报告只负责叙述，所有数字均来自本脚本，保证可复算。
@@ -6,7 +6,7 @@
 import csv, statistics as st
 
 ROOT = "/Users/ivan/workspace/github/Shanghai-XueQuFang"
-OUT = f"{ROOT}/analysis/徐汇区公办初中水平分析"
+OUT = f"{ROOT}/analysis/徐汇区公办初中名额分配到校分析"
 YEARS = [2026, 2025, 2024, 2023, 2022]      # 展示用倒序
 
 

@@ -7,7 +7,7 @@ import csv, statistics as st, random, sys
 
 ROOT = "/Users/ivan/workspace/github/Shanghai-XueQuFang"
 D = f"{ROOT}/data/徐汇区/学校"
-OUT = f"{ROOT}/analysis/徐汇区公办初中水平分析"
+OUT = f"{ROOT}/analysis/徐汇区公办初中名额分配到校分析"
 YEARS = [2022, 2023, 2024, 2025, 2026]
 BASE4 = ['042001', '042008', '042035', '043015']
 ZONE = {2022: ['042001', '042008', '042035', '043015'],
