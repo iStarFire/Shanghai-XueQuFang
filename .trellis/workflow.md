@@ -151,7 +151,7 @@ python3 ./.trellis/scripts/get_context.py --mode phase --step <X.Y>  # 某一步
 
 ```
 Phase 1: Plan    → 分类请求、取得建任务同意，然后产出规划产物
-Phase 2: Execute → 采集/整理数据 → 数据正确性校验 → 分析 → 结论可靠性验证
+Phase 2: Execute → 采集/整理数据 → 数据正确性校验 → 分析 → 结论可靠性验证 → 结论网页化
 Phase 3: Finish  → 复盘、更新规范、提交、收尾
 ```
 
@@ -229,20 +229,22 @@ Phase 3: Finish  → 复盘、更新规范、提交、收尾
 
 ```
 2.1 数据采集与整理  →  2.2 数据正确性校验  →  2.3 分析与结论产出  →  2.4 结论可靠性验证
+                                                              →  2.5 结论网页化与发布
 ```
 
 - 2.1 数据采集与整理 `[required · repeatable]`
 - 2.2 数据正确性校验 `[required · repeatable]` ← **未通过不得进入 2.3**
 - 2.3 分析与结论产出 `[required · repeatable]`
-- 2.4 结论可靠性验证 `[required · repeatable]` ← **未通过不得进入 Phase 3**
-- 2.5 回滚 `[on demand]`
+- 2.4 结论可靠性验证 `[required · repeatable]` ← **未通过不得进入 2.5 与 Phase 3**
+- 2.5 结论网页化与发布 `[on demand]` ← **未过 2.4 不得生成对外页面**
+- 2.6 回滚 `[on demand]`
 
 <!-- 每轮面包屑：status='in_progress'（覆盖 Phase 2 全部 + Phase 3.2-3.4） -->
 
 [workflow-state:in_progress]
 工具角色：`trellis-implement` = 数据采集/整理与分析执行子代理；`trellis-check` = 数据校验与结论验证子代理；`trellis-research` = 资料检索子代理。三者都是以 Task/Agent 形式调用的子代理，不是 Skill。
-流程：`trellis-implement`（2.1 采集/整理）→ `trellis-check`（2.2 数据正确性校验）→ `trellis-implement`（2.3 分析）→ `trellis-check`（2.4 结论可靠性验证）→ `trellis-update-spec` → 提交（Phase 3.4）→ `/trellis:finish-work`。
-**门禁**：2.2 未通过不得开始 2.3；2.4 未通过不得进入 Phase 3。校验/验证记录必须落盘到任务目录（`validation/` 或 `research/`），只在对话里说「已校验」不算完成。
+流程：`trellis-implement`（2.1 采集/整理）→ `trellis-check`（2.2 数据正确性校验）→ `trellis-implement`（2.3 分析）→ `trellis-check`（2.4 结论可靠性验证）→ `trellis-implement`（2.5 结论网页化，如需发布）→ `trellis-update-spec` → 提交（Phase 3.4）→ `/trellis:finish-work`。
+**门禁**：2.2 未通过不得开始 2.3；2.4 未通过不得进入 2.5 与 Phase 3。校验/验证记录必须落盘到任务目录（`validation/` 或 `research/`），只在对话里说「已校验」不算完成。
 子代理自我豁免：若已作为 `trellis-implement` 运行，不要再派 `trellis-implement` / `trellis-check`；若已作为 `trellis-check` 运行，不要再派同类。派发只由主会话发起。
 派发提示词首行写 `Active task: <task.py current 返回的路径>`。上下文读取顺序：jsonl 条目 → `prd.md` → `design.md`（如有）→ `implement.md`（如有）。
 [/workflow-state:in_progress]
@@ -446,7 +448,8 @@ python3 ./.trellis/scripts/task.py start <task-dir>
 
 目标：把经过评审的规划产物变成**可复核的数据与可信的结论**。
 
-顺序不可调换：先有可信数据（2.1+2.2），才允许分析（2.3）；先完成结论验证（2.4），才允许进入收尾。
+顺序不可调换：先有可信数据（2.1+2.2），才允许分析（2.3）；先完成结论验证（2.4），
+才允许对外发布（2.5）与进入收尾。
 
 #### 2.1 数据采集与整理 `[required · repeatable]`
 
@@ -532,12 +535,50 @@ python3 ./.trellis/scripts/task.py start <task-dir>
 
 **门禁**：核心结论未通过（计算不一致、数据链路断裂、样本明显不足、口径偷换）时，**必须回到 2.3 修正**，修正后重新执行 2.4。带着已知重大不确定性输出结论，必须在结论中显著标注。
 
-#### 2.5 回滚 `[on demand]`
+#### 2.5 结论网页化与发布 `[on demand]`
+
+把 2.4 已验证的结论转成可直接分享的静态页面（移动端可读，可发布到 GitHub Pages）。
+
+**前置条件：2.4 已通过。** 未过 2.4 不得生成对外页面 —— 页面属于「对外输出的结论」，
+受本文件第 7 条硬原则（结论必须可证伪）约束。
+
+- **单一事实来源**：页面必须由结论正文（`analysis/<课题>/分析报告.md`）**程序生成**，
+  **不得手写 HTML**。改结论只改 Markdown，然后重跑生成脚本。
+  ⇒ 目的是从根本上杜绝「网页上的数字与已验证的结论不一致」。
+- **产物位置**：
+  - 课题页 `analysis/<课题>/index.html`
+  - 站点入口为仓库根 `index.html`（自动汇总 `analysis/*/index.html`）
+  - `.nojekyll` 必须存在（关闭 Jekyll，否则 `_` 开头的目录不会被发布）
+
+**硬性要求**：
+
+1. **零外部依赖**：CSS 内联，不引任何 CDN —— 发布环境不可控，页面必须离线可读
+2. **移动端可用**：必须设 `viewport`；宽表用横向滚动容器包裹，
+   **不得让整页产生横向溢出**（首列吸附、表体自滑）
+3. **数字同源**：页面里的每个数字都来自已通过 2.4 的结论正文，不得另行计算
+4. **生成幂等**：连跑两次输出必须逐字节一致（锚点稳定，旧链接不失效）
+
+**派发**：生成用 `trellis-implement`；页面自检与移动端实测用 `trellis-check`
+（结果落盘 `validation/page-check.md`）。
+
+**验证方式**：
+
+- 自检生成物：无未转换的 Markdown 残留（裸 `**`、未转表格行）、无外部加载资源
+- 生成幂等：连跑两次比对哈希
+- **用真实移动视口（如 390px）实测 `document.scrollWidth == clientWidth`**。
+  **不得只用桌面视口或目测截图判断** —— 截图工具可能把布局宽度钳到最小值，
+  制造「页面被撑宽」的假象（本项目踩过：Chrome headless 最小窗口宽 500px，
+  截 390px 宽的图看起来右侧全被截断，实测页面并无溢出）
+
+**发布**：GitHub Pages，Source 设为 `Deploy from a branch → main → / (root)`。
+
+#### 2.6 回滚 `[on demand]`
 
 - 2.2 / 2.4 暴露 `prd.md` 缺陷 → 回到 Phase 1 修订 `prd.md`，再重做对应步骤
 - 采集方向错误 → 丢弃/隔离该批数据（移到 `data/<行政区>/_废弃/` 并注明原因），重做 2.1
 - 结论不成立但流程无误 → 回到 Phase 1 修订问题定义，不要硬凑结论
 - 需要更多资料 → 同 Phase 1.2，检索结果写入 `research/`
+- 2.5 生成页面后结论被修订 → 重跑生成脚本，**页面不得手工改回去**
 
 ---
 
@@ -634,7 +675,8 @@ AI 主导本任务变更的批量提交，使 `/finish-work` 随后能干净运�
 
 - 无当前任务时必须先分类，并在创建 Trellis 任务前取得用户同意
 - 规划必须区分「轻量 PRD-only」与「复杂任务需 prd + design + implement」
-- **Phase 2 必须保持 `2.1 采集 → 2.2 数据校验 → 2.3 分析 → 2.4 结论验证` 的顺序与门禁**：数据校验未过不得分析，结论验证未过不得收尾
+- **Phase 2 必须保持 `2.1 采集 → 2.2 数据校验 → 2.3 分析 → 2.4 结论验证 → 2.5 结论网页化` 的顺序与门禁**：数据校验未过不得分析，结论验证未过不得对外发布、不得收尾
+- **`2.5` 生成的页面必须由结论正文程序生成，不得手写**：手写会让页面与已验证的结论脱钩，绕过 2.4 的门禁
 - 每条必需执行路径上，Phase 3.4 的提交提醒必须可达，且先于 `/trellis:finish-work`
 
 所有 tag 块位于上方 `## Phase Index` 各阶段摘要之后：
