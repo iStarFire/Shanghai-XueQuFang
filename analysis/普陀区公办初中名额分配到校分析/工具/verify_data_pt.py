@@ -6,7 +6,8 @@ import fitz
 BASE = "/Users/ivan/workspace/github/Shanghai-XueQuFang"
 D = f"{BASE}/data/普陀区/学校"
 SCORE = f"{D}/名额到校最低分数线-普陀区-2022-2026.csv"
-PLAN = f"{D}/名额到校计划-普陀区-2026.csv"
+PLAN = f"{D}/名额到校计划-普陀区-2022-2026.csv"
+PLAN_MAN = f"{D}/名额到校计划-普陀区-2023-人工转录.csv"
 ROSTER = f"{D}/初中名录-公办民办-普陀区-2026.csv"
 ALIAS = f"{D}/初中校名别名表-普陀区.csv"
 YEARS = [2022, 2023, 2024, 2025, 2026]
@@ -36,7 +37,7 @@ for y in YEARS:
     jhs = {r['junior_high_school'] for r in rows}
     shs = {r['senior_high_school'] for r in rows}
     print(f'  {y}: {len(rows)} 行 / {len(jhs)} 初中 / {len(shs)} 高中')
-check('计划表为完整矩形 41×9=369', len(plan) == 369, f'实际 {len(plan)}')
+check('计划表五年合并 191 校×9=1719 行', len(plan) == 1719, f'实际 {len(plan)}')
 check('名录 41 所', len(roster) == 41, f'实际 {len(roster)}')
 required = ['year', 'district', 'junior_high_school', 'senior_high_school',
             'min_score', 'source_doc', 'source_page']
@@ -74,11 +75,15 @@ check('名录 ownership 命中枚举', own <= {'公办', '民办', '待核实'},
 
 print('=== 4. 一致性 ===')
 # 4a 分数线 2026 的 (初中,高中) 对 ⊆ 计划非零名额对
-nz = {(r['junior_high_school'], r['senior_high_school']) for r in plan if int(r['quota']) > 0}
-sp26 = {(r['junior_high_school'], r['senior_high_school'])
-        for r in score if r['year'] == '2026'}
-check('2026 分数线的对 ⊆ 计划非零名额对', sp26 <= nz,
-      f'分数线 {len(sp26)} 对，计划非零 {len(nz)} 对，越界 {len(sp26 - nz)}: {sorted(sp26 - nz)[:3]}')
+tot_ok = True
+for y in [str(x) for x in YEARS if x != 2023] + ['2023']:
+    nz = {(r['junior_high_school'], r['senior_high_school']) for r in plan
+          if r['year'] == y and int(r['quota']) > 0}
+    sp = {(r['junior_high_school'], r['senior_high_school']) for r in score if r['year'] == y}
+    if not (sp <= nz):
+        tot_ok = False
+        print(f'    {y} 越界: {sorted(sp - nz)[:3]}')
+check('五年 分数线对 ⊆ 计划非零名额对（越界 0）', tot_ok)
 # 4b 内部一致性：语数外 > 数学 且 > 语文
 bad2 = [r for r in score
         if float(r['last_chinese_math_english']) < max(float(r['last_math']), float(r['last_chinese']))]
@@ -88,8 +93,15 @@ check('名录 ↔ 2026 分数线名单一致',
       {r['school_name'] for r in roster} ==
       {r['junior_high_school'] for r in score if r['year'] == '2026'})
 # 4d 计划名额总计
-tot = sum(int(r['quota']) for r in plan)
-print(f'  计划全区名额总计 {tot}；按校最高 {max((sum(int(x["quota"]) for x in plan if x["junior_high_school"]==n), n) for n in {r["junior_high_school"] for r in plan})}')
+import collections as _c
+per_year = _c.defaultdict(int)
+for r in plan:
+    per_year[r['year']] += int(r['quota'])
+print(f'  计划名额逐年: {dict(sorted(per_year.items()))}')
+man = load(PLAN_MAN)
+check('2023 人工转录逐行总计自洽',
+      all(sum(int(r[k]) for k in ['huayer','shangzhong','fufu','jiaofu','shangshida',
+          'huayer_putuo','erzhong','jinyuan','yichuan']) == int(r['total']) for r in man))
 # 4e 跨区同名校排查（徐汇 vs 普陀初中名）
 xt = f"{BASE}/data/徐汇区/学校"
 try:
