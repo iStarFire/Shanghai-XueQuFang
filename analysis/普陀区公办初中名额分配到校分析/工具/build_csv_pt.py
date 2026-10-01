@@ -7,7 +7,7 @@ schema 与徐汇一致（含 high_school_tier 区属/委属），source_page 记
 """
 import csv, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from scores_pt import extract_year
+from scores_pt import extract_year, NAMES as FIELD_NAMES
 
 BASE = "/Users/ivan/workspace/github/Shanghai-XueQuFang"
 D_SCHOOL = f"{BASE}/data/普陀区/学校"
@@ -32,12 +32,21 @@ def main():
     for y in YEARS:
         src = f'【普陀】【{y}】名额到校最低分数线.pdf'
         rows = extract_year(y, f'{D_SCHOOL}/{src}')
+        fields = FIELD_NAMES[y]          # 与提取值逐列对齐（逐年列结构不同）
         for pno, v in rows:
-            tier = TIER.get(v[1], '')
+            d = dict(zip(fields, v))     # junior/senior/min_score/... 按名取
+            senior = d['senior_high_school']
+            tier = TIER.get(senior, '')
             if not tier:
-                print(f'  ⚠ 未知高中（学年 {y}）: {v[1]!r}')
-            all_rows.append([y, '普陀区', v[0], '', v[1], '', tier,
-                             v[2], FULL, '', '', ''] + v[3:] + [src, pno])
+                print(f'  ⚠ 未知高中（学年 {y}）: {senior!r}')
+            all_rows.append([
+                y, '普陀区', d['junior_high_school'], '', senior, '', tier,
+                d['min_score'], FULL,
+                f'{float(d["min_score"])/FULL:.6f}',
+                d.get('is_tie_privilege', ''), d.get('comprehensive_eval', ''),
+                d.get('last_chinese_math_english', ''), d.get('last_math', ''),
+                d.get('last_chinese', ''), d.get('last_comprehensive_test', ''),
+                src, pno])
         print(f'{y}: {len(rows)} 行')
     cols = ['year', 'district', 'junior_high_school', 'junior_high_school_code',
             'senior_high_school', 'senior_high_school_code', 'high_school_tier',
@@ -48,7 +57,6 @@ def main():
         w = csv.writer(f)
         w.writerow(cols)
         for r in all_rows:
-            r[9] = f'{float(r[7])/FULL:.6f}' if r[7] else ''
             w.writerow(r)
     print(f'写出 {OUT}：{len(all_rows)} 行')
 
