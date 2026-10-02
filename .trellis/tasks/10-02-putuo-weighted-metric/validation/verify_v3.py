@@ -145,6 +145,28 @@ print(f'\n结论: {"全部通过" if b1+b2+b3+b4+b5 == 0 else "存在问题项"}
 # ---------- 事实清单（供报告改写） ----------
 multi = {r['junior_high_school']: r for r in load(f'{D_A}/rank-多口径总表-普陀区-2022-2026.csv')}
 tbl = sorted(RANKED_ROWS.values(), key=lambda r: int(r['rank_P_wq_comb']))
+# ---------- 报告表核对（新格式） ----------
+rep = open(f'{D_A}/分析报告.md', encoding='utf-8').read()
+multi_ = {r['junior_high_school']: r for r in load(f'{D_A}/rank-多口径总表-普陀区-2022-2026.csv')}
+nb = nbad = 0
+for c, r in RANKED_ROWS.items():
+    m = multi_[c]
+    checks = [
+        f"| {m['rank_P_wq_comb']} | {c} | {F(m['P_wq_comb']):.3f} | {m['rank_P_wq_all']} | "
+        f"{m['rank_P_wq_head']} | {m['rank_P_wq_tail']} | {m['rank_P_eq_comb']} | "
+        f"{int(m['shift_comb_wq_eq']):+d} |",
+        f"| {c} | {F(r['P_wq']):.3f}（{r['rank_P_wq']}） | {F(r['P_eq']):.3f}（{r['rank_P_eq']}） |",
+        f"| {c} | {F(m['P_wq_comb']):.3f}（{m['rank_P_wq_comb']}） | "
+        f"{F(m['Z_wq_comb']):+.3f}（{m['rank_Z_wq_comb']}） | "
+        f"{F(m['ZR_wq_comb']):+.3f}（{m['rank_ZR_wq_comb']}） |",
+    ]
+    for s_ in checks:
+        nb += 1
+        if s_ not in rep:
+            nbad += 1
+            print(f'  REPORT 未匹配：{s_[:64]}')
+print(f'[6] 报告表 2-1 / 2-2 / A.3-1 全量核对：{nb} 项，未匹配 {nbad}')
+
 print('\n=== A. 加权主口径 综合排名（32 所）===')
 for r in tbl:
     print(f"  {r['rank_P_wq_comb']:>2} {r['junior_high_school'].replace('上海市',''):<26}"
