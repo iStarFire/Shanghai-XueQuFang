@@ -40,6 +40,22 @@ S = {(r['junior_high_school'], r['senior_high_school'], int(r['year'])): float(r
      for r in raw if r['min_score'] not in ('', None)}
 schools = sorted({k[0] for k in S})
 
+# 计划名额（用于「年均到校计划数」）：口径 = 按该校有数据的年份求均值
+plan = load(f'{D_S}/名额到校计划-普陀区-2022-2026.csv')
+QP = {(r['junior_high_school'], r['senior_high_school'], int(r['year'])): int(r['quota'])
+      for r in plan}
+ALL9 = GROUPS['all'] + ['华东师范大学第二附属中学', '上海市上海中学', '复旦大学附属中学',
+                        '上海交通大学附属中学', '上海师范大学附属中学']
+cover_years = {c: [y for y in YEARS if any((c, h, y) in S for h in GROUPS['all'])]
+               for c in schools}
+QUOTA = {}
+for c in schools:
+    ys = cover_years[c]
+    QUOTA[c] = (
+        st.fmean([sum(QP.get((c, h, y), 0) for h in GROUPS['all']) for y in ys]) if ys else None,
+        st.fmean([sum(QP.get((c, h, y), 0) for h in ALL9) for y in ys]) if ys else None,
+    )
+
 
 def group_P(lines):
     per = {}
@@ -104,7 +120,7 @@ for r in ranked:
         'P': F(r['P']), 'Z': F(r['Z']), 'ZR': F(r['ZR']),
         'mean_rank': F(r['old_mean_rank']),
         'P_lin': F(w['P_lin']), 'P_exp': F(w['P_exp']), 'P_recent3': F(w['P_recent3']),
-        'quota4_avg': F(wide[c]['quota4_avg']),
+        'quota4_avg': round(QUOTA[c][0], 4), 'quota_all_avg': round(QUOTA[c][1], 4),
     })
 
 for key, desc in [('P_comb', True), ('P_all', True), ('P_head', True), ('P_tail', True),
@@ -118,7 +134,7 @@ cols = ['junior_high_school', 'n_years', 'P_comb', 'rank_P_comb',
         'P_all', 'rank_P_all', 'P_head', 'rank_P_head', 'P_tail', 'rank_P_tail',
         'P', 'rank_P', 'Z', 'rank_Z', 'ZR', 'rank_ZR', 'mean_rank', 'rank_mean_rank',
         'P_lin', 'rank_P_lin', 'P_exp', 'rank_P_exp', 'P_recent3', 'rank_P_recent3',
-        'quota4_avg']
+        'quota4_avg', 'quota_all_avg']
 with open(f'{D_A}/rank-多口径总表-普陀区-2022-2026.csv', 'w', newline='', encoding='utf-8-sig') as f:
     w = csv.DictWriter(f, fieldnames=cols)
     w.writeheader()
