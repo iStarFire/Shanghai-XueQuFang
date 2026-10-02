@@ -117,9 +117,9 @@ for r in csvrows:
     checks = [
         f"| {r['rank_P_comb']} | {c} | {F(r['P_comb']):.3f} | {F(r['P_all']):.3f}（{r['rank_P_all']}）",
         f"| {c} | {F(r['P']):.3f}（{r['rank_P']}） | {F(r['Z']):+.2f}（{r['rank_Z']}）",
-        (f"| {F(r['quota4_avg']):.1f} | {F(r['quota_all_avg']) - F(r['quota4_avg']):.1f} | {r['n_years']} 年 |"
+        (f"| {F(r['quota4_avg']):.1f} | {r['n_years']} 年 |"
          if r['n_years'] == '5' else
-         f"| {F(r['quota4_avg']):.1f} | {F(r['quota_all_avg']) - F(r['quota4_avg']):.1f} | {r['n_years']} 年（精度低一年） |"),
+         f"| {F(r['quota4_avg']):.1f} | {r['n_years']} 年（精度低一年） |"),
     ]
     for s in checks:
         nb2 += 1
