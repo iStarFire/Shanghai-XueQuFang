@@ -64,10 +64,27 @@ for g, lines in GROUPS.items():
             if vs:
                 per.setdefault(y, {})[c] = st.fmean(vs)
     Py = {y: py_ranks(v) for y, v in per.items()}
+    Zy = {}
+    ZRy = {}
+    for y, vals in per.items():
+        xs = sorted(vals.values())
+        n = len(xs)
+        mu, sg = st.fmean(xs), st.pstdev(xs)
+        med = st.median(xs)
+        iqr = xs[n * 3 // 4] - xs[n // 4]
+        Zy[y] = {c: (v - mu) / sg for c, v in vals.items()}
+        if iqr:
+            ZRy[y] = {c: (v - med) / (iqr / 1.349) for c, v in vals.items()}
     for c in schools:
         v = [Py[y][c] for y in YEARS if c in Py[y]]
         if v:
             recomp[(c, g)] = st.fmean(v)
+        z = [Zy[y][c] for y in YEARS if c in Zy[y]]
+        zr = [ZRy[y][c] for y in YEARS if c in ZRy[y]]
+        if z:
+            recomp[(c, g + '_z')] = st.fmean(z)
+        if zr:
+            recomp[(c, g + '_zr')] = st.fmean(zr)
 
 csvrows = load(f'{D}/rank-多口径总表-普陀区-2022-2026.csv')
 bad = n = 0
@@ -83,13 +100,24 @@ for r in csvrows:
     if abs(comb - F(r['P_comb'])) > 5e-4:
         bad += 1
         print(f'  MISMATCH {c} P_comb: 交付={r["P_comb"]} 独立={comb:.5f}')
-print(f'[1] 三组 P + 综合 P 复算：{n} 项，超容差 {bad} 项')
+    zc = (recomp[(c, 'all_z')] + recomp[(c, 'head_z')] + recomp[(c, 'tail_z')]) / 3
+    zrc = (recomp[(c, 'all_zr')] + recomp[(c, 'head_zr')] + recomp[(c, 'tail_zr')]) / 3
+    for col, mine in [('Z_comb', zc), ('ZR_comb', zrc)]:
+        n += 1
+        if abs(mine - F(r[col])) > 5e-4:
+            bad += 1
+            print(f'  MISMATCH {c} {col}: 交付={r[col]} 独立={mine:.5f}')
+print(f'[1] 三组 P/Z/ZR + 三个综合值复算：{n} 项，超容差 {bad} 项')
 
 # 名次复算
-for col, key in [('rank_P_comb', 'P_comb'), ('rank_P_all', 'P_all'),
+for col, key in [('rank_Z_comb', 'Z_comb'), ('rank_ZR_comb', 'ZR_comb'),
+                 ('rank_P_comb', 'P_comb'), ('rank_P_all', 'P_all'),
                  ('rank_P_head', 'P_head'), ('rank_P_tail', 'P_tail')]:
-    vals = {r['junior_high_school']: recomp[(r['junior_high_school'], key.split('_')[1])]
-            if key != 'P_comb' else F(r['P_comb']) for r in csvrows}
+    def _val(r):
+        if key in ('P_comb', 'Z_comb', 'ZR_comb'):
+            return F(r[key])
+        return recomp[(r['junior_high_school'], key.split('_')[1])]
+    vals = {r['junior_high_school']: _val(r) for r in csvrows}
     order = sorted(vals, key=lambda c: -vals[c])
     for i, c in enumerate(order, 1):
         got = [r for r in csvrows if r['junior_high_school'] == c][0][col]
@@ -120,12 +148,15 @@ for r in csvrows:
         (f"| {F(r['quota4_avg']):.1f} | {r['n_years']} 年 |"
          if r['n_years'] == '5' else
          f"| {F(r['quota4_avg']):.1f} | {r['n_years']} 年（精度低一年） |"),
+        (f"| {c} | {F(r['P_comb']):.3f}（{r['rank_P_comb']}） | "
+         f"{F(r['Z_comb']):+.3f}（{r['rank_Z_comb']}） | "
+         f"{F(r['ZR_comb']):+.3f}（{r['rank_ZR_comb']}） |"),
     ]
     for s in checks:
         nb2 += 1
         if s.replace('-', '−') not in rep and s not in rep:
             bad += 1
             print(f'  REPORT 未匹配：{s[:60]}...')
-print(f'[4] 报告表 2-1/2-2 全量核对：{nb2} 项（累计超容差 {bad}）')
+print(f'[4] 报告表 2-1/2-2 与表 A.4-1 全量核对：{nb2} 项（累计超容差 {bad}）')
 
 print('\n结论:', '全部通过' if bad == 0 else f'存在 {bad} 项问题，需排查')

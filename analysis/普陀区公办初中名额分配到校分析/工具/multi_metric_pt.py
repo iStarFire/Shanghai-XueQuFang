@@ -58,33 +58,43 @@ for c in schools:
 
 
 def group_P(lines):
+    """返回 (P聚合, Z聚合, ZR聚合, 逐年池量)。Z 用 μ/σ；ZR 用 中位/(IQR/1.349)。"""
     per = {}
     for c in schools:
         for y in YEARS:
             vs = [S[(c, h, y)] for h in lines if (c, h, y) in S]
             if vs:
                 per[(c, y)] = st.fmean(vs)
-    Py, py = {}, {}
+    Py, Zy, ZRy, py = {}, {}, {}, {}
     for y in YEARS:
         vals = {c: per[(c, y)] for c in schools if (c, y) in per}
-        xs = list(vals.values())
+        xs = sorted(vals.values())
         n = len(xs)
+        mu, sg = st.fmean(xs), st.pstdev(xs)
+        med = st.median(xs)
+        iqr = xs[n * 3 // 4] - xs[n // 4]
+        rs = iqr / 1.349 if iqr else None
         py[y] = n
         for c, v in vals.items():
             b = sum(1 for w in xs if w > v)
             e = sum(1 for w in xs if w == v)
             Py[(c, y)] = 1 - ((b + (e + 1) / 2) - 1) / (n - 1)
-    agg = {}
-    for c in schools:
-        v = [Py[(c, y)] for y in YEARS if (c, y) in Py]
-        if v:
-            agg[c] = (st.fmean(v), len(v))
-    return agg, py
+            Zy[(c, y)] = (v - mu) / sg
+            if rs:
+                ZRy[(c, y)] = (v - med) / rs
+    def agg(D):
+        out = {}
+        for c in schools:
+            v = [D[(c, y)] for y in YEARS if (c, y) in D]
+            if v:
+                out[c] = st.fmean(v)
+        return out
+    return (agg(Py), agg(Zy), agg(ZRy), py, PA_N if False else {c: len([y for y in YEARS if (c, y) in Py]) for c in schools})
 
 
-PA, pool_all = group_P(GROUPS['all'])
-PH, pool_head = group_P(GROUPS['head'])
-PT, pool_tail = group_P(GROUPS['tail'])
+PA, ZA, ZRA, pool_all, ny_a = group_P(GROUPS['all'])
+PH, ZH, ZRH, pool_head, ny_h = group_P(GROUPS['head'])
+PT, ZT, ZRT, pool_tail, ny_t = group_P(GROUPS['tail'])
 
 # ---- 自校验 P_all vs 既有主口径 ----
 rcsv = load(f'{D_A}/rank-标准化-普陀区-2022-2026.csv')
@@ -92,9 +102,9 @@ ranked = [r for r in rcsv if r['ranked'] == '1']
 bad = 0
 for r in ranked:
     c = r['junior_high_school']
-    if c in PA and abs(PA[c][0] - F(r['P'])) > 5e-4:
+    if c in PA and abs(PA[c] - F(r['P'])) > 5e-4:
         bad += 1
-        print(f'  [自校验失败] {c}: {PA[c][0]:.5f} vs {r["P"]}')
+        print(f'  [自校验失败] {c}: {PA[c]:.5f} vs {r["P"]}')
 print(f'自校验：{len(ranked)} 所 P_all vs 主口径 CSV，不一致 {bad} 项')
 
 # ---- 既有口径读取 ----
@@ -114,16 +124,19 @@ for r in ranked:
     w = wcsv[c]
     rows.append({
         'junior_high_school': c,
-        'n_years': PA[c][1],
-        'P_comb': round((PA[c][0] + PH[c][0] + PT[c][0]) / 3, 6),
-        'P_all': round(PA[c][0], 6), 'P_head': round(PH[c][0], 6), 'P_tail': round(PT[c][0], 6),
+        'n_years': ny_a[c],
+        'P_comb': round((PA[c] + PH[c] + PT[c]) / 3, 6),
+        'P_all': round(PA[c], 6), 'P_head': round(PH[c], 6), 'P_tail': round(PT[c], 6),
         'P': F(r['P']), 'Z': F(r['Z']), 'ZR': F(r['ZR']),
         'mean_rank': F(r['old_mean_rank']),
         'P_lin': F(w['P_lin']), 'P_exp': F(w['P_exp']), 'P_recent3': F(w['P_recent3']),
+        'Z_comb': round((ZA[c] + ZH[c] + ZT[c]) / 3, 6),
+        'ZR_comb': round((ZRA[c] + ZRH[c] + ZRT[c]) / 3, 6),
         'quota4_avg': round(QUOTA[c][0], 4), 'quota_all_avg': round(QUOTA[c][1], 4),
     })
 
-for key, desc in [('P_comb', True), ('P_all', True), ('P_head', True), ('P_tail', True),
+for key, desc in [('P_comb', True), ('Z_comb', True), ('ZR_comb', True),
+                  ('P_all', True), ('P_head', True), ('P_tail', True),
                   ('P', True), ('Z', True), ('ZR', True), ('mean_rank', False),
                   ('P_lin', True), ('P_exp', True), ('P_recent3', True)]:
     rk = rank_of({d['junior_high_school']: d[key] for d in rows}, desc)
@@ -131,6 +144,7 @@ for key, desc in [('P_comb', True), ('P_all', True), ('P_head', True), ('P_tail'
         d['rank_' + key] = rk[d['junior_high_school']]
 
 cols = ['junior_high_school', 'n_years', 'P_comb', 'rank_P_comb',
+        'Z_comb', 'rank_Z_comb', 'ZR_comb', 'rank_ZR_comb',
         'P_all', 'rank_P_all', 'P_head', 'rank_P_head', 'P_tail', 'rank_P_tail',
         'P', 'rank_P', 'Z', 'rank_Z', 'ZR', 'rank_ZR', 'mean_rank', 'rank_mean_rank',
         'P_lin', 'rank_P_lin', 'P_exp', 'rank_P_exp', 'P_recent3', 'rank_P_recent3',
