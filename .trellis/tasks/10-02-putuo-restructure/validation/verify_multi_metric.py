@@ -159,4 +159,24 @@ for r in csvrows:
             print(f'  REPORT 未匹配：{s[:60]}...')
 print(f'[4] 报告表 2-1/2-2 与表 A.4-1 全量核对：{nb2} 项（累计超容差 {bad}）')
 
+# ---------- 近名校名防混检查 ----------
+roster = load(f'{ROOT}/data/普陀区/学校/初中名录-公办民办-普陀区-2026.csv')
+name2code = {r['school_name']: r['school_code'] for r in roster}
+csvnames = {r['junior_high_school'] for r in csvrows}
+for a, b in [('上海市梅陇中学', '上海市普陀区梅陇实验中学')]:
+    ca, cb = name2code.get(a), name2code.get(b)
+    ok_code = ca and cb and ca != cb
+    # 子串包含关系：a 的名字也出现在 b 里的情形（易混）
+    risky = a in b or b in a or a.replace('上海市', '') in b
+    print(f'[5] 近名校名检查：「{a}」({ca}) vs 「{b}」({cb})')
+    print(f'     校代码不同: {bool(ok_code)}｜名称含子串（易混）: {risky}｜'
+          f'入榜情况: {a} in 表={a in csvnames}，{b} in 表={b in csvnames}')
+    if not ok_code or (b in csvnames and load(f'{D}/宽表-初中水平-普陀区-2022-2026.csv')
+                       and [r for r in load(f'{D}/宽表-初中水平-普陀区-2022-2026.csv')
+                            if r['junior_high_school'] == b][0]['years_included'] != '2'):
+        bad += 1
+        print('      [FAIL] 校代码冲突或覆盖年数异常')
+    else:
+        print('      [OK] 两校数据未混算，且新校按 n<4 规则未入榜')
+
 print('\n结论:', '全部通过' if bad == 0 else f'存在 {bad} 项问题，需排查')
