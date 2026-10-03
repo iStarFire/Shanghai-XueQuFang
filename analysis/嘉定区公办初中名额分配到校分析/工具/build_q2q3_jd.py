@@ -122,11 +122,12 @@ W = load(f'{D_A}/宽表-初中水平-嘉定区-2022-2026.csv')
 RANKED = [r for r in W if r['row_type'] == 'ranked']
 FIXED = [r for r in RANKED if r['years_included'] == '5']   # Q2 固定样本 27 所
 
-# 当年全区全池中位（含民办，与主口径 rel 同基准）
+# 当年**公办池**中位（与主口径一致：排名不含民办）
 POOL_MED, POOL_N = {}, {}
 for y in YEARS:
     vals = [float(r[f'mean_score_base3_wq_{y}']) for r in W
-            if r[f'valid_pairs_{y}'] not in ('', '0') and r[f'mean_score_base3_wq_{y}']]
+            if r['ownership'] == '公办'
+            and r[f'valid_pairs_{y}'] not in ('', '0') and r[f'mean_score_base3_wq_{y}']]
     POOL_MED[y] = st.median(vals)
     POOL_N[y] = len(vals)
 print(f'固定样本 {len(FIXED)} 所｜逐年全池中位：'
@@ -196,10 +197,12 @@ print(f'    注：R²={qq["r2"]:.4f} 极低 → 2022 分位几乎不预测 2026 
 FIXED_NAMES = {r['junior_high_school'] for r in FIXED}
 for y in YEARS:
     allv = sorted(float(r[f'mean_score_base3_wq_{y}']) for r in W
-                  if r[f'valid_pairs_{y}'] not in ('', '0')
+                  if r['ownership'] == '公办'
+                  and r[f'valid_pairs_{y}'] not in ('', '0')
                   and r[f'mean_score_base3_wq_{y}'])
     out = [float(r[f'mean_score_base3_wq_{y}']) for r in W
-           if r['junior_high_school'] not in FIXED_NAMES
+           if r['ownership'] == '公办'
+           and r['junior_high_school'] not in FIXED_NAMES
            and r[f'valid_pairs_{y}'] not in ('', '0') and r[f'mean_score_base3_wq_{y}']]
     pct = [sum(1 for v in allv if v <= o) / len(allv) for o in out]
     row = rows2[int(y) - 2022]

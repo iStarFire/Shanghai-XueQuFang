@@ -48,7 +48,9 @@ GROUPS = {'all': QU3, 'head': HEAD2, 'tail': TAIL1}
 ALL8 = [c for _, c, _, _ in HS]
 W_TIME = {'lin': {2022: 1, 2023: 2, 2024: 3, 2025: 4, 2026: 5},
           'exp': {2022: 1, 2023: 2, 2024: 4, 2025: 8, 2026: 16},
-          'recent3': {2022: 0, 2023: 0, 2024: 1, 2025: 1, 2026: 1}}
+          'recent3': {2022: 0, 2023: 0, 2024: 1, 2025: 1, 2026: 1},
+          # 近 2 年（2025–2026 等权）：用户 2026-10-03 要求，最短的近期窗口
+          'recent2': {2022: 0, 2023: 0, 2024: 0, 2025: 1, 2026: 1}}
 
 
 def load(p):
@@ -99,6 +101,15 @@ for r in plan_rows:
     Q[(c, r['senior_high_school_code'], int(r['year']))] = int(r['quota'])
     CODE.setdefault(c, r.get('junior_high_school_code', ''))
 schools = sorted({k[0] for k in S} | {k[0] for k in Q})
+# ---- 排名池：**只用当年有数据的公办初中**，民办不参与排名与分位 ----
+# 用户 2026-10-03 明确要求「排名不要考虑民办，只考虑当年全部公办学校」。
+# 改动前池子含民办（2024 起每年 7 所），且民办多为强校（2026 民办远东 P=1.000
+# 即全区第 1），会机械地压低所有公办校的分位与名次。
+PUB = {c for c in schools if roster.get(c, {}).get('ownership') == '公办'}
+print(f'排名池（公办）{len(PUB)} 所｜民办 {len(schools) - len(PUB)} 所不参与排名')
+
+
+
 print(f'学校 {len(schools)} 所｜分数线 {len(S)} 格｜名额 {len(Q)} 格')
 
 # 归并自检：旧名不得残留、规范名必须在、陷阱 8 高风险校不得被合并掉
@@ -123,7 +134,8 @@ def group_mean(c, y, codes, chain):
 
 
 def year_stats(mm, y):
-    vals = {c: mm[(c, y)] for c in schools if (c, y) in mm}
+    # 排名池只含公办（民办保留 mean 供披露，但无分位/位次）
+    vals = {c: mm[(c, y)] for c in PUB if (c, y) in mm}
     xs = sorted(vals.values())
     n = len(xs)
     if n < 2:
@@ -154,7 +166,7 @@ for g, codes in GROUPS.items():
         YEAR_MEAN[(g, chain)] = mm
         rk = {}
         for y in YEARS:
-            vals = {c: mm[(c, y)] for c in schools if (c, y) in mm}
+            vals = {c: mm[(c, y)] for c in PUB if (c, y) in mm}
             xs = list(vals.values())
             YEAR_N[(g, chain, y)] = len(xs)
             for c, v in vals.items():
@@ -207,12 +219,12 @@ print(f'row_type｜ranked {len(TABLE)}｜new_school {len(NEW)} {NEW}｜excluded_
 # rel 基准 = 当年「有数据全池」中位（嘉定既有口径；换用五年全勤池会使 rel 均名与 SEN 改变）
 rel = {}
 for y in YEARS:
-    vals = sorted(YEAR_MEAN[('all', 'wq')][(x, y)] for x in schools if (x, y) in YEAR_MEAN[('all', 'wq')])
+    vals = sorted(YEAR_MEAN[('all', 'wq')][(x, y)] for x in PUB if (x, y) in YEAR_MEAN[('all', 'wq')])
     med_y = st.median(vals)
     for x in schools:
         if (x, y) in YEAR_MEAN[('all', 'wq')]:
             rel[(x, y)] = YEAR_MEAN[('all', 'wq')][(x, y)] - med_y
-REL_POOL = {y: len([x for x in schools if (x, y) in YEAR_MEAN[('all', 'wq')]]) for y in YEARS}
+REL_POOL = {y: len([x for x in PUB if (x, y) in YEAR_MEAN[('all', 'wq')]]) for y in YEARS}
 REL_MED = {y: st.median(sorted(YEAR_MEAN[('all', 'wq')][(x, y)]
                                for x in schools if (x, y) in YEAR_MEAN[('all', 'wq')]))
            for y in YEARS}
@@ -354,7 +366,7 @@ wide_cols += ['quota3_avg', 'quota_all_avg',
 for g in ('all', 'head', 'tail', 'comb'):
     wide_cols += [f'P_wq_{g}', f'rank_P_wq_{g}', f'P_eq_{g}', f'rank_P_eq_{g}']
 wide_cols += ['Z_wq_comb', 'rank_Z_wq_comb', 'ZR_wq_comb', 'rank_ZR_wq_comb']
-for k in ('lin', 'exp', 'recent3'):
+for k in W_TIME:
     wide_cols += [f'P_{k}', f'rank_P_{k}']
 
 rows_out = []
@@ -389,18 +401,23 @@ for c in schools:
     qa = [sum(Q.get((c, h, y), 0) for h in ALL8) for y in cov]
     d['quota3_avg'] = num(st.fmean(q3), 4) if q3 else ''
     d['quota_all_avg'] = num(st.fmean(qa), 4)
-    mr = [YEAR_RANK[('all', 'wq')][(c, y)] for y in cov]
-    d['mean_rank_base3_wq_avg'] = num(st.fmean(mr), 4)
-    d['mean_rank_base3_wq_median'] = num(st.median(mr), 4)
+    # 民办不在排名池（YEAR_RANK 只含公办），逐年位次可能缺失 -> 跳过而非报错
+    mr = [YEAR_RANK[('all', 'wq')][(c, y)] for y in cov
+          if (c, y) in YEAR_RANK[('all', 'wq')]]
+    d['mean_rank_base3_wq_avg'] = num(st.fmean(mr), 4) if mr else ''
+    d['mean_rank_base3_wq_median'] = num(st.median(mr), 4) if mr else ''
     d['mean_rank_base3_wq_var'] = num(st.pvariance(mr), 4) if len(mr) > 1 else ''
-    d['mean_rank_base3_eq_avg'] = num(
-        st.fmean([YEAR_RANK[('all', 'eq')][(c, y)] for y in cov]) if cov else '', 4)
+    _eq = [YEAR_RANK[('all', 'eq')][(c, y)] for y in cov
+           if (c, y) in YEAR_RANK[('all', 'eq')]]
+    d['mean_rank_base3_eq_avg'] = num(st.fmean(_eq), 4) if _eq else ''
+    _lin = [(W_TIME['lin'][y], YEAR_RANK[('all', 'wq')][(c, y)]) for y in cov
+            if (c, y) in YEAR_RANK[('all', 'wq')]]
     d['mean_rank_base3_w_linear'] = num(
-        sum(W_TIME['lin'][y] * YEAR_RANK[('all', 'wq')][(c, y)] for y in cov)
-        / sum(W_TIME['lin'][y] for y in cov), 4)
+        sum(w * r for w, r in _lin) / sum(w for w, _ in _lin), 4) if _lin else ''
+    _exp = [(W_TIME['exp'][y], YEAR_RANK[('all', 'wq')][(c, y)]) for y in cov
+            if (c, y) in YEAR_RANK[('all', 'wq')]]
     d['mean_rank_base3_w_exp'] = num(
-        sum(W_TIME['exp'][y] * YEAR_RANK[('all', 'wq')][(c, y)] for y in cov)
-        / sum(W_TIME['exp'][y] for y in cov), 4)
+        sum(w * r for w, r in _exp) / sum(w for w, _ in _exp), 4) if _exp else ''
     d['P_wq'] = num(AGG['P'][('all', 'wq', c)], 6)
     d['rank_P_wq'] = RK[('all', 'wq')].get(c, '')
     d['P_eq'] = num(AGG['P'][('all', 'eq', c)], 6)
@@ -527,7 +544,8 @@ mcols = ['junior_high_school', 'junior_high_school_former_names', 'row_type', 'n
          'P_eq_head', 'rank_P_eq_head', 'P_eq_tail', 'rank_P_eq_tail',
          'shift_comb_wq_eq', 'Z_wq_comb', 'rank_Z_wq_comb',
          'ZR_wq_comb', 'rank_ZR_wq_comb',
-         'P_lin', 'rank_P_lin', 'P_exp', 'rank_P_exp', 'P_recent3', 'rank_P_recent3',
+         'P_lin', 'rank_P_lin', 'P_exp', 'rank_P_exp',
+         'P_recent3', 'rank_P_recent3', 'P_recent2', 'rank_P_recent2',
          'mean_rank_wq_avg', 'quota3_avg', 'quota_all_avg', 'SEN']
 
 
