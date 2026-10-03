@@ -25,7 +25,8 @@ cols = (['junior_high_school', 'ownership', 'in_pool5', 'in_pool3', 'historic',
         + [f'{v}_{y}' for y in YEARS for v in per]
         + ['quota_avg', 'P_wq', 'P_eq', 'Z_avg', 'ZR_avg', 'rel_avg', 'rel_first',
            'rel_last', 'delta_rel', 'SEN', 'sen_recent3', 'sen_ex2024', 'spearman',
-           'sen_z', 'trend_class', 'rank_P_wq', 'rank_P_eq', 'rank_Z', 'rank_Z_wq_comb',
+           'sen_z', 'trend_class', 'sen_abs', 'sen_2y', 'reversed_2y',
+           'P_2y', 'rank_P_2y', 'rank_P_wq', 'rank_P_eq', 'rank_Z', 'rank_Z_wq_comb',
            'rank_P_lin', 'rank_P_exp', 'rank_P_recent3', 'shift_wq_eq']
         + [f'rank_P_{y}' for y in YEARS] + [f'rank_P_eq_{y}' for y in YEARS])
 rows = []
@@ -62,6 +63,9 @@ for c in R['gov']:
             'SEN': num(R['SEN'][c], 4), 'sen_recent3': num(R['SEN_R3'][c], 4),
             'sen_ex2024': num(R['SEN_NO24'][c], 4), 'spearman': num(R['RHO'][c], 4),
             'sen_z': num(R['ZSEN'][c], 3), 'trend_class': R['CLS'][c],
+            'sen_abs': num(R['SEN_ABS'][c], 4), 'sen_2y': num(R['SEN_2Y'][c], 4),
+            'reversed_2y': R['REVERSED'][c],
+            'P_2y': num(R['P_2Y'][c]), 'rank_P_2y': R['RK_2Y'][c],
             'rank_P_wq': R['RK_WQ'][c], 'rank_P_eq': R['RK_EQ'][c],
             'rank_Z': R['RK_Z'][c], 'rank_Z_wq_comb': R['RK_ZR'][c],
             'rank_P_lin': R['RK_VAR']['lin'][c], 'rank_P_exp': R['RK_VAR']['exp'][c],
@@ -72,7 +76,8 @@ print('\n=== 交付物 ===')
 write('宽表-初中水平-黄浦区-2022-2026.csv', cols, rows)
 
 # ---------- 2) 排序表 ----------
-c2 = (['junior_high_school', 'rank_P_wq', 'P_wq', 'P_eq', 'Z_avg', 'SEN', 'trend_class']
+c2 = (['junior_high_school', 'rank_P_wq', 'P_wq', 'P_eq', 'Z_avg', 'SEN', 'trend_class',
+       'rank_P_2y', 'P_2y', 'shift_2y', 'reversed_2y']
       + [f'P_{y}' for y in YEARS] + [f'rank_P_{y}' for y in YEARS]
       + [f'quota_{y}' for y in YEARS])
 write('排序表-名额分配到校-黄浦区-2022-2026.csv', c2,
@@ -119,7 +124,8 @@ write('rank-加权敏感性-黄浦区-2022-2026.csv', c4, rows4)
 # ---------- 5) 趋势分析 ----------
 c5 = (['junior_high_school', 'n_years', 'rel_first', 'rel_last', 'delta_rel', 'rel_avg',
        'SEN', 'sen_z', 'trend_class', 'sen_recent3', 'sen_ex2024', 'spearman',
-       'structural_break_2024'] + [f'rel_{y}' for y in YEARS])
+       'sen_abs', 'sen_2y', 'reversed_2y', 'structural_break_2024']
+      + [f'rel_{y}' for y in YEARS])
 write('趋势分析-黄浦区-2022-2026.csv', c5,
       [{'junior_high_school': c, 'n_years': 5,
         'rel_first': num(R['REL'][(c, YEARS[0])], 3),
@@ -129,6 +135,8 @@ write('趋势分析-黄浦区-2022-2026.csv', c5,
         'SEN': num(R['SEN'][c], 4), 'sen_z': num(R['ZSEN'][c], 3),
         'trend_class': R['CLS'][c], 'sen_recent3': num(R['SEN_R3'][c], 4),
         'sen_ex2024': num(R['SEN_NO24'][c], 4), 'spearman': num(R['RHO'][c], 4),
+        'sen_abs': num(R['SEN_ABS'][c], 4), 'sen_2y': num(R['SEN_2Y'][c], 4),
+        'reversed_2y': R['REVERSED'][c],
         'structural_break_2024': int(c in BREAK_2024),
         **{f'rel_{y}': num(R['REL'][(c, y)], 3) for y in YEARS}}
        for c in sorted(P5, key=lambda c: R['RK_WQ'][c])])

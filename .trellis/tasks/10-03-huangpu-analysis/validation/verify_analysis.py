@@ -175,10 +175,10 @@ def main():
         ck('2.1 主表遗漏的校', miss, [])
         # 近3年 / 2026 两列为合并格式「名次（变化）」，须与宽表逐格一致
         import re as _re
-        bad_tc, bad_d3, bad_d26 = [], [], []
+        bad_tc, bad_d3, bad_d26, bad_d2y = [], [], [], []
         for l in rows:
             cs = [c.strip() for c in l.strip('|').split('|')]
-            if len(cs) != 13:
+            if len(cs) != 14:
                 bad_tc.append((cs[1], f'列数={len(cs)}'))
                 continue
             nm = cs[1]
@@ -187,8 +187,9 @@ def main():
                 continue
             w = Wd[hit[0]]
             r5 = int(w['rank_P_wq'])
-            for col, key, acc in ((cs[10], 'rank_P_recent3', bad_d3),
-                                  (cs[11], 'rank_P_2026', bad_d26)):
+            for col, key, acc in ((cs[10], 'rank_P_2y', bad_d2y),
+                                  (cs[11], 'rank_P_recent3', bad_d3),
+                                  (cs[12], 'rank_P_2026', bad_d26)):
                 m = _re.fullmatch(r'\*\*(\d+)\*\*（([+−-]?\d+)）', col)
                 if not m:
                     acc.append((nm, col, '格式'))
@@ -196,9 +197,10 @@ def main():
                 rk, d = int(m.group(1)), int(m.group(2).replace('−', '-'))
                 if rk != int(w[key]) or d != r5 - int(w[key]):
                     acc.append((nm, col, w[key], r5 - int(w[key])))
-        ck('主表列数 = 13（两列合并后）', bad_tc, [])
+        ck('主表列数 = 14', bad_tc, [])
         ck('近 3 年 名次与变化与宽表一致', bad_d3, [])
         ck('2026 名次与变化与宽表一致', bad_d26, [])
+        ck('近 2 年 名次与变化与宽表一致', bad_d2y, [])
         ck('2026 当年池与五年全勤池同一批学校',
            sorted(POOL_Y['2026']), sorted(P5))
         # 两套独立口径互证：近 3 年升幅前 3 应与 SEN「明显上升」组**完全重合**
@@ -208,6 +210,19 @@ def main():
         cls_up = {c for c in P5 if Wd[c]['trend_class'] == '明显上升'}
         ck('近 3 年升幅前 3 与 SEN「明显上升」组完全重合', len(set(up3) & cls_up), 3)
         ck('SEN「明显上升」组恰为 3 所', len(cls_up), 3)
+        # 卢湾案例：五年 −3.75（明显下降）但近两年 +7.72（已反转）——
+        # 该案例是「单看五年分类会误判当前状态」的标准反例，固定其数值
+        ck('卢湾 五年 SEN = −3.749', round(float(Wd['上海市卢湾中学']['SEN']), 3),
+           -3.749)
+        ck('卢湾 近两年 SEN = +7.72（已反转）',
+           round(float(Wd['上海市卢湾中学']['sen_2y']), 2), 7.72)
+        ck('卢湾 分类=明显下降 且 近两年=已反转',
+           [Wd['上海市卢湾中学']['trend_class'],
+            Wd['上海市卢湾中学']['reversed_2y']], ['明显下降', '已反转'])
+        ck('三所明显下降中仅市南近两年续降',
+           [c for c in P5 if Wd[c]['trend_class'] == '明显下降'
+            and Wd[c]['reversed_2y'] == '近两年续降'], ['上海市市南中学'])
+        ck('报告已说明卢湾案例', int('卢湾中学为什么' in t), 1)
 
     print('\n' + '=' * 62)
     print(f'总计 {N} 项检查，不通过 {len(FAILS)} 项')

@@ -165,7 +165,9 @@ def compute():
         s = sum(w for w, _ in pr)
         return sum(w * v for w, v in pr) / s if s else None
 
+    WT['2y'] = [0, 0, 0, 1, 1]
     P_wq = {c: agg(c, P, WT['wq']) for c in P5}
+    P_2Y = {c: agg(c, P, WT['2y']) for c in P5}
     P_eq = {c: agg(c, PEQ, WT['wq']) for c in P5}
     P_var = {v: {c: agg(c, P, w) for c in P5} for v, w in WT.items()}
 
@@ -176,8 +178,15 @@ def compute():
         for c in POOL_Y[y]:
             REL[(c, y)] = WQ[(c, y)] - MED[y]
     SEN, SEN_R3, SEN_NO24, RHO = {}, {}, {}, {}
+    # SEN_ABS：对**自身加权均分**的斜率（不去中位线），与 SEN 互补。
+    # SEN 测「相对当年池中位的领先幅度变化」，会同时包含
+    #   (a) 学校自身水平变化  与  (b) 当年池中位线的移动；
+    # SEN_ABS 只含 (a)。两口径不同向时，「明显下降/上升」标签不可直接采信。
+    SEN_ABS, SEN_ABS_R3 = {}, {}
     xs = [float(y) for y in YEARS]
     for c in P5:
+        SEN_ABS[c] = ols_slope(xs, [WQ[(c, y)] for y in YEARS])
+        SEN_ABS_R3[c] = ols_slope(xs[2:], [WQ[(c, y)] for y in YEARS[2:]])
         SEN[c] = ols_slope(xs, [REL[(c, y)] for y in YEARS])
         SEN_R3[c] = ols_slope(xs[2:], [REL[(c, y)] for y in YEARS[2:]])
         SEN_NO24[c] = ols_slope(xs[:3] + xs[4:],
@@ -186,8 +195,21 @@ def compute():
     mS = st.fmean([SEN[c] for c in P5])
     sS = st.pstdev([SEN[c] for c in P5]) or 1e-9
     ZSEN = {c: (SEN[c] - mS) / sS for c in P5}
+    # 注：曾尝试用 SEN_ABS（自身斜率）做「双口径分类」，但**数学上退化**：
+    # rel = wq − 中位，OLS 斜率对减去常数是平移，而 z 分数对平移不变
+    # → 两口径的 z 与分类必然完全相同，无法提供独立信息。
+    # 该口径的价值在于说明「降幅中多少来自中位线移动」，故只作为诊断列保留。
+    mA = st.fmean([SEN_ABS[c] for c in P5])
+    sA = st.pstdev([SEN_ABS[c] for c in P5]) or 1e-9
+    ZSEN_ABS = {c: (SEN_ABS[c] - mA) / sA for c in P5}
     CLS = {c: ('明显上升' if ZSEN[c] >= 1 else
                '明显下降' if ZSEN[c] <= -1 else '平稳') for c in P5}
+    # 窗口敏感性：五年尺度与近两年尺度方向是否一致（单一线性斜率无法描述「先降后升」）
+    SEN_2Y = {c: ols_slope(xs[3:], [REL[(c, y)] for y in YEARS[3:]]) for c in P5}
+    REVERSED = {c: ('已反转' if (SEN[c] < 0 < SEN_2Y[c]) else
+                    '近两年续降' if (SEN[c] < 0 and SEN_2Y[c] < 0) else
+                    '近两年续升' if (SEN[c] > 0 and SEN_2Y[c] > 0) else '方向未变')
+                for c in P5}
 
     RK_WQ = rkmap(P_wq, P5)
     RK_EQ = rkmap(P_eq, P5)
@@ -197,6 +219,7 @@ def compute():
     RK_Y = {y: rkmap({c: P[(c, y)] for c in POOL_Y[y]}, POOL_Y[y]) for y in YEARS}
     RK_Y_EQ = {y: rkmap({c: PEQ[(c, y)] for c in POOL_Y[y]}, POOL_Y[y]) for y in YEARS}
     RK_P3 = rkmap({c: agg(c, P, [1, 1, 1, 0, 0]) for c in P3}, P3)
+    RK_2Y = rkmap(P_2Y, P5)
 
     return dict(S=S, Q=Q, pairs=pairs, unpaired=unpaired, gov=gov,
                 POOL_Y=POOL_Y, UNP=UNP, P5=P5, P3=P3, HIST=HIST,
@@ -204,6 +227,9 @@ def compute():
                 P=P, PEQ=PEQ, Z=Z, ZR=ZR, MED=MED, REL=REL,
                 P_wq=P_wq, P_eq=P_eq, P_var=P_var,
                 SEN=SEN, SEN_R3=SEN_R3, SEN_NO24=SEN_NO24, RHO=RHO,
-                ZSEN=ZSEN, CLS=CLS, agg=agg,
+                SEN_ABS=SEN_ABS, SEN_ABS_R3=SEN_ABS_R3,
+                SEN_2Y=SEN_2Y, REVERSED=REVERSED,
+                ZSEN=ZSEN, ZSEN_ABS=ZSEN_ABS, CLS=CLS, agg=agg,
+                P_2Y=P_2Y, RK_2Y=RK_2Y,
                 RK_WQ=RK_WQ, RK_EQ=RK_EQ, RK_Z=RK_Z, RK_ZR=RK_ZR,
                 RK_VAR=RK_VAR, RK_Y=RK_Y, RK_Y_EQ=RK_Y_EQ, RK_P3=RK_P3)
