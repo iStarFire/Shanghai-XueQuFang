@@ -112,7 +112,18 @@ def md_to_html(md):
             t += [f'<th>{inline(c)}</th>' for c in head]
             t.append('</tr></thead><tbody>')
             for r in rows:
-                t.append('<tr>' + ''.join(f'<td>{inline(c)}</td>' for c in r) + '</tr>')
+                # 行级标记：首列以 `^` 开头 = 该行「未参与主排序」（新开办学校），
+                # 由报告正文驱动，页面据此高亮整行，避免手写 HTML 绕过生成链路。
+                cls = ''
+                cells = list(r)
+                # 标记可能出现在任意列（本项目用在「初中」列之后），故全行扫描
+                if any(c.startswith('^') or c.endswith('^') for c in cells):
+                    cls = ' class="row-disclosed"'
+                    cells = [(c[1:].strip() if c.startswith('^')
+                              else c[:-1].strip() if c.endswith('^') else c)
+                             for c in cells]
+                t.append(f'<tr{cls}>'
+                         + ''.join(f'<td>{inline(c)}</td>' for c in cells) + '</tr>')
             t.append('</tbody></table></div>')
             out.append(''.join(t))
             continue
@@ -197,12 +208,16 @@ CSS = """
   --accent:#1f6feb; --accent-soft:#eaf1fd; --warn:#b26a00; --warn-soft:#fff6e5;
   --ok:#1a7f37; --code-bg:#f0f2f5; --radius:10px;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  /* 未参与主排序的行（新开办学校）：浅色模式下暖黄底 + 橙色左条 */
+  --disclosed-bg:#fff8e6; --disclosed-bar:#e2a03f; --disclosed-fg:#6b5410;
 }
 @media (prefers-color-scheme:dark){
   :root{
     --bg:#12141a; --card:#1a1d24; --fg:#e6e8eb; --muted:#9aa4b2; --line:#2a2f38;
     --accent:#6ea8fe; --accent-soft:#1c2739; --warn:#e2a03f; --warn-soft:#2a2314;
     --ok:#5ec27b; --code-bg:#232830;
+    /* 未参与主排序的行（新开办学校）：深色模式下用暗底 + 亮色条 */
+    --disclosed-bg:#2b2412; --disclosed-bar:#e2a03f; --disclosed-fg:#f0d9a8;
   }
 }
 *{box-sizing:border-box}
@@ -249,6 +264,12 @@ th,td{padding:.55em .7em;text-align:left;border-bottom:1px solid var(--line);
 th{background:var(--code-bg);font-weight:650;position:sticky;top:0;z-index:1}
 tbody tr:last-child td{border-bottom:0}
 tbody tr:nth-child(even){background:color-mix(in srgb,var(--code-bg) 45%,transparent)}
+/* 未参与主排序的行（报告正文中以 ^ 标记）：底色 + 左侧色条。
+   放在 even 规则之后，用 !important 覆盖斑马纹，避免隔行底色把高亮冲掉。 */
+tbody tr.row-disclosed{background:var(--disclosed-bg)!important;
+  box-shadow:inset 3px 0 0 var(--disclosed-bar)}
+tbody tr.row-disclosed td{color:var(--disclosed-fg)}
+tbody tr.row-disclosed td:first-child{font-weight:600}
 td:first-child,th:first-child{position:sticky;left:0;background:var(--card);
       box-shadow:1px 0 0 var(--line);z-index:2;white-space:normal;min-width:8.5em}
 th:first-child{background:var(--code-bg);z-index:3}

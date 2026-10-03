@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/analysis/method-guidelines.md", "reason": "2.3 分析前必读：口径声明、事实与推断分离、小样本表述纪律、输出格式"}
+{"file": ".trellis/spec/data/field-conventions.md", "reason": "row_type 分类、空值不得写 0、rel 基准含民办、名额到校两条口径纪律"}
+{"file": ".trellis/spec/data/source-registry.md", "reason": "3 组别名与 ownership 修正须回写来源登记，2.1 的产物落点"}
+{"file": ".trellis/spec/guides/index.md", "reason": "跨领域思考指南索引，确认是否有适用于趋势/收敛分析与小样本推断的既有思考路径"}
+{"file": ".trellis/tasks/10-03-jiading-new-schools-recent3/prd.md", "reason": "四项研究问题、Q1-Q4 需求、事实 F1-F9、验收标准 A1-A22、2.2/2.4 门禁"}
+{"file": ".trellis/tasks/10-03-jiading-new-schools-recent3/design.md", "reason": "Q2 固定样本与 6 指标、Q3 预注册分类规则与检验力限制、Q4 选择标准、报告重组、局限 11 条"}

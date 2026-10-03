@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/quality/data-validation.md", "reason": "2.2 门禁判定依据：七个维度逐项检查与证据格式，含回源抽查与内部一致性要求"}
+{"file": ".trellis/spec/analysis/conclusion-verification.md", "reason": "2.4 门禁判定依据：九个维度、反向证据、门禁规则与诚实性要求"}
+{"file": ".trellis/tasks/10-03-jiading-new-schools-recent3/prd.md", "reason": "验收标准 A1-A22 与 2.2/2.4 门禁清单；Q2/Q3/Q4 各有独立验收项"}
+{"file": ".trellis/tasks/10-03-jiading-new-schools-recent3/design.md", "reason": "Q3 预注册分类规则与检验力限制、Q2 结论三分判定、回滚中止条件，用于验证判定是否合规"}

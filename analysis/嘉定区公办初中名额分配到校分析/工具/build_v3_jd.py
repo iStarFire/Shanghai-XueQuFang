@@ -69,17 +69,44 @@ plan_rows = (load('名额到校计划-嘉定区-2023-2026.csv')
              + load('名额到校计划-嘉定区-2022-图片转录.csv'))
 roster = {r['junior_high_school']: r for r in load('初中名录-公办民办-嘉定区-2026.csv')}
 
+# ---- 同校改名归并（旧名 -> 规范名），在**读取阶段**映射 ----
+# 依据 .trellis/spec/quality/data-validation.md 陷阱 7：同一实体跨年只占一行，
+# 显示名取最新年份写法，历年写法另记 former_names 列。
+# 三组归并的证据链与「无编号可核」的限制见 design.md 2.1-2.3；
+# 名录侧的同步归并由 build_roster_jd.py 完成（缺它会导致 ownership 静默变空）。
+ALIAS = {
+    '上海市嘉定区德富路中学': '交大附中附属嘉定德富中学',
+    '上海市嘉定区杨柳初级中学': '上海市嘉定区嘉二实验学校',
+    '上海嘉定区世界外国语学校': '上海嘉定区世外学校',
+}
+# 陷阱 8 高风险对：名称相似但确为两所不同学校，禁止合并
+MUST_KEEP_SEPARATE = ('上海外国语大学嘉定外国语学校', '上海嘉定区世外学校')
+
+
+def CANON(n):
+    return ALIAS.get(n, n)
+
+
 S, Q, CODE = {}, {}, {}
 for r in score_rows:
+    c = CANON(r['junior_high_school'])
     v = F(r['min_score'])
     if v is not None:
-        S[(r['junior_high_school'], r['senior_high_school_code'], int(r['year']))] = v
-    CODE.setdefault(r['junior_high_school'], r['junior_high_school_code'])
+        S[(c, r['senior_high_school_code'], int(r['year']))] = v
+    CODE.setdefault(c, r['junior_high_school_code'])
 for r in plan_rows:
-    Q[(r['junior_high_school'], r['senior_high_school_code'], int(r['year']))] = int(r['quota'])
-    CODE.setdefault(r['junior_high_school'], r.get('junior_high_school_code', ''))
+    c = CANON(r['junior_high_school'])
+    Q[(c, r['senior_high_school_code'], int(r['year']))] = int(r['quota'])
+    CODE.setdefault(c, r.get('junior_high_school_code', ''))
 schools = sorted({k[0] for k in S} | {k[0] for k in Q})
 print(f'学校 {len(schools)} 所｜分数线 {len(S)} 格｜名额 {len(Q)} 格')
+
+# 归并自检：旧名不得残留、规范名必须在、陷阱 8 高风险校不得被合并掉
+assert not (set(schools) & set(ALIAS)), f'旧名残留：{set(schools) & set(ALIAS)}'
+for _n in MUST_KEEP_SEPARATE:
+    assert _n in schools, f'陷阱 8：{_n} 缺失'
+_missing = [c for c in schools if c not in roster]
+assert not _missing, f'名录缺 {len(_missing)} 所（名录未同步归并？）：{_missing[:5]}'
 
 
 def group_mean(c, y, codes, chain):
@@ -152,7 +179,29 @@ COV = lambda c: len([y for y in YEARS if (c, y) in YEAR_MEAN[('all', 'wq')]])
 RANKED = [c for c in schools if COV(c) == 5]
 FOUR_YEAR = [c for c in schools if COV(c) == 4]
 TABLE = RANKED + FOUR_YEAR
+
+# ---- row_type：区分「入榜排序 / 新开办缺历史数据 / 民办排除」三类 ----
+# 顺序按 design 3.2：民办优先（民办校多为老校首次获得名额资格，并非新办，
+# 见 build_roster_jd.py 核实记录），故不能靠年份判定民办。
+def row_type(c):
+    if roster.get(c, {}).get('ownership') == '民办':
+        return 'excluded_private'
+    return 'ranked' if c in TABLE else 'new_school'
+
+
+ROW_TYPE = {c: row_type(c) for c in schools}
+NEW = [c for c in schools if ROW_TYPE[c] == 'new_school']
+PRIV = [c for c in schools if ROW_TYPE[c] == 'excluded_private']
+
+# 自检：new_school 必须是「有历史数据缺口且延续至今」的公办校
+for c in NEW:
+    sy = roster.get(c, {}).get('score_years', '').split(';')
+    assert '2026' in sy, f'{c} 不延续至今，不能归为新开办'
+    assert roster.get(c, {}).get('ownership') == '公办', f'{c} 办学性质异常'
+assert len(PRIV) == 8, f'民办应为 8 所，实际 {len(PRIV)}'
+assert len(schools) == 40, f'归并后全区应 40 所，实际 {len(schools)}'
 print(f'五年全勤 {len(RANKED)}｜恰好 4 年 {len(FOUR_YEAR)} {FOUR_YEAR}｜入榜 {len(TABLE)}')
+print(f'row_type｜ranked {len(TABLE)}｜new_school {len(NEW)} {NEW}｜excluded_private {len(PRIV)}')
 
 # ---------- 趋势链（加权主口径） ----------
 # rel 基准 = 当年「有数据全池」中位（嘉定既有口径；换用五年全勤池会使 rel 均名与 SEN 改变）
@@ -280,7 +329,8 @@ for k in W_TIME:
     RK[(k, 'wq')] = ranks_of(lambda c, k=k: AGG['P'][(k, 'wq', c)])
 
 # ---------- 输出 1：宽表 ----------
-wide_cols = ['junior_high_school', 'junior_high_school_code', 'ownership',
+wide_cols = ['junior_high_school', 'junior_high_school_former_names',
+             'junior_high_school_code', 'ownership', 'row_type',
              'years_included', 'years_list', 'ranked']
 for s, c, _, _ in HS:
     for y in YEARS:
@@ -291,7 +341,7 @@ for s, c, _, _ in HS:
 for y in YEARS:
     wide_cols += [f'mean_score_base3_eq_{y}', f'mean_score_base3_wq_{y}',
                   f'rank_base3_eq_{y}', f'rank_base3_wq_{y}',
-                  f'valid_pairs_{y}', f'quota3_{y}',
+                  f'valid_pairs_{y}', f'quota3_{y}', f'rel_{y}',
                   f'P_eq_{y}', f'P_wq_{y}', f'Z_eq_{y}', f'Z_wq_{y}',
                   f'ZR_eq_{y}', f'ZR_wq_{y}']
 wide_cols += ['quota3_avg', 'quota_all_avg',
@@ -310,8 +360,12 @@ for k in ('lin', 'exp', 'recent3'):
 rows_out = []
 for c in schools:
     cov = [y for y in YEARS if (c, y) in YEAR_MEAN[('all', 'wq')]]
-    d = {'junior_high_school': c, 'junior_high_school_code': CODE.get(c, ''),
+    d = {'junior_high_school': c,
+         'junior_high_school_former_names': roster.get(c, {}).get(
+             'junior_high_school_former_names', ''),
+         'junior_high_school_code': CODE.get(c, ''),
          'ownership': roster.get(c, {}).get('ownership', ''),
+         'row_type': ROW_TYPE[c],
          'years_included': len(cov), 'years_list': ';'.join(str(y) for y in cov),
          'ranked': 1 if c in TABLE else 0}
     for s, code, _, _ in HS:
@@ -325,6 +379,7 @@ for c in schools:
         d[f'rank_base3_wq_{y}'] = num(YEAR_RANK[('all', 'wq')].get((c, y)), 2)
         d[f'valid_pairs_{y}'] = sum(1 for h in QU3 if (c, h, y) in S)
         d[f'quota3_{y}'] = sum(Q.get((c, h, y), 0) for h in QU3)
+        d[f'rel_{y}'] = num(rel.get((c, y)), 4)
         for chain in ('eq', 'wq'):
             t = YEAR_PZR[('all', chain)].get((c, y))
             d[f'P_{chain}_{y}'] = num(t[0], 6) if t else ''
@@ -372,6 +427,32 @@ for c in schools:
         d[f'rank_P_{k}'] = RK[(k, 'wq')].get(c, '')
     rows_out.append(d)
 
+# ---- 空值语义：未参与主排序的学校，其「多年聚合」列一律留空 ----
+# 依据 design 3.5 与 spec/data/field-conventions.md「缺失值不得用 0 代替」。
+# 逐年诊断列（score_/quota_/mean_score_base3_/rank_base3_/quota3_/P_/Z_/ZR_ 逐年）
+# **必须保留**——新开办学校的单年位次与均分正是 R3 要披露的内容。
+AGG_COLS = ['quota3_avg', 'quota_all_avg', 'rel_avg', 'SEN', 'shift_wq_eq',
+            'mean_rank_base3_wq_avg', 'mean_rank_base3_wq_median',
+            'mean_rank_base3_wq_var', 'mean_rank_base3_eq_avg',
+            'mean_rank_base3_w_linear', 'mean_rank_base3_w_exp',
+            'P_wq', 'rank_P_wq', 'P_eq', 'rank_P_eq',
+            'Z_wq', 'rank_Z_wq', 'ZR_wq', 'rank_ZR_wq']
+for _p in ('P_wq', 'P_eq'):
+    AGG_COLS += [f'{_p}_{g}' for g in ('all', 'head', 'tail', 'comb')]
+AGG_COLS += ['Z_wq_comb', 'rank_Z_wq_comb', 'ZR_wq_comb', 'rank_ZR_wq_comb']
+AGG_COLS += [x for k in W_TIME for x in (f'P_{k}', f'rank_P_{k}')]
+
+_n_blank = 0
+for _d in rows_out:
+    if _d['row_type'] == 'ranked':
+        continue
+    for _col in AGG_COLS:
+        if _d.get(_col) not in ('', None):
+            _d[_col] = ''
+            _n_blank += 1
+print(f'空值语义：{len(schools) - len(TABLE)} 所非入榜学校共清空 {_n_blank} 个多年聚合格'
+      f'（逐年诊断列保留）')
+
 with open(f'{D_A}/宽表-初中水平-嘉定区-2022-2026.csv', 'w', newline='', encoding='utf-8-sig') as f:
     w = csv.DictWriter(f, fieldnames=wide_cols)
     w.writeheader()
@@ -389,19 +470,21 @@ tcols = (['junior_high_school', 'n_years', 'rel_first', 'rel_last', 'delta_rel',
 with open(f'{D_A}/趋势分析-嘉定区-2022-2026.csv', 'w', newline='', encoding='utf-8-sig') as f:
     w = csv.DictWriter(f, fieldnames=tcols)
     w.writeheader()
-    for c in sorted(RANKED, key=lambda c: RK[('all', 'wq')][c]):
+    for c in sorted(TABLE, key=lambda c: RK[('all', 'wq')][c]):
         t = trend[c]
         zs = [CONV_B[(c, y)]['z'] for y in YEARS[1:] if (c, y) in CONV_B]
-        row = {'junior_high_school': c, 'n_years': 5,
+        # convA/convB 只在 RANKED（五年全勤样本）上回归，4 年校这些列留空
+        row = {'junior_high_school': c, 'n_years': COV(c),
                'rel_first': num(t['rel_first'], 3), 'rel_last': num(t['rel_last'], 3),
                'delta_rel': num(t['delta_rel'], 3), 'sen': num(t['sen'], 4),
                'sen_ols': num(t['sen_ols'], 4), 'spearman': num(t['spearman'], 4),
                'sen_recent3': num(t['sen_recent3'], 4),
                'convB_zmax': num(max(zs, key=abs), 3) if zs else '',
                'convB_beyond_n': sum(1 for z in zs if abs(z) >= 1),
-               'convA_pred': num(t['convergence_pred'], 3),
-               'convA_resid': num(t['residual'], 3), 'convA_resid_z': num(t['residual_z'], 3),
-               'convA_beyond': t['beyond_convergence']}
+               'convA_pred': num(t.get('convergence_pred'), 3),
+               'convA_resid': num(t.get('residual'), 3),
+               'convA_resid_z': num(t.get('residual_z'), 3),
+               'convA_beyond': t.get('beyond_convergence', '')}
         for y in YEARS[1:]:
             cb = CONV_B.get((c, y))
             row[f'convB_b_{y}'] = num(cb['b'], 4) if cb else ''
@@ -411,7 +494,8 @@ with open(f'{D_A}/趋势分析-嘉定区-2022-2026.csv', 'w', newline='', encodi
 
 # ---------- 输出 3：rank-标准化 ----------
 by_name = {d['junior_high_school']: d for d in rows_out}
-rcols = ['junior_high_school', 'junior_high_school_code', 'ownership', 'n_years', 'ranked',
+rcols = ['junior_high_school', 'junior_high_school_former_names',
+         'junior_high_school_code', 'ownership', 'row_type', 'n_years', 'ranked',
          'P_wq', 'rank_P_wq', 'P_eq', 'rank_P_eq', 'shift_wq_eq',
          'Z_wq', 'rank_Z_wq', 'ZR_wq', 'rank_ZR_wq', 'Z_eq', 'ZR_eq',
          'mean_rank_wq_avg', 'mean_rank_eq_avg', 'rel_avg', 'SEN']
@@ -420,20 +504,23 @@ with open(f'{D_A}/rank-标准化-嘉定区-2022-2026.csv', 'w', newline='', enco
     w.writeheader()
     for c in schools:
         d = by_name[c]
-        w.writerow({'junior_high_school': c, 'junior_high_school_code': d['junior_high_school_code'],
-                    'ownership': d['ownership'], 'n_years': d['years_included'],
+        w.writerow({'junior_high_school': c,
+                    'junior_high_school_former_names': d['junior_high_school_former_names'],
+                    'junior_high_school_code': d['junior_high_school_code'],
+                    'ownership': d['ownership'], 'row_type': d['row_type'],
+                    'n_years': d['years_included'],
                     'ranked': d['ranked'], 'P_wq': d['P_wq'], 'rank_P_wq': d['rank_P_wq'],
                     'P_eq': d['P_eq'], 'rank_P_eq': d['rank_P_eq'],
                     'shift_wq_eq': d['shift_wq_eq'], 'Z_wq': d['Z_wq'], 'ZR_wq': d['ZR_wq'],
                     'rank_Z_wq': d['rank_Z_wq'], 'rank_ZR_wq': d['rank_ZR_wq'],
-                    'Z_eq': num(AGG['Z'][('all', 'eq', c)], 4),
-                    'ZR_eq': num(AGG['ZR'][('all', 'eq', c)], 4),
+                    'Z_eq': '' if d['row_type'] != 'ranked' else num(AGG['Z'][('all', 'eq', c)], 4),
+                    'ZR_eq': '' if d['row_type'] != 'ranked' else num(AGG['ZR'][('all', 'eq', c)], 4),
                     'mean_rank_wq_avg': d['mean_rank_base3_wq_avg'],
                     'mean_rank_eq_avg': d['mean_rank_base3_eq_avg'],
                     'rel_avg': d['rel_avg'], 'SEN': d['SEN']})
 
-# ---------- 输出 4：rank-多口径总表 ----------
-mcols = ['junior_high_school', 'n_years',
+# ---------- 输出 4：rank-多口径总表（入榜 28 所 + 新开办 4 所 = 32 行） ----------
+mcols = ['junior_high_school', 'junior_high_school_former_names', 'row_type', 'n_years',
          'P_wq_comb', 'rank_P_wq_comb', 'P_wq_all', 'rank_P_wq_all',
          'P_wq_head', 'rank_P_wq_head', 'P_wq_tail', 'rank_P_wq_tail',
          'P_eq_comb', 'rank_P_eq_comb', 'P_eq_all', 'rank_P_eq_all',
@@ -442,15 +529,26 @@ mcols = ['junior_high_school', 'n_years',
          'ZR_wq_comb', 'rank_ZR_wq_comb',
          'P_lin', 'rank_P_lin', 'P_exp', 'rank_P_exp', 'P_recent3', 'rank_P_recent3',
          'mean_rank_wq_avg', 'quota3_avg', 'quota_all_avg', 'SEN']
+
+
+def _mkey(d):
+    """入榜学校按 rank_P_wq_comb 升序在前，新开办学校统一排在后面。"""
+    r = d.get('rank_P_wq_comb')
+    return (0 if d['row_type'] == 'ranked' else 1,
+            r if r not in ('', None) else 999)
+
+
 with open(f'{D_A}/rank-多口径总表-嘉定区-2022-2026.csv', 'w', newline='', encoding='utf-8-sig') as f:
     w = csv.DictWriter(f, fieldnames=mcols)
     w.writeheader()
-    for d in sorted([r for r in rows_out if r['junior_high_school'] in TABLE],
-                    key=lambda d: d['rank_P_wq_comb']):
-        d['shift_comb_wq_eq'] = (RK[('comb', 'eq')][d['junior_high_school']]
-                                 - d['rank_P_wq_comb'])
+    for d in sorted([r for r in rows_out
+                     if r['row_type'] in ('ranked', 'new_school')], key=_mkey):
+        if d['row_type'] == 'ranked':
+            d['shift_comb_wq_eq'] = (RK[('comb', 'eq')][d['junior_high_school']]
+                                     - d['rank_P_wq_comb'])
         d['n_years'] = d['years_included']
         w.writerow({k: d.get(k, '') for k in mcols})
+print(f'总表 {len(TABLE) + len(NEW)} 行（入榜 {len(TABLE)} + 新开办 {len(NEW)}）')
 
 # ---------- 输出 5：rank-加权敏感性 ----------
 scols = ['junior_high_school', 'n_years', 'P_wq', 'P_lin', 'P_exp', 'P_recent3',
