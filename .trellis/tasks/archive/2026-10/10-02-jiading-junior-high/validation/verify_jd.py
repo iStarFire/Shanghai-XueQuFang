@@ -5,8 +5,8 @@ import os
 import re
 import statistics as st
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))))))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))))
 D = f'{ROOT}/data/嘉定区/学校'
 A = f'{ROOT}/analysis/嘉定区公办初中名额分配到校分析'
 YEARS = [2022, 2023, 2024, 2025, 2026]
@@ -176,6 +176,17 @@ for i in (1, 2, 3, 4, 5, 8, 10, 14, 20, 28):
     s = next(k for k in rk if k.replace('上海市嘉定区', '').replace('上海市', '') == nm)
     ck(f'  第{i}行 P', p, round(float(rk[s]['P_wq']), 3), tol=0.0015)
     ck(f'  第{i}行 名额', q, float(rk[s]['quota_avg']), tol=0.06)
+
+
+print('\n=== [9] 报告独立性：不得含跨区对照 ===')
+BAN = ['普陀', '徐汇', '黄浦', '浦东', '闵行', '静安', '长宁', '杨浦', '虹口', '其他区', '异地']
+rep_txt = open(f'{A}/分析报告.md', encoding='utf-8').read()
+bad = [(k, rep_txt.count(k)) for k in BAN if k in rep_txt]
+ck('报告中跨区引用', bad, [])
+ck('报告行数', rep_txt.count('\n') + 1, 379, tol=0)
+ck('委属线排除理由已本地化', '100% 是「1 个名额」' in rep_txt and '−0.060' in rep_txt, True)
+ck('含第 6 章「证据强度/反向证据/替代解释」', '## 6 结论的证据强度、反向证据与替代解释' in rep_txt, True)
+ck('含不可回答问题清单', '不可由本报告回答的问题' in rep_txt, True)
 
 print('\n' + '=' * 60)
 print(f'总计 {n} 项检查，不通过 {len(fails)} 项')
