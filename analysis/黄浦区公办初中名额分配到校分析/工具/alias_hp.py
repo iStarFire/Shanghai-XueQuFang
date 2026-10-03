@@ -58,16 +58,47 @@ JUNIOR_ALIAS = {
 JUNIOR_CANON = sorted(set(JUNIOR_ALIAS.values()), key=len, reverse=True)
 
 
+# 各年计划 PDF 的简称并不统一，且**不是**全称的子串（如「市十中」vs「上海市第十中学」），
+# 故对无法用规则匹配的这几个写死。
+EXTRA_VARIANTS = {
+    '市十中': '上海市第十中学', '市八中': '上海市市八初级中学',
+    '市八初级': '上海市市八初级中学', '市南': '上海市市南中学',
+    '市八': '上海市市八初级中学', '中山': '上海市黄浦区教育学院附属中山学校',
+    '尚文': '上海市尚文中学', '卢湾': '上海市卢湾中学',
+    '清华': '上海市清华中学', '金陵': '上海市金陵中学',
+    '格致': '上海市格致初级中学', '大同': '上海市大同初级中学',
+    '向明': '上海市向明初级中学', '大境': '上海外国语大学附属大境初级中学',
+    '光明': '上海市光明初级中学', '敬业': '上海市敬业初级中学',
+    '储能': '上海理工大学附属储能中学', '比乐': '上海音乐学院附属黄浦比乐中学',
+    '黄浦学校': '上海市黄浦学校', '实验': '上海交通大学附属黄浦实验中学',
+}
+
+
 def canon_junior(name):
-    """把计划表里的各种简称/截断写法归一到分数线表全称；无法归一时原样返回。"""
+    """把计划表里的各种简称/截断写法归一到分数线表全称；无法归一时原样返回。
+
+    三级匹配：① 精确别名 ② **子串唯一**匹配（如「储能中」⊂「上海理工大学附属储能中学」）
+    ③ 写死的补充变体（「市十中」这类非子串写法）。**不用前缀匹配**——「上理储能」不是
+    「上海理工大学附属储能中学」的前缀，前缀匹配会漏。
+    """
     if not name:
         return name
     if name in JUNIOR_ALIAS:
         return JUNIOR_ALIAS[name]
-    for f in JUNIOR_CANON:
-        if f.startswith(name):
-            return f
-    return name
+    hit = [f for f in JUNIOR_CANON if name in f]
+    if len(hit) == 1:
+        return hit[0]
+    if len(hit) > 1:                      # 多个候选时取被包含位置最靠后的（更具体）
+        return max(hit, key=lambda f: (f.find(name), len(f)))
+    # ④ 子序列唯一匹配：简称的字按顺序出现在某个全称中（如「上理储能」⊂
+    # 「上海理工大学附属储能中学」，但不是连续子串）。要求候选唯一，避免误配。
+    def subseq(short, full):
+        it = iter(full)
+        return all(ch in it for ch in short)
+    cand = [f for f in JUNIOR_CANON if len(name) >= 3 and subseq(name, f)]
+    if len(cand) == 1:
+        return cand[0]
+    return EXTRA_VARIANTS.get(name, name)
 
 
 JUNIOR_BY_NAME = {v: k for k, v in JUNIOR_ALIAS.items()}
