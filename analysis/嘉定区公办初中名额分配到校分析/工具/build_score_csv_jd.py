@@ -15,6 +15,7 @@ D = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))), 'data', '嘉定区', '学校')
 YEARS = [2022, 2023, 2024, 2025, 2026]
 QUARTER = {'142001', '142002', '142004'}
+
 HS_CANON = {
     '上海市嘉定区第一中学': ('142001', '区属'),
     '上海交通大学附属中学嘉定分校': ('142002', '区属'),
@@ -31,14 +32,51 @@ def cl(s):
     return re.sub(r'\s+', '', s)
 
 
-def canon_hs(s):
-    s = cl(s)
+# 计划表：用于「委属本部 vs 区属分校」消歧（碎片截断时仅凭文字无法区分）
+PLAN_QUOTA = {}
+_pq = os.path.join(D, '名额到校计划-嘉定区-2023-2026.csv')
+_pq2 = os.path.join(D, '名额到校计划-嘉定区-2022-图片转录.csv')
+for _p in (_pq, _pq2):
+    if os.path.exists(_p):
+        with open(_p, encoding='utf-8-sig') as _f:
+            for _r in csv.DictReader(_f):
+                PLAN_QUOTA.setdefault((int(_r['year']), _r['junior_high_school']), set()).add(
+                    _r['senior_high_school_code'])
+# 截断对：短名 -> 长名（仅长名侧为区属线时才算歧义）
+TRUNC_PAIRS = [('上海师范大学附属中学', '上海师范大学附属中学嘉定新城分校'),
+               ('上海交通大学附属中学', '上海交通大学附属中学嘉定分校')]
+CODE2NAME = {v[0]: k for k, v in HS_CANON.items()}
+
+
+def canon_hs(s, year=None, sch=None):
+    s = _denoise(cl(s))
+    # 先做「本部 / 分校」消歧：短名恰好命中委属线时，须再看当年该校区属线是否有名额
+    if year and sch:
+        q = PLAN_QUOTA.get((year, sch), set())
+        for short, lng in TRUNC_PAIRS:
+            if short in s:
+                c_short = next(c for c, n in CODE2NAME.items() if n == short)
+                c_long = next(c for c, n in CODE2NAME.items() if n == lng)
+                if c_long in q and c_short not in q:
+                    return c_long, '区属', lng
     if s in HS_CANON:
         return HS_CANON[s][0], HS_CANON[s][1], s
     hit = [k for k in HS_CANON if k in s or s in k]
     if hit:
         k = max(hit, key=len)
         return HS_CANON[k][0], HS_CANON[k][1], k
+    # 名称被截断（如「上海师范大学附属中学」实为「…嘉定新城分校」）：
+    # 若该校当年在区属线有名额而委属线没有 → 判为区属线
+    if year and sch:
+        q = PLAN_QUOTA.get((year, sch), set())
+        for short, lng in TRUNC_PAIRS:
+            if short in s:
+                c_short = next(c for c, n in CODE2NAME.items() if n == short)
+                c_long = next(c for c, n in CODE2NAME.items() if n == lng)
+                if c_long in q and c_short not in q:
+                    return c_long, '区属', lng
+                if c_short in q:
+                    return c_short, HS_CANON[c_short][1], short
     return None, None, s
 
 
@@ -47,6 +85,15 @@ def num(t):
         return float(t)
     except ValueError:
         return None
+
+
+NOISE = ('上海市教育考试院', '教育考试院')
+
+
+def _denoise(t):
+    for n in NOISE:
+        t = t.replace(n, '')
+    return t
 
 
 def load_junior_canon():
@@ -65,6 +112,7 @@ JUNIOR_CANON = load_junior_canon()
 
 
 def match_junior(blob):
+    blob = _denoise(blob)          # 仅移除页脚「上海市教育考试院」，不动校名用字
     hit = [n for n in JUNIOR_CANON if n in blob]
     if hit:
         return max(hit, key=len)
@@ -95,7 +143,9 @@ for y in YEARS:
     # 列窗口由表头 x 推导（表头与数据左对齐，但偏移固定）：
     #   初中名 x < xs-220 < 招生学校名 x < xs-40 < 录取最低分 x ≈ xs
     assert None not in (xj, xl, xs), f'{y} 表头定位失败'
-    jhi, hlo, hhi = xs - 220, xs - 220, xs - 40
+    # 2023 版式校名续段在 x=70（初中列），故窗口取 xs-200（2023→88 / 2025→100），
+    # 仍小于招生学校列起点（128~211），两列不串。
+    jhi, hlo, hhi = xs - 200, xs - 220, xs - 40
 
     n_anchor = n_bad = 0
     bad_rows = []
@@ -107,11 +157,15 @@ for y in YEARS:
         ks = sorted(b)
         yof = {k: min(w[1] for w in b[k]) for k in b}
 
+        def col_same(k, lo, hi):
+            return [cl(w[4]) for w in sorted(b[k], key=lambda w: w[0])
+                    if lo <= w[0] <= hi and re.search(r'[\u4e00-\u9fff]', w[4])]
+
         def win(y0, lo, hi):
             """分数锚点 ±12px 窗口内、指定列区间的中文 token（页眉页脚噪声由规范名匹配过滤）。"""
             out = []
             for k in b:
-                if abs(yof[k] - y0) > 12:
+                if abs(yof[k] - y0) > 7:
                     continue
                 for w in sorted(b[k], key=lambda w: w[0]):
                     if lo <= w[0] <= hi and re.search(r'[\u4e00-\u9fff]', w[4]):
@@ -127,11 +181,15 @@ for y in YEARS:
             if sc is None:
                 continue
             n_anchor += 1
-            jr = match_junior(''.join(win(y0, 0, jhi)))
-            code, tier, hname = canon_hs(''.join(win(y0, hlo, hhi)))
-            if code is None:                      # 同页宽窗重试一次
-                code, tier, hname = canon_hs(''.join(win(y0 + 8, hlo, hhi))
-                                            + ''.join(win(y0, hlo, hhi)))
+            if True:
+                jblob = ''.join(win(y0, 0, jhi))
+                jr = match_junior(jblob)
+                # 少数行 PDF 把「初中名 + 招生名」合并为单 token → 用初中名剩余部分兜底
+                leftover = jblob.replace(jr, '', 1) if jr else ''
+                code, tier, hname = canon_hs(leftover + ''.join(win(y0, hlo, hhi)), y, jr)
+                if code is None:
+                    code, tier, hname = canon_hs(''.join(win(y0 + 8, hlo, hhi))
+                                                + leftover + ''.join(win(y0, hlo, hhi)))
             if not jr:
                 jr = last_jr                      # 同页最近一次有效初中名（校名写在分数线上一行）
             elif code is not None:
@@ -140,10 +198,69 @@ for y in YEARS:
                 n_bad += 1
                 bad_rows.append((pno, jr, win(y0, hlo, hhi), sc))
                 continue
-            rows.append([y, '嘉定区', jr, None, hname, code, tier, sc, 750.0,
+            rows.append([y, '嘉定区', jr, None, hname, code, tier, sc, 800.0,
                          f'【嘉定】【{y}】名额到校最低分数线.pdf', pno])
     doc.close()
     diag[y] = (n_anchor, n_bad, bad_rows)
+
+# ---- 定向修复：计划中有名额但抽取未覆盖的 (校, 线)，回原 PDF 逐页定位 ----
+plan_path = os.path.join(D, '名额到校计划-嘉定区-2023-2026.csv')
+plan_pairs = {}
+if os.path.exists(plan_path):
+    with open(plan_path, encoding='utf-8-sig') as f:
+        for r in csv.DictReader(f):
+            plan_pairs[(int(r['year']), r['junior_high_school'], r['senior_high_school_code'])] = r['senior_high_school']
+have = {(r[0], r[2], r[5]) for r in rows}
+missing = [k for k in plan_pairs if k not in have]
+print(f'定向修复：计划有名额但未覆盖 {len(missing)} 对')
+for y in YEARS:
+    src = [k for k in missing if k[0] == y]
+    if not src:
+        continue
+    path = os.path.join(D, f'【嘉定】【{y}】名额到校最低分数线.pdf')
+    doc = fitz.open(path)
+    xs = None
+    for pg in doc:
+        for w in pg.get_text('words'):
+            if w[4] == '录取最低分':
+                xs = w[0]
+    buckets = {}
+    for pno, pg in enumerate(doc, 1):
+        for w in pg.get_text('words'):
+            buckets.setdefault((pno, round(w[1] / 3.0)), []).append(w)
+    yof = {}
+    for (pno, k), ws in buckets.items():
+        yof[(pno, k)] = min(w[1] for w in ws)
+    def near(pno, y0, lo, hi, tol=7):
+        out = []
+        for (p2, k) in buckets:
+            if p2 != pno or abs(yof[(p2, k)] - y0) > tol:
+                continue
+            out += [cl(w[4]) for w in sorted(buckets[(p2, k)], key=lambda w: w[0])
+                    if lo <= w[0] <= hi and re.search(r'[\u4e00-\u9fff]', w[4])]
+        return out
+    for (yy, sch, code) in src:
+        hname = NAME_BY_CODE.get(code, '')
+        hit = None
+        for (pno, k) in sorted(buckets, key=lambda t: (t[0], yof[t])):
+            ws = sorted(buckets[(pno, k)], key=lambda w: w[0])
+            y0 = yof[(pno, k)]
+            sc = next((num(w[4]) for w in ws
+                       if abs(w[0] - xs) <= 20 and num(w[4]) is not None and w[4] != '0'), None)
+            if sc is None:
+                continue
+            if match_junior(''.join(near(pno, y0, 0, 100))) != sch:
+                continue
+            if canon_hs(''.join(near(pno, y0, 100, 300)), y, sch)[0] == code:
+                hit = (sc, pno)
+                break
+        if hit:
+            code2, tier2, hname2 = canon_hs(hname, yy, sch) if hname else (code, '区属' if code in QUARTER else '委属', hname)
+            rows.append([yy, '嘉定区', sch, None, hname2, code,
+                         '区属' if code in QUARTER else '委属', hit[0], 800.0,
+                         f'【嘉定】【{yy}】名额到校最低分数线.pdf', hit[1]])
+            print(f'    修复 {yy} {sch} {hname2} {hit[0]} (p{hit[1]})')
+    doc.close()
 
 # 去重：同一 (年, 校, 线) 只保留文档中首次出现的一行
 seen = {}
