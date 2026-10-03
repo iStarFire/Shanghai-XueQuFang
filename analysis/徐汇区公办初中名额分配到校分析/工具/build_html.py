@@ -351,16 +351,34 @@ def build_toc(toc):
     return f'<nav class="toc"><h2>本页目录</h2><ol>{lis}</ol></nav>'
 
 
+# 下载区标签：文件名前缀 -> 显示名。**自动扫描课题目录**，缺失的自动跳过。
+# 2026-10 教训：普陀的下载清单曾整段复制自徐汇，os.path.exists 把不存在的文件
+# 全过滤掉，6 个 CSV 的下载入口全部消失——硬编码清单就是根因，故改为自动发现。
+DL_LABELS = [
+    ('宽表-', '宽表 CSV（含逐线逐年原始数据）'),
+    ('趋势分析-', '趋势分析 CSV（rel / SEN / 收敛回归）'),
+    ('单线视角-', '单线视角 CSV（逐校逐线）'),
+    ('rank-标准化-', '排名表 CSV（标准化）'),
+    ('rank-多口径总表-', '排名表 CSV（多口径总表）'),
+    ('rank-加权敏感性-', '排名表 CSV（加权敏感性）'),
+    ('rank-稳健性-', '排名表 CSV（稳健性）'),
+    ('缺分对清单', '缺分对清单'),
+    ('分析方法-', '分析方法'),
+    ('剔除清单', '剔除清单'),
+    ('分析报告', '分析报告（Markdown）'),
+]
+
+
 def build_dl():
-    files = [
-        ('宽表-初中水平-徐汇区-2022-2026.csv', '宽表 CSV（28 行 × 117 列）'),
-        ('分析报告.md', '分析报告（Markdown）'),
-        ('分析方法-名额到校.md', '分析方法'),
-        ('剔除清单.md', '剔除清单'),
-        ('缺分对清单.csv', '缺分对清单'),
-    ]
-    links = ''.join(f'<a href="{html.escape(f)}">⬇ {html.escape(t)}</a>'
-                    for f, t in files if os.path.exists(f'{TOPIC}/{f}'))
+    """按 DL_LABELS 顺序匹配课题目录下的文件；目录里没有的自动跳过。"""
+    onfile = [f for f in os.listdir(TOPIC)
+              if os.path.isfile(os.path.join(TOPIC, f)) and not f.startswith('.')]
+    items = []
+    for pre, lb in DL_LABELS:
+        hit = next((f for f in sorted(onfile) if f.startswith(pre)), None)
+        if hit:
+            items.append((hit, lb))
+    links = ''.join(f'<a href="{html.escape(f)}">⬇ {html.escape(t)}</a>' for f, t in items)
     return f'<div class="dl">{links}</div>'
 
 
