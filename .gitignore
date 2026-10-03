@@ -67,3 +67,6 @@ notes.local.md
 # 小红书等平台的分享图与文案，属于本地个人产出，非项目数据
 target/
 .playwright-cli/
+
+# 根目录游离产物（图表脚本调试残留，不入库）
+/pt_col.png
