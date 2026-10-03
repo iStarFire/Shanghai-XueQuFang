@@ -6,8 +6,19 @@ import os
 import re
 import statistics as st
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__))))))
+def _find_root(marker=os.path.join('data', '嘉定区')):
+    """向上查找仓库根，使脚本放在任何任务层级（含 archive）都能运行。"""
+    d = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        if os.path.isdir(os.path.join(d, marker)):
+            return d
+        nd = os.path.dirname(d)
+        if nd == d:
+            raise RuntimeError(f'未从 {__file__} 向上找到 {marker}')
+        d = nd
+
+
+ROOT = _find_root()
 D_S = f'{ROOT}/data/嘉定区/学校'
 D_A = f'{ROOT}/analysis/嘉定区公办初中名额分配到校分析'
 YEARS = [2022, 2023, 2024, 2025, 2026]
