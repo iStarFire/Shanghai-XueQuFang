@@ -167,6 +167,34 @@ def main():
         # 主表 = 2.1 节（趋势表也是 17 行，须按节限定，否则重复计数）
         seg = t.split('### 2.1')[1].split('### 2.2')[0] if '### 2.1' in t else ''
         ck('报告含 2.1 主表节', int(bool(seg)), 1)
+        # 目录编号：H2 标题须自带连续编号（0..N-1），且 TOC 不得再自动编号（否则双重序号）
+        import re as _r2
+        h2 = _r2.findall(r'^## (.+)$', t, _r2.M)
+        ck('H2 标题数 = 10', len(h2), 10)
+        nums = []
+        for h in h2:
+            m = _r2.match(r'^(\d+)[.、 ]?\s*\S', h)
+            nums.append(int(m.group(1)) if m else None)
+        ck('H2 编号连续 0..9 且无重复', nums, list(range(10)))
+        ck('首个 H2 为「0 摘要」', h2[0], '0 摘要')
+        hp = f'{ROOT}/analysis/黄浦区公办初中名额分配到校分析/工具/build_html_hp.py'
+        htm = open(hp, encoding='utf-8').read()
+        ck('生成器已关闭 TOC 自动编号（list-style:none）',
+           int('list-style:none' in htm), 1)
+        if os.path.exists(f'{ROOT}/analysis/黄浦区公办初中名额分配到校分析/index.html'):
+            ih = open(f'{ROOT}/analysis/黄浦区公办初中名额分配到校分析/index.html',
+                      encoding='utf-8').read()
+            blk = _r2.search(r'<nav class="toc">.*?</nav>', ih, _r2.S)
+            ck('网页存在 TOC 区块', int(bool(blk)), 1)
+            if blk:
+                ck('TOC 条目数 = H2 标题数',
+                   len(_r2.findall(r'<li><a', blk.group(0))), len(h2))
+                ck('TOC 已渲染为无自动编号（无 list-style 覆盖遗漏）',
+                   int('list-style:none' in ih), 1)
+                # 目录文字不应出现「数字. 数字」双重序号
+                dbl = [x for x in _r2.findall(r'<a[^>]*>([^<]+)</a>', blk.group(0))
+                       if _r2.match(r'^\d+\.\s*\d+', x.strip())]
+                ck('TOC 无「N. N」双重序号', dbl, [])
         short = [c.replace('上海市', '') for c in P5]
         rows = [l for l in seg.split('\n') if l.startswith('| ')
                 and any(c in l for c in short) and l.count('|') >= 12]

@@ -71,7 +71,10 @@ th:first-child{background:var(--code-bg);z-index:3}
 nav.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
         padding:.9em 1.1em;margin:1.4em 0}
 nav.toc h2{font-size:.95rem;margin:0 0 .5em;padding:0;border:0;color:var(--muted)}
-nav.toc ol{margin:0;padding-left:1.3em;font-size:.92rem}
+/* 标题已自带编号（0. 摘要 / 1. 口径…），故关闭 <ol> 的自动编号，
+   否则会渲染成「2. 1 口径与池定义」双重序号。四个区共用的旧版生成器
+   都有此问题（普陀/嘉定/徐汇同样受影响）。 */
+nav.toc ol{margin:0;padding-left:1.3em;font-size:.92rem;list-style:none}
 nav.toc li{margin:.22em 0}
 nav.toc a{text-decoration:none}
 /* 下载区 */
@@ -104,10 +107,10 @@ footer{color:var(--muted);font-size:.85rem;margin-top:3em;padding-top:1.2em;
   <h1>黄浦区公办初中名额到校分析（2022–2026）</h1>
 </div></header>
 <main class="wrap">
-<nav class="toc"><h2>本页目录</h2><ol><li><a href="#sec-x1">摘要</a></li><li><a href="#sec-1">1 口径与池定义</a></li><li><a href="#sec-2">2 目标一：公办初中排名</a></li><li><a href="#sec-3">3 目标二：公办校间的差距是否在缩小</a></li><li><a href="#sec-4">4 目标三：哪些在上升、哪些在下降</a></li><li><a href="#sec-5">5 目标四：代表性公办初中个案</a></li><li><a href="#sec-6">6 结论的证据强度与反向证据</a></li><li><a href="#sec-7">7 不可由本报告回答的问题</a></li><li><a href="#sec-8">8 局限声明</a></li><li><a href="#sec-9">9 交付物</a></li></ol></nav>
+<nav class="toc"><h2>本页目录</h2><ol><li><a href="#sec-0">0 摘要</a></li><li><a href="#sec-1">1 口径与池定义</a></li><li><a href="#sec-2">2 目标一：公办初中排名</a></li><li><a href="#sec-3">3 目标二：公办校间的差距是否在缩小</a></li><li><a href="#sec-4">4 目标三：哪些在上升、哪些在下降</a></li><li><a href="#sec-5">5 目标四：代表性公办初中个案</a></li><li><a href="#sec-6">6 结论的证据强度与反向证据</a></li><li><a href="#sec-7">7 不可由本报告回答的问题</a></li><li><a href="#sec-8">8 局限声明</a></li><li><a href="#sec-9">9 交付物</a></li></ol></nav>
 <div class="dl"><a href="宽表-初中水平-黄浦区-2022-2026.csv">⬇ 宽表 CSV（含逐线逐年原始数据）</a><a href="趋势分析-黄浦区-2022-2026.csv">⬇ 趋势分析 CSV（rel / SEN / 收敛回归）</a><a href="单线视角-黄浦区-2022-2026.csv">⬇ 单线视角 CSV（逐校逐线）</a><a href="排序表-名额分配到校-黄浦区-2022-2026.csv">⬇ 排序表 CSV（主口径排名 + 逐年分位）</a><a href="收敛分析-黄浦区-2022-2026.csv">⬇ 收敛分析 CSV（逐年离散度 × 双口径）</a><a href="rank-多口径总表-黄浦区-2022-2026.csv">⬇ 排名表 CSV（多口径总表）</a><a href="rank-加权敏感性-黄浦区-2022-2026.csv">⬇ 排名表 CSV（加权敏感性）</a><a href="分析报告.md">⬇ 分析报告（Markdown）</a></div>
 <blockquote>分析黄浦区<strong>公办初中</strong>在名额到校通道上的排名、校际差距变化、升降趋势，<br>并对头部与升降最明显的学校做个案。<br>数据源：5 份官方分数线 PDF（952 条）+ 5 份官方到校计划 PDF（1384 条），<br>均已通过数据正确性门禁（94 + 28 项）。</blockquote>
-<h2 id="sec-x1">摘要</h2>
+<h2 id="sec-0">0 摘要</h2>
 <blockquote><strong>所有结论都标注时间窗口。</strong> 本报告的五年尺度与近两年尺度<strong>方向常常不同</strong><br>（17 所中 7 所「已反转」），只报单一尺度的结论会误导。</blockquote>
 <ol><li><strong>排名（五年综合尺度）</strong>：第一是<strong>卢湾中学</strong>（<code>P_wq</code> 0.863）。它在五年尺度上是<strong>全区降幅最大的学校</strong>（SEN −3.75 分/年，17 所中最低；剔除 2022 高基点后仍为 −2.43、居第 3）—— <strong>「强」与「五年在升」不同向</strong>。 ⚠️ <strong>但这不是现状</strong>：卢湾的下滑发生在 <strong>2022–2025</strong>（rel 19.7→13.4→7.1→−0.0）， <strong>2026 已强反转</strong>（名次 10 → 2，加权均分 +24.9 分，近两年 SEN <strong>+7.72</strong>、全区上升第 2）。<strong>说它「正在下滑」是错的。</strong></li></ol>
 <ol><li><strong>差距</strong>：校际差距<strong>总体在缩小</strong>，主辅两口径同向（IQR 逐年斜率 −1.56 / −2.07）， <strong>但 2025 年出现一次异常趋同</strong>（IQR 2.4、σ 2.8），2026 年已回弹到 9.2。 <strong>不是持续缩小。</strong></li></ol>
@@ -149,7 +152,7 @@ footer{color:var(--muted);font-size:.85rem;margin-top:3em;padding-top:1.2em;
 <div class="tw"><table><thead><tr><th>窗口</th><th>SEN</th><th><code>rel</code> 路径</th></tr></thead><tbody><tr><td>全 5 年</td><td><strong>−3.75</strong></td><td>19.7 → 13.4 → 7.1 → −0.0 → 7.7</td></tr><tr><td>剔除 2022</td><td>−2.43</td><td>13.4 → 7.1 → −0.0 → 7.7</td></tr><tr><td>近 3 年</td><td><strong>+0.29</strong></td><td>7.1 → −0.0 → 7.7</td></tr><tr><td>近 2 年</td><td><strong>+7.72</strong></td><td>−0.0 → 7.7</td></tr></tbody></table></div>
 <p>→ 卢湾的近两年 SEN <strong>+7.72</strong>，是 17 所中第 2 高（仅次于尚文 +3.01、金陵 +0.23 之后）。<br><strong>它不是「现在在退」，而是「退了四年之后在回升」</strong>，主表的「明显下降·已反转」正是这个意思。</p>
 <p>三所「明显下降」校中，<strong>只有市南中学在近两年仍在降</strong>（−2.47）；<br>中山学校（+0.24）与卢湾（+7.72）都已反转。</p>
-<h3 id="sec-x2">一个方法论限制（已修正设计）</h3>
+<h3 id="sec-x1">一个方法论限制（已修正设计）</h3>
 <p><code>rel = 自身加权均分 − 当年池中位</code>，所以 <code>SEN</code> 天然混合了两件事：<br><strong>(a) 学校自身水平变化</strong> 与 <strong>(b) 当年池中位线的移动</strong>。</p>
 <p>卢湾的五年净变化：自身 <strong>−4.7 分</strong>、中位线 <strong>+7.3 分</strong>，两者相减得 <code>rel</code> 降约 12 分。<br>即<strong>降幅中约六成来自「中位线在涨」（其他学校在变强），而非卢湾自己变差</strong>。</p>
 <p>宽表因此增设两列诊断量：</p>

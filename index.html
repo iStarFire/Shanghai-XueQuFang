@@ -71,7 +71,10 @@ th:first-child{background:var(--code-bg);z-index:3}
 nav.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
         padding:.9em 1.1em;margin:1.4em 0}
 nav.toc h2{font-size:.95rem;margin:0 0 .5em;padding:0;border:0;color:var(--muted)}
-nav.toc ol{margin:0;padding-left:1.3em;font-size:.92rem}
+/* 标题已自带编号（0. 摘要 / 1. 口径…），故关闭 <ol> 的自动编号，
+   否则会渲染成「2. 1 口径与池定义」双重序号。四个区共用的旧版生成器
+   都有此问题（普陀/嘉定/徐汇同样受影响）。 */
+nav.toc ol{margin:0;padding-left:1.3em;font-size:.92rem;list-style:none}
 nav.toc li{margin:.22em 0}
 nav.toc a{text-decoration:none}
 /* 下载区 */
