@@ -70,3 +70,4 @@ target/
 
 # 根目录游离产物（图表脚本调试残留，不入库）
 /pt_col.png
+__pycache__/

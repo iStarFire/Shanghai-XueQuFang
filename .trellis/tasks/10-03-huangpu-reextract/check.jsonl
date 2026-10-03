@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/quality/data-validation.md", "reason": "数据正确性校验规范，重抽须按此逐维留证"}
+{"file": ".trellis/spec/data/field-conventions.md", "reason": "字段命名与口径约定，决定重建 CSV 的列名与缺失值写法"}
+{"file": ".trellis/spec/data/source-registry.md", "reason": "来源登记规范，重抽须登记 5 个 PDF 的页数与版面差异"}
+{"file": ".trellis/spec/analysis/method-guidelines.md", "reason": "PDF 抽取与口径类事实的既有教训（禁止同行桶假设、完整性用记录数判定）"}
