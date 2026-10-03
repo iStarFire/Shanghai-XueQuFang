@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="围绕上海学区房的数据采集、整理、校验与分析结论。所有数字均可回源到官方原始文件与页码。">
+<title>上海学区房数据分析</title>
+<style>
+:root{
+  --bg:#f7f8fa; --card:#fff; --fg:#1a1d21; --muted:#5b6470; --line:#e3e6ea;
+  --accent:#1f6feb; --accent-soft:#eaf1fd; --warn:#b26a00; --warn-soft:#fff6e5;
+  --ok:#1a7f37; --code-bg:#f0f2f5; --radius:10px;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12141a; --card:#1a1d24; --fg:#e6e8eb; --muted:#9aa4b2; --line:#2a2f38;
+    --accent:#6ea8fe; --accent-soft:#1c2739; --warn:#e2a03f; --warn-soft:#2a2314;
+    --ok:#5ec27b; --code-bg:#232830;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",
+       "Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  overflow-wrap:break-word;
+}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 64px}
+header.top{
+  background:var(--card);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;backdrop-filter:saturate(150%) blur(8px);
+}
+header.top .wrap{padding-top:12px;padding-bottom:12px}
+.crumb{font-size:.82rem;color:var(--muted)}
+.crumb a{color:var(--accent);text-decoration:none}
+h1{font-size:clamp(1.35rem,4.6vw,1.9rem);line-height:1.35;margin:.5em 0 .3em}
+h2{font-size:clamp(1.15rem,3.8vw,1.45rem);margin:2em 0 .6em;
+   padding-left:.55em;border-left:4px solid var(--accent);line-height:1.4}
+h3{font-size:clamp(1.02rem,3.2vw,1.18rem);margin:1.6em 0 .5em;color:var(--fg)}
+h4{font-size:1rem;margin:1.3em 0 .4em;color:var(--muted)}
+p{margin:.7em 0}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line);margin:2em 0}
+strong{font-weight:650}
+code{background:var(--code-bg);padding:.12em .38em;border-radius:5px;
+     font-family:var(--mono);font-size:.88em}
+blockquote{
+  margin:1em 0;padding:.8em 1em;background:var(--accent-soft);
+  border-left:4px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;
+  font-size:.95em;color:var(--fg);
+}
+blockquote strong{color:var(--warn)}
+ul,ol{padding-left:1.35em;margin:.7em 0}
+li{margin:.3em 0}
+/* 表格：移动端横向滚动，首列吸附 */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1.1em 0;
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:100%}
+th,td{padding:.55em .7em;text-align:left;border-bottom:1px solid var(--line);
+      white-space:nowrap}
+th{background:var(--code-bg);font-weight:650;position:sticky;top:0;z-index:1}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:nth-child(even){background:color-mix(in srgb,var(--code-bg) 45%,transparent)}
+td:first-child,th:first-child{position:sticky;left:0;background:var(--card);
+      box-shadow:1px 0 0 var(--line);z-index:2;white-space:normal;min-width:8.5em}
+th:first-child{background:var(--code-bg);z-index:3}
+/* 目录 */
+nav.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+        padding:.9em 1.1em;margin:1.4em 0}
+nav.toc h2{font-size:.95rem;margin:0 0 .5em;padding:0;border:0;color:var(--muted)}
+nav.toc ol{margin:0;padding-left:1.3em;font-size:.92rem}
+nav.toc li{margin:.22em 0}
+nav.toc a{text-decoration:none}
+/* 下载区 */
+.dl{display:flex;flex-wrap:wrap;gap:.6em;margin:1.2em 0}
+.dl a{display:inline-flex;align-items:center;gap:.4em;background:var(--card);
+      border:1px solid var(--line);border-radius:999px;padding:.45em .95em;
+      font-size:.88rem;text-decoration:none;color:var(--fg)}
+.dl a:hover{border-color:var(--accent);color:var(--accent)}
+/* 入口页卡片 */
+.cards{display:grid;gap:14px;grid-template-columns:1fr;margin-top:1.6em}
+@media(min-width:680px){.cards{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+      padding:1.1em 1.2em;text-decoration:none;color:inherit;transition:.15s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card h3{margin:0 0 .4em;font-size:1.05rem;color:var(--accent)}
+.card p{margin:0;font-size:.9rem;color:var(--muted)}
+.tag{display:inline-block;font-size:.75rem;padding:.1em .55em;border-radius:999px;
+     background:var(--accent-soft);color:var(--accent);margin-bottom:.5em}
+footer{color:var(--muted);font-size:.85rem;margin-top:3em;padding-top:1.2em;
+       border-top:1px solid var(--line)}
+@media print{
+  header.top{position:static}body{background:#fff}
+  .tw{overflow:visible}.dl,nav.toc{display:none}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="crumb">上海学区房数据分析</div>
+  <h1>分析结论</h1>
+</div></header>
+<main class="wrap">
+  <p>围绕上海学区房的数据采集、整理、校验与分析结论。所有数字均可回源到官方原始文件与页码。</p>
+  <div class="cards">
+<a class="card" href="analysis/嘉定区公办初中名额分配到校分析/index.html"><span class="tag">嘉定区</span><h3>嘉定区公办初中名额分配到校分析</h3><p>2022–2026 年名额分配到校计划数与最低分数线，给出区属市重点线口径的排名、规模结构、收敛检验与指标有效边界</p></a>
+<a class="card" href="analysis/徐汇区公办初中名额分配到校分析/index.html"><span class="tag">徐汇区</span><h3>徐汇区公办初中名额分配到校分析</h3><p></p></a>
+<a class="card" href="analysis/普陀区公办初中名额分配到校分析/index.html"><span class="tag">普陀区</span><h3>普陀区公办初中名额分配到校分析</h3><p></p></a>
+  </div>
+  <footer>
+    <p>所有原始文件与结论均可回源核验。仓库：
+       <a href="https://github.com/iStarFire/Shanghai-XueQuFang">https://github.com/iStarFire/Shanghai-XueQuFang</a></p>
+  </footer>
+</main>
+</body>
+</html>

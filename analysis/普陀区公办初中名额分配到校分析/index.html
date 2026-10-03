@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="徐汇区公办初中「名额分配到校」竞争强度的 2022–2026 年分析结论">
+<title>普陀区公办初中名额分配到校分析（2022–2026） · 上海学区房数据分析</title>
+<style>
+:root{
+  --bg:#f7f8fa; --card:#fff; --fg:#1a1d21; --muted:#5b6470; --line:#e3e6ea;
+  --accent:#1f6feb; --accent-soft:#eaf1fd; --warn:#b26a00; --warn-soft:#fff6e5;
+  --ok:#1a7f37; --code-bg:#f0f2f5; --radius:10px;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12141a; --card:#1a1d24; --fg:#e6e8eb; --muted:#9aa4b2; --line:#2a2f38;
+    --accent:#6ea8fe; --accent-soft:#1c2739; --warn:#e2a03f; --warn-soft:#2a2314;
+    --ok:#5ec27b; --code-bg:#232830;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",
+       "Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  overflow-wrap:break-word;
+}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 64px}
+header.top{
+  background:var(--card);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;backdrop-filter:saturate(150%) blur(8px);
+}
+header.top .wrap{padding-top:12px;padding-bottom:12px}
+.crumb{font-size:.82rem;color:var(--muted)}
+.crumb a{color:var(--accent);text-decoration:none}
+h1{font-size:clamp(1.35rem,4.6vw,1.9rem);line-height:1.35;margin:.5em 0 .3em}
+h2{font-size:clamp(1.15rem,3.8vw,1.45rem);margin:2em 0 .6em;
+   padding-left:.55em;border-left:4px solid var(--accent);line-height:1.4}
+h3{font-size:clamp(1.02rem,3.2vw,1.18rem);margin:1.6em 0 .5em;color:var(--fg)}
+h4{font-size:1rem;margin:1.3em 0 .4em;color:var(--muted)}
+p{margin:.7em 0}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line);margin:2em 0}
+strong{font-weight:650}
+code{background:var(--code-bg);padding:.12em .38em;border-radius:5px;
+     font-family:var(--mono);font-size:.88em}
+blockquote{
+  margin:1em 0;padding:.8em 1em;background:var(--accent-soft);
+  border-left:4px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;
+  font-size:.95em;color:var(--fg);
+}
+blockquote strong{color:var(--warn)}
+ul,ol{padding-left:1.35em;margin:.7em 0}
+li{margin:.3em 0}
+/* 表格：移动端横向滚动，首列吸附 */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1.1em 0;
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:100%}
+th,td{padding:.55em .7em;text-align:left;border-bottom:1px solid var(--line);
+      white-space:nowrap}
+th{background:var(--code-bg);font-weight:650;position:sticky;top:0;z-index:1}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:nth-child(even){background:color-mix(in srgb,var(--code-bg) 45%,transparent)}
+td:first-child,th:first-child{position:sticky;left:0;background:var(--card);
+      box-shadow:1px 0 0 var(--line);z-index:2;white-space:normal;min-width:8.5em}
+th:first-child{background:var(--code-bg);z-index:3}
+/* 目录 */
+nav.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+        padding:.9em 1.1em;margin:1.4em 0}
+nav.toc h2{font-size:.95rem;margin:0 0 .5em;padding:0;border:0;color:var(--muted)}
+nav.toc ol{margin:0;padding-left:1.3em;font-size:.92rem}
+nav.toc li{margin:.22em 0}
+nav.toc a{text-decoration:none}
+/* 下载区 */
+.dl{display:flex;flex-wrap:wrap;gap:.6em;margin:1.2em 0}
+.dl a{display:inline-flex;align-items:center;gap:.4em;background:var(--card);
+      border:1px solid var(--line);border-radius:999px;padding:.45em .95em;
+      font-size:.88rem;text-decoration:none;color:var(--fg)}
+.dl a:hover{border-color:var(--accent);color:var(--accent)}
+/* 入口页卡片 */
+.cards{display:grid;gap:14px;grid-template-columns:1fr;margin-top:1.6em}
+@media(min-width:680px){.cards{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+      padding:1.1em 1.2em;text-decoration:none;color:inherit;transition:.15s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card h3{margin:0 0 .4em;font-size:1.05rem;color:var(--accent)}
+.card p{margin:0;font-size:.9rem;color:var(--muted)}
+.tag{display:inline-block;font-size:.75rem;padding:.1em .55em;border-radius:999px;
+     background:var(--accent-soft);color:var(--accent);margin-bottom:.5em}
+footer{color:var(--muted);font-size:.85rem;margin-top:3em;padding-top:1.2em;
+       border-top:1px solid var(--line)}
+@media print{
+  header.top{position:static}body{background:#fff}
+  .tw{overflow:visible}.dl,nav.toc{display:none}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="crumb"><a href="../">← 上海学区房数据分析</a></div>
+  <h1>普陀区公办初中名额分配到校分析（2022–2026）</h1>
+</div></header>
+<main class="wrap">
+<nav class="toc"><h2>本页目录</h2><ol><li><a href="#sec-x1">核心结论（基于名额加权主口径，先读这里）</a></li><li><a href="#sec-x2">局限声明（使用本报告前必读）</a></li><li><a href="#sec-x3">快速导航</a></li><li><a href="#sec-1">1 数据与口径</a></li><li><a href="#sec-2">2 排名总表（多口径，加权综合为主）</a></li><li><a href="#sec-3">3 结构与异质性</a></li><li><a href="#sec-4">4 趋势与收敛</a></li><li><a href="#sec-5">5 逐校个案</a></li><li><a href="#sec-a">附录 A 口径敏感性与稳健性</a></li><li><a href="#sec-b">附录 B 验证记录</a></li></ol></nav>
+<div class="dl"><a href="宽表-初中水平-普陀区-2022-2026.csv">⬇ 宽表 CSV（含逐线逐年原始数据）</a><a href="趋势分析-普陀区-2022-2026.csv">⬇ 趋势分析 CSV（rel / SEN / 收敛回归）</a><a href="单线视角-普陀区-2022-2026.csv">⬇ 单线视角 CSV（逐校逐线）</a><a href="rank-标准化-普陀区-2022-2026.csv">⬇ 排名表 CSV（标准化）</a><a href="rank-多口径总表-普陀区-2022-2026.csv">⬇ 排名表 CSV（多口径总表）</a><a href="rank-加权敏感性-普陀区-2022-2026.csv">⬇ 排名表 CSV（加权敏感性）</a><a href="分析报告.md">⬇ 分析报告（Markdown）</a></div>
+<blockquote>用 5 年「名额分配到校」公开数据（区考试中心公示），分析普陀区<strong>不选择生源初中</strong><br>在名额到校通道上的真实竞争梯队、稳定性与趋势。<br>- 数据来源：上海市教育考试院（分数线 2023–2026）+ 普陀区教育考试中心（分数线 2022、<br>计划 2022–2026），逐文件登记见 <code>data/普陀区/学校/来源.md</code><br>- 口径：市实验性示范性高中「名额分配到校」招生录取最低分数线（含综合素质评价成绩）；<br><strong>当年到校均分 = 计划名额加权平均</strong>（v3，等权版保留为对照列）；<br><strong>主排序 = 综合口径</strong> <code>P综合 = (P全身 + P头部 + P尾部)/3</code>（三组等权）；<br>单口径 P / Z / ZR 与时间权重口径<strong>全部并列披露</strong>（第 2 章总表）<br>- 基线高中：<strong>区属 4 所</strong>——华二普陀 / 曹杨二中 / 晋元 / 宜川（五年全勤无断点）；<br>委属 5 所不参与排名口径，其名额仅计入「年均计划」列的说明<br>- 方法：逐年名次 → 分位 P 主口径；Z/ZR 辅；Sen 斜率 + 收敛回归<br>- <strong>排名样本过滤（必读）</strong>：所有 P / Z / rank 列对全部 44 所都有值，<br>主表一律先按 <code>years_included ≥ 4</code> 过滤（31 所五年全勤 + 1 所 4 年），见局限声明第 9 条<br>- <strong>指标的有效边界</strong>：名额到校的切点只落在<strong>全校前约 2%–5%</strong> 段（占考生 83% 的中段不可见），<br>逐线量化见 <strong>3.4</strong>；本榜不可用于判断学校整体好坏</blockquote>
+<hr>
+<h2 id="sec-x1">核心结论（基于名额加权主口径，先读这里）</h2>
+<blockquote><strong>口径变更声明（v3，显式记录）</strong>：本报告主口径的<strong>当年到校均分</strong>已由「4 条线最低分的算术平均（等权）」<br>改为「<strong>计划名额加权平均</strong>」：<code>Σ(最低分 × 该线名额) / Σ(名额)</code>（只取当年该校有分数的线）。<br><strong>等权版全部保留为对照列</strong>，正文同时给出两者名次与位次差。三组结构口径（全身 / 头部 / 尾部）<br>与综合口径 <code>P综合 = (P全身 + P头部 + P尾部)/3</code> 的<strong>合成规则不变</strong>，仅底层均分改为加权。<br><strong>语义局限（必读）</strong>：名额按在籍人数比例分配，<strong>权重差异反映的是招生规模结构，而非学校水平</strong>；<br>因此加权版与等权版的差异应作为<strong>口径不确定性</strong>理解，而不是「加权更准」。<br>两者一致性：Spearman = <strong>0.9842</strong>，最大位移 <strong>北海中学 -5 位</strong>。</blockquote>
+<p><strong>A. 排名（名额加权综合口径，32 所）</strong></p>
+<ol><li><strong>第一梯队（加权综合前 4）</strong>：晋元高级中学附属学校（0.827）、江宁学校（0.795）、曹杨第二中学附属学校（0.765）、中远实验学校（0.751）。等权口径下的前 4 为 江宁学校、晋元高级中学附属学校、真北中学、中远实验学校 ——<strong>换加权口径使晋元附校升至第 1、江宁退到第 2</strong>。</li><li><strong>第二梯队（加权综合 5–8）</strong>：真北中学、梅陇中学、华东师范大学附属外国语实验学校、华东师范大学第四附属中学。</li><li><strong>加权与等权的位次差异是有限的</strong>：32 所中 8 所不变、12 所变动 1 位、 10 所变动 2 位，<strong>仅 北海中学 变动 5 位</strong>；Spearman = 0.9842。</li><li><strong>梅陇中学（全区规模最大）</strong>：加权综合第 6、全身第 6、 <strong>头部第 2</strong>、尾部第 9（等权综合第 7）。它的强度集中在门槛最高的线上（华二普陀线均分全区第 1、曹杨二中线第 2），弱项在门槛较低的两条线—— <strong>只报一个名次会看错它</strong>。<strong>注意精度</strong>：在全身口径下它与真北（0.7116）、华东师大附属外国语（0.7100）<strong>实质并列</strong>（三者极差仅 0.0015 分位），第 6 名须给区间引用（见 3.4）。</li></ol>
+<p><strong>B. 头部口径与尾部口径分别说明什么</strong></p>
+<ol><li><strong>头部口径 = 尖子层位置</strong>（只看门槛最高的两条线：华二普陀、曹杨二中）：前 5 为曹杨第二中学附属学校、梅陇中学、华东师范大学第四附属中学、华东师范大学附属外国语实验学校、真北中学。</li><li><strong>尾部口径 = 中后段位置</strong>（只看门槛较低的两条线：晋元、宜川）：前 5 为 晋元高级中学附属学校、江宁学校、上海师范大学附属第二实验学校、中远实验学校、上海外国语大学尚阳外国语学校。</li><li><strong>两个口径的分歧是真实信息</strong>：头部与尾部口径 Spearman 仅 <strong>0.635</strong> （全身–头部 0.895、全身–尾部 0.862）。极差最大的学校：洛川学校（全身20 / 头部28 / 尾部10，极差 18）、北海中学（全身21 / 头部13 / 尾部28，极差 15）、普陀区教育学院附属学校（全身22 / 头部26 / 尾部11，极差 15）。</li><li><strong>两组的共同局限</strong>：头部组与尾部组<strong>各只用 2 条线</strong>，每条线每校每年只有 1–5 个名额，属<strong>小样本极值</strong>；综合口径压随机噪声，但不消除口径偏置。</li></ol>
+<p><strong>C. 结构与规模</strong></p>
+<ol><li><strong>名额规模不解释位次</strong>：31 所五年全勤中 <code>Spearman(区属年均计划, 加权均名) = -0.483</code>、 <code>(…, P综合) = 0.49</code>——中等强度、方向为<strong>名额越多位次略好</strong>，与「大校被压低」的直觉相反；控制线难度后的同线内检验 ρ = <strong>−0.170</strong>（n=742，逐线口径）。梅陇（年均 62.4 个名额）在晋元/宜川线上的<strong>切点分位</strong> 与江宁几乎相同——<strong>「人数多导致排名下滑」在本数据中不成立</strong>。</li><li><strong>单线视角与全身口径同向但会漂移</strong>：位次平均漂移 3.5–6.3 位（最大 19 位），四条区属线的第一名各不相同——单线视角适合看趋势与个案，不得替代综合口径做排名。</li></ol>
+<p><strong>D. 趋势与收敛（加权口径重算）</strong></p>
+<ol><li><strong>全区在系统性收敛</strong>：校际 IQR 从 2022 年的 13.3 分降到 2026 年的 5.2 分（−61%）；收敛回归 <strong>b=−0.861、R²=0.745</strong>——约 75% 的五年变化量可由「起点高低」解释。</li><li><strong>超出收敛解释的个案 10 所</strong>（|残差 z|≥1）：下降超出——沙田学校、桃浦中学、普陀区教育学院附属学校、新杨中学、文达学校、晋元高级中学附属学校南校；上升超出——上海理工大学附属普陀实验学校、中远实验学校、同济大学第二附属中学、延河中学。</li><li><strong>名额总额的低谷在 2023（611）而非 2024</strong>：660 → 611 → 666 → 671 → 736。</li></ol>
+<p><strong>E. 个案与口径</strong></p>
+<ol><li><strong>真北中学是最容易被口径误导的学校</strong>：加权综合第 5、全身第 5，但<strong>近 3 年权重下位次明显下沉</strong> （逐年 rel +9.45 → -0.32， Sen -2.57、ρ -0.90）——高开低走。</li><li><strong>沙田学校 / 桃浦中学 / 教育学院附属学校 / 新杨中学 / 文达学校 / 晋元附校南校</strong>为「下降超出收敛」名单； <strong>上理工附属普陀实验 / 中远实验 / 同济二附中 / 延河中学</strong>为「上升超出收敛」名单。</li><li><strong>时间权重不改变第一梯队但会重排中后段</strong>：线性/指数/近 3 年与等权榜 Spearman 0.936/0.821/0.882，变动 ≥3 位的分别为 12/17/18 所（详见附录 A）。 <strong>加权 = 当前水平、等权 = 长期画像</strong>，加权不等于更准。</li><li><strong>P / Z / ZR 三种单指标一致</strong>：<code>Spearman(P加权, P等权) = 0.9655</code>、 <code>(P加权, Z加权) = 0.9718</code>、<code>(P综合, Z综合) = 0.9758</code>、 <code>(P综合, ZR综合) = 0.9897</code>——第一梯队成员一致，「谁是第一」对口径敏感。</li></ol>
+<p><strong>F. 使用边界（防止误读）</strong></p>
+<ol><li><strong>不能用本数据衡量「初中好坏」</strong>：它衡量的是「名额到校通道的竞争强度」，不含统一招生批次、自主招生与整体教学质量；<strong>本报告只做普陀区内排名</strong>； <strong>13 所不足 4 年的学校未入榜</strong>（5 所民办 + 4 所公办新校/新参与校 + 4 所已停办或数据不足）。 <strong>量化边界见 3.4</strong>：切点只测到全校前约 2%–5% 段，占考生 83% 的中段完全不可见；要判整体水平需补毕业生规模、统招批次均分与市重点录取率。</li></ol>
+<hr>
+<h2 id="sec-x2">局限声明（使用本报告前必读）</h2>
+<ol><li><strong>口径只覆盖名额到校通道</strong>，不含统一招生/自主招生，不能衡量学校绝对好坏。</li><li><strong>分数线跨年不可直接比较原值</strong>：本报告跨年只用「当年名次/分位」，以及「相对当年中位的分差 rel」。</li><li><strong>最低分是小样本极值</strong>：单条线上的名额可能只有 1 个，单年单校噪声大；本报告的主要结论建立在多年聚合上。</li><li><strong>结构断点</strong>：初中集合逐年变化（34→33→40→41→41），2024 年新增民办与新课；主表（第 2 章）含 <strong>31 所五年全勤 + 1 所 4 年</strong>（曹杨二中附属实验中学：P 为年内标准化故可入榜，已在表中标注年数，精度低一年）；其余不足 4 年的学校仅列明细，不参与跨年排名。</li><li><strong>2023 年计划表为图片版人工转录</strong>（34 行）：已通过逐行总计自洽与分数线交叉校验（五年越界 0），但引用 2023 名额数时须知悉人工转录来源。</li><li><strong>名录 ownership（公办/民办）为初判</strong>，待公开名录来源核实；不影响排名（样本 = 计划公示覆盖的全部不选择生源校）。</li><li><strong>五年窗口</strong>：所有「趋势」判断的检验力有限；「未检出趋势」≠「没有变化」。</li><li>部分「有计划名额但无录取线」的对（逐年 9/5/4/4/4 对）按「无人达线」理解，待官方说明核对，未做填补。</li><li><strong>排名必须先按 <code>years_included ≥ 4</code> 过滤（本条为复现陷阱）</strong>：宽表的 <code>P_wq / P_wq_all / P_wq_head / P_wq_tail / P_wq_comb</code> 与 <code>rank_*</code> 共 10 列对<strong>全部 44 所</strong>都有值，包括只有 1–3 年数据的学校；若不过滤直接排序， <strong>民办新黄浦实验学校（3 年，0.7796）会排到第 3</strong>，梅陇被挤到第 7；在全身口径下影响更大（4 所 2–3 年学校上移，梅陇由第 6 变第 9）。本报告主表已按 n≥4 过滤（31 所五年全勤 + 1 所 4 年），<strong>报告结论不受影响</strong>，但复现或二次加工本表时必须先过滤。</li></ol>
+<hr>
+<h2 id="sec-x3">快速导航</h2>
+<ol><li><strong>核心结论</strong>（18 条，基于名额加权综合口径）——先读这一节</li><li><strong>局限声明</strong>——使用本报告前必读</li><li><strong>第 1 章 数据与口径</strong>：样本、来源、加权与等权口径、P/Z/ZR、三组结构口径的定义</li><li><strong>第 2 章 排名总表</strong>：加权综合 + 三组 + 单指标 + 时间权重（表 2-1 / 2-2）</li><li><strong>第 3 章 结构与异质性</strong>：规模效应、单线视角、名额深度检验</li><li><strong>第 4 章 趋势与收敛</strong>：逐年离散、收敛回归、超出收敛个案、趋势方向</li><li><strong>第 5 章 逐校个案</strong>：加权前六名 + 梅陇三口径 + 超出收敛个案</li><li><strong>附录 A 口径敏感性</strong>（时间权重、单指标、Z/ZR 版本）· <strong>附录 B 验证记录</strong></li></ol>
+<p><strong>交付物</strong>：<code>宽表-初中水平-普陀区-2022-2026.csv</code>（<strong>199 列，含逐年逐线原始分数与名额</strong>）、<br><code>rank-多口径总表-普陀区-2022-2026.csv</code>、<code>rank-标准化-普陀区-2022-2026.csv</code>、<br><code>rank-加权敏感性-普陀区-2022-2026.csv</code>、<code>趋势分析-普陀区-2022-2026.csv</code>、<br><code>单线视角-普陀区-2022-2026.csv</code>、<code>data/普陀区/学校/名额到校*-普陀区-*.csv</code>。</p>
+<hr>
+<h2 id="sec-1">1 数据与口径</h2>
+<h3 id="sec-1-1">1.1 样本与基础事实</h3>
+<ul><li><strong>样本</strong>：45 个曾出现在名额到校计划或分数线中的初中名（含 3 所已停办：光新/兴陇/武宁）；其中 <strong>31 所五年全勤</strong>（2022–2026 每年都有区属基线上的录取线），进入跨年排名； 1 所 4 年（曹杨二中附属实验中学，2022 年未参与；<strong>P 主口径下已入榜并标注年数</strong>）； 13 所不足 4 年 = 5 所民办（2024 起参与）＋ 4 所公办新校/新参与校（梅陇实验中学、甘泉外国语各仅 2 年；音乐学院附属安师实验、金鼎各 3 年）＋ 4 所已停办或仅 1–2 年数据。 <strong>注意：其中的公办新校（梅陇实验中学、甘泉外国语）早期分数并不低，但 2 年窗口无法评估</strong>。</li><li><strong>基线高中</strong>：区属 4 所——华东师范大学第二附属中学（普陀校区）、上海市曹杨第二中学、上海市晋元高级中学、上海市宜川中学。<strong>五所委属</strong>（华二、上中、复附、交附、上师大） <strong>不参与任何排名口径，也不计入本报告展示的计划数</strong>。</li><li><strong>计划名额逐年总额</strong>：660 / 611 / 666 / 671 / 736（2022→2026）。全区名额最多的校是<strong>梅陇中学</strong>：区属 4 所口径 <strong>62.4 个/年</strong>（2023 年峰值 <strong>68 个</strong>，2026 年 61 个）。</li><li><strong>数据链路</strong>：区考试中心/市考试院 PDF → 长表（809 行分数线 + 1719 行计划）→ 宽表 → 本报告。 2.2 七维度校验通过（[校验记录](../../.trellis/tasks/10-01-putuo-junior-high/validation/data-validation.md)）。</li></ul>
+<hr>
+<h3 id="sec-1-2-p-z-zr">1.2 口径定义：P / Z / ZR 到底是什么</h3>
+<p>三者都是「把当年分数差换算成相对位置」的方法，区别在<strong>使用什么信息</strong>与<strong>用什么尺度</strong>。</p>
+<p><strong>P（分位，主口径）</strong>——只用<strong>名次</strong>信息：</p>
+<p>``<code><br>先算该校当年基线均分 x_it<br>→ 在当年全部有数据初中里排名次 rank_it（平均名次法，并列取平均）<br>→ P_it = 1 − (rank_it − 1)/(n_t − 1)        （0–1，越大越强）<br>→ P_i  = mean_t( P_it )                     （跨年等权，只对有数据的年份）<br></code>``</p>
+<p><strong>Z（z-score）</strong>——保留<strong>分数间距</strong>，尺度用均值/标准差：</p>
+<p>``<code><br>μ_t = 当年全部初中的均分均值；σ_t = 当年全部初中的总体标准差（pstdev）<br>z_it = (x_it − μ_t) / σ_t<br>Z_i  = mean_t( z_it )<br></code>``</p>
+<p><strong>ZR（稳健 z）</strong>——同样保留间距，但尺度用<strong>抗极值</strong>的中位数/四分位距：</p>
+<p>``<code><br>zr_it = (x_it − 中位_t) / (IQR_t / 1.349)<br>ZR_i  = mean_t( zr_it )<br></code>``</p>
+<p><code>1.349</code> 是正态分布下 IQR 与标准差的换算系数（IQR ≈ 1.349σ），除它使 ZR 与 Z 量纲一致。</p>
+<p><strong>为什么要两个尺度</strong>：普陀 2024 年的 σ = 13.92，但 IQR/1.349 只有 8.15（被个别极低线拉大了 σ）；<br>2025 年 IQR/1.349 = 4.36 而 σ = 9.01。<strong>Z 在离散度大的年份压缩差异、在离散度小的年份放大差异</strong>，<br>等于隐式地给各年份不同权重；ZR 用稳健尺度缓解这一点。</p>
+<p><strong>三者的分工与一致性</strong>：</p>
+<div class="tw"><table><thead><tr><th>口径</th><th>使用的信息</th><th>特点</th></tr></thead><tbody><tr><td><strong>P（主）</strong></td><td>仅名次（序数）</td><td>有界、抗尺度、抗极值；丢掉"分差有多大"</td></tr><tr><td><strong>Z</strong></td><td>分数间距 + μ/σ</td><td>保留间距；受极值与年度离散度影响</td></tr><tr><td><strong>ZR</strong></td><td>分数间距 + 中位/IQR</td><td>保留间距且抗极值，是 Z 的稳健版</td></tr></tbody></table></div>
+<p>两两一致性：Spearman(P加权, P等权) = <strong>0.9655</strong>、Spearman(P加权, Z加权) = <strong>0.9718</strong>，第一梯队成员一致。<br>差异集中在中段与趋势型学校：<strong>Z 口径把真北中学排到第 1</strong>，而 ZR 口径下它是第 3<br>（江宁 ZR 第 1）——原因见上文的尺度差异。</p>
+<h3 id="sec-1-3">1.3 三个结构口径与综合口径</h3>
+<p>本报告在「基线高中」维度上再切三组，用于区分<strong>尖子层</strong>与<strong>中后段</strong>：</p>
+<div class="tw"><table><thead><tr><th>口径</th><th>基线高中</th><th>含义</th></tr></thead><tbody><tr><td>全身 <code>all</code></td><td>华二普陀 / 曹杨二中 / 晋元 / 宜川（4 所区属）</td><td>全部区属通道的整体位置（= 原主口径 P）</td></tr><tr><td>头部 <code>head</code></td><td>华二普陀 / 曹杨二中（门槛最高的 2 条线）</td><td><strong>尖子层</strong>的相对位置</td></tr><tr><td>尾部 <code>tail</code></td><td>晋元 / 宜川（门槛较低的 2 条线）</td><td><strong>中后段</strong>的相对位置</td></tr><tr><td><strong>综合</strong> <code>comb</code></td><td>—</td><td><code>P综合 = (P全身 + P头部 + P尾部)/3</code>（等权）</td></tr></tbody></table></div>
+<ul><li>三组的逐年排名池：34 / 33 / 40 / 41 / 41 所（含民办）；尾部组 2025–2026 少 2 所（无该线数据）。</li><li><strong>必须知道的样本局限</strong>：每条线每校每年只有 <strong>1–5 个名额</strong>，「最低分」是小样本极值；头部/尾部组各只用 2 条线，噪声更大。<strong>综合口径是三种噪声的等权平均，不消除口径偏置。</strong></li><li><strong>合成规则的性质</strong>：三组等权 = 宣称「尖子层与中后段同等重要」。这是<strong>分析者的价值判断</strong>（已在文首登记），替代方案（头部加权、按名次平均）的差异见第 2 章注。三组之间 Spearman：全身–头部 <strong>0.897</strong>、全身–尾部 <strong>0.857</strong>、<strong>头部–尾部 0.628</strong>—— 头尾分歧是真实信息，不是噪声。</li></ul>
+<hr>
+<h2 id="sec-2">2 排名总表（多口径，加权综合为主）</h2>
+<h3 id="sec-2-1">2.1 综合排名总表</h3>
+<p><strong>表 2-1</strong> 综合口径 = <code>P综合 = (P全身 + P头部 + P尾部)/3</code>（等权三组），<strong>底层均分 = 计划名额加权平均</strong>。<br>「等权综合名次」为对照口径，「位次差」= 等权名次 − 加权名次（正 = 加权口径下更靠前）。</p>
+<div class="tw"><table><thead><tr><th>综合名次</th><th>初中</th><th>P综合（加权）</th><th>全身</th><th>头部</th><th>尾部</th><th>等权综合名次</th><th>位次差</th><th>年均计划</th><th>覆盖</th></tr></thead><tbody><tr><td>1</td><td>上海市晋元高级中学附属学校</td><td>0.827</td><td>1</td><td>9</td><td>1</td><td>2</td><td>+1</td><td>44.6</td><td>5 年</td></tr><tr><td>2</td><td>上海市江宁学校</td><td>0.795</td><td>2</td><td>6</td><td>2</td><td>1</td><td>-1</td><td>20.8</td><td>5 年</td></tr><tr><td>3</td><td>上海市曹杨第二中学附属学校</td><td>0.765</td><td>4</td><td>1</td><td>6</td><td>5</td><td>+2</td><td>33.2</td><td>5 年</td></tr><tr><td>4</td><td>上海市中远实验学校</td><td>0.751</td><td>3</td><td>7</td><td>4</td><td>4</td><td>+0</td><td>20.4</td><td>5 年</td></tr><tr><td>5</td><td>上海市真北中学</td><td>0.726</td><td>5</td><td>5</td><td>7</td><td>3</td><td>-2</td><td>11.2</td><td>5 年</td></tr><tr><td>6</td><td>上海市梅陇中学</td><td>0.719</td><td>6</td><td>2</td><td>9</td><td>7</td><td>+1</td><td>62.4</td><td>5 年</td></tr><tr><td>7</td><td>华东师范大学附属外国语实验学校</td><td>0.694</td><td>7</td><td>4</td><td>12</td><td>8</td><td>+1</td><td>17.4</td><td>5 年</td></tr><tr><td>8</td><td>华东师范大学第四附属中学</td><td>0.684</td><td>9</td><td>3</td><td>13</td><td>6</td><td>-2</td><td>25.6</td><td>5 年</td></tr><tr><td>9</td><td>上海师范大学附属第二实验学校</td><td>0.654</td><td>8</td><td>15</td><td>3</td><td>11</td><td>+2</td><td>15.6</td><td>5 年</td></tr><tr><td>10</td><td>上海市曹杨中学附属学校</td><td>0.650</td><td>12</td><td>10</td><td>8</td><td>10</td><td>+0</td><td>14.0</td><td>5 年</td></tr><tr><td>11</td><td>上海外国语大学尚阳外国语学校</td><td>0.645</td><td>10</td><td>12</td><td>5</td><td>9</td><td>-2</td><td>17.8</td><td>5 年</td></tr><tr><td>12</td><td>上海市长征中学</td><td>0.614</td><td>11</td><td>8</td><td>19</td><td>12</td><td>+0</td><td>22.0</td><td>5 年</td></tr><tr><td>13</td><td>同济大学第二附属中学</td><td>0.548</td><td>13</td><td>14</td><td>17</td><td>13</td><td>+0</td><td>27.4</td><td>5 年</td></tr><tr><td>14</td><td>上海市普陀区教育学院附属中学</td><td>0.540</td><td>14</td><td>16</td><td>16</td><td>15</td><td>+1</td><td>30.6</td><td>5 年</td></tr><tr><td>15</td><td>上海市万里城实验学校</td><td>0.527</td><td>16</td><td>11</td><td>22</td><td>14</td><td>-1</td><td>19.0</td><td>5 年</td></tr><tr><td>16</td><td>上海市晋元高级中学附属学校南校</td><td>0.503</td><td>19</td><td>18</td><td>14</td><td>16</td><td>+0</td><td>6.4</td><td>5 年</td></tr><tr><td>17</td><td>上海理工大学附属普陀实验学校</td><td>0.495</td><td>18</td><td>20</td><td>15</td><td>20</td><td>+3</td><td>4.8</td><td>5 年</td></tr><tr><td>18</td><td>上海市铜川学校</td><td>0.483</td><td>17</td><td>19</td><td>18</td><td>18</td><td>+0</td><td>11.2</td><td>5 年</td></tr><tr><td>19</td><td>上海市怒江中学</td><td>0.465</td><td>15</td><td>17</td><td>25</td><td>21</td><td>+2</td><td>4.4</td><td>5 年</td></tr><tr><td>20</td><td>上海市洛川学校</td><td>0.463</td><td>20</td><td>28</td><td>10</td><td>19</td><td>-1</td><td>9.4</td><td>5 年</td></tr><tr><td>21</td><td>上海市普陀区教育学院附属学校</td><td>0.442</td><td>22</td><td>26</td><td>11</td><td>22</td><td>+1</td><td>5.0</td><td>5 年</td></tr><tr><td>22</td><td>上海市北海中学</td><td>0.438</td><td>21</td><td>13</td><td>28</td><td>17</td><td>-5</td><td>15.8</td><td>5 年</td></tr><tr><td>23</td><td>上海市沙田学校</td><td>0.391</td><td>24</td><td>22</td><td>21</td><td>23</td><td>+0</td><td>8.6</td><td>5 年</td></tr><tr><td>24</td><td>上海市文达学校</td><td>0.362</td><td>25</td><td>23</td><td>24</td><td>24</td><td>+0</td><td>12.4</td><td>5 年</td></tr><tr><td>25</td><td>上海市曹杨第二中学附属实验中学</td><td>0.348</td><td>23</td><td>30</td><td>20</td><td>27</td><td>+2</td><td>16.0</td><td>4 年（精度低一年）</td></tr><tr><td>26</td><td>上海市洵阳中学</td><td>0.337</td><td>26</td><td>21</td><td>29</td><td>25</td><td>-1</td><td>7.2</td><td>5 年</td></tr><tr><td>27</td><td>上海市宜川中学附属学校</td><td>0.313</td><td>28</td><td>27</td><td>23</td><td>26</td><td>-1</td><td>12.0</td><td>5 年</td></tr><tr><td>28</td><td>上海市子长学校</td><td>0.302</td><td>27</td><td>25</td><td>31</td><td>29</td><td>+1</td><td>5.6</td><td>5 年</td></tr><tr><td>29</td><td>上海市新杨中学</td><td>0.268</td><td>29</td><td>29</td><td>30</td><td>31</td><td>+2</td><td>23.6</td><td>5 年</td></tr><tr><td>30</td><td>上海市延河中学</td><td>0.262</td><td>31</td><td>32</td><td>26</td><td>28</td><td>-2</td><td>12.4</td><td>5 年</td></tr><tr><td>31</td><td>上海市桃浦中学</td><td>0.259</td><td>30</td><td>31</td><td>27</td><td>32</td><td>+1</td><td>11.0</td><td>5 年</td></tr><tr><td>32</td><td>上海市曹杨中学</td><td>0.239</td><td>32</td><td>24</td><td>32</td><td>30</td><td>-2</td><td>24.6</td><td>5 年</td></tr></tbody></table></div>
+<blockquote><strong>年均计划</strong>：区属 4 所高中每年给该校的名额均值（按该校有数据的年份平均）。名额多寡不解释位次<br>（见 3.1：ρ 为中等强度且方向为「名额越多位次略好」）。<br><strong>怎么读</strong>：先看加权综合名次，再看三组名次与等权对照。分歧大 = 「偏科」，例如<br>洛川学校（全身 20 / 头部 28 / 尾部 10）、<br>梅陇中学（全身 6 / 头部 2 / 尾部 9）。</blockquote>
+<h3 id="sec-2-2">2.2 单指标得分与名次对照</h3>
+<p><strong>表 2-2</strong> 同一批学校在 8 个口径下的位次（后 3 列为时间权重口径，详见附录 A）。</p>
+<div class="tw"><table><thead><tr><th>初中</th><th>P加权（名次）</th><th>P等权（名次）</th><th>Z加权（名次）</th><th>ZR加权（名次）</th><th>均名(加权)</th><th>P线性</th><th>P指数</th><th>P近3年</th></tr></thead><tbody><tr><td>上海市晋元高级中学附属学校</td><td>0.874（1）</td><td>0.832（2）</td><td>+0.83（1）</td><td>+0.91（1）</td><td>5.60</td><td>0.880（1）</td><td>0.869（1）</td><td>0.882（1）</td></tr><tr><td>上海市江宁学校</td><td>0.803（2）</td><td>0.841（1）</td><td>+0.78（2）</td><td>+0.82（2）</td><td>8.20</td><td>0.808（2）</td><td>0.790（3）</td><td>0.815（2）</td></tr><tr><td>上海市中远实验学校</td><td>0.785（3）</td><td>0.803（3）</td><td>+0.69（5）</td><td>+0.74（3）</td><td>8.80</td><td>0.791（3）</td><td>0.823（2）</td><td>0.807（3）</td></tr><tr><td>上海市曹杨第二中学附属学校</td><td>0.769（4）</td><td>0.772（5）</td><td>+0.68（4）</td><td>+0.64（4）</td><td>9.60</td><td>0.751（4）</td><td>0.740（5）</td><td>0.748（4）</td></tr><tr><td>上海市真北中学</td><td>0.712（5）</td><td>0.787（4）</td><td>+0.75（3）</td><td>+0.54（5）</td><td>12.40</td><td>0.610（13）</td><td>0.542（18）</td><td>0.530（15）</td></tr><tr><td>上海市梅陇中学</td><td>0.710（6）</td><td>0.732（8）</td><td>+0.58（7）</td><td>+0.57（6）</td><td>11.60</td><td>0.725（5）</td><td>0.746（4）</td><td>0.722（5）</td></tr><tr><td>华东师范大学附属外国语实验学校</td><td>0.710（7）</td><td>0.767（6）</td><td>+0.69（6）</td><td>+0.51（7）</td><td>12.20</td><td>0.635（10）</td><td>0.596（13）</td><td>0.589（13）</td></tr><tr><td>上海师范大学附属第二实验学校</td><td>0.696（8）</td><td>0.643（11）</td><td>+0.50（10）</td><td>+0.41（10）</td><td>12.20</td><td>0.661（6）</td><td>0.617（10）</td><td>0.700（7）</td></tr><tr><td>华东师范大学第四附属中学</td><td>0.683（9）</td><td>0.750（7）</td><td>+0.56（8）</td><td>+0.44（8）</td><td>12.80</td><td>0.654（7）</td><td>0.611（11）</td><td>0.647（9）</td></tr><tr><td>上海外国语大学尚阳外国语学校</td><td>0.646（10）</td><td>0.650（9）</td><td>+0.40（11）</td><td>+0.30（11）</td><td>14.20</td><td>0.637（9）</td><td>0.588（15）</td><td>0.633（11）</td></tr><tr><td>上海市长征中学</td><td>0.634（11）</td><td>0.645（10）</td><td>+0.34（13）</td><td>+0.30（12）</td><td>14.20</td><td>0.645（8）</td><td>0.591（14）</td><td>0.707（6）</td></tr><tr><td>上海市曹杨中学附属学校</td><td>0.630（12）</td><td>0.639（12）</td><td>+0.54（9）</td><td>+0.34（9）</td><td>15.20</td><td>0.535（16）</td><td>0.422（20）</td><td>0.525（16）</td></tr><tr><td>同济大学第二附属中学</td><td>0.566（13）</td><td>0.598（14）</td><td>+0.19（14）</td><td>+0.18（13）</td><td>16.40</td><td>0.631（11）</td><td>0.703（6）</td><td>0.689（8）</td></tr><tr><td>上海市普陀区教育学院附属中学</td><td>0.549（14）</td><td>0.518（15）</td><td>+0.38（12）</td><td>+0.13（15）</td><td>18.20</td><td>0.493（19）</td><td>0.461（19）</td><td>0.421（21）</td></tr><tr><td>上海市怒江中学</td><td>0.533（15）</td><td>0.373（22）</td><td>+0.15（22）</td><td>-0.05（20）</td><td>18.30</td><td>0.564（14）</td><td>0.599（12）</td><td>0.496（19）</td></tr><tr><td>上海市万里城实验学校</td><td>0.530（16）</td><td>0.608（13）</td><td>+0.13（15）</td><td>+0.11（14）</td><td>17.80</td><td>0.618（12）</td><td>0.676（7）</td><td>0.645（10）</td></tr><tr><td>上海市铜川学校</td><td>0.496（17）</td><td>0.467（17）</td><td>+0.06（16）</td><td>-0.11（18）</td><td>19.50</td><td>0.531（18）</td><td>0.543（17）</td><td>0.506（17）</td></tr><tr><td>上海理工大学附属普陀实验学校</td><td>0.493（18）</td><td>0.394（20）</td><td>+0.10（20）</td><td>+0.07（17）</td><td>19.40</td><td>0.544（15）</td><td>0.643（8）</td><td>0.546（14）</td></tr><tr><td>上海市晋元高级中学附属学校南校</td><td>0.490（19）</td><td>0.452（18）</td><td>+0.01（19）</td><td>-0.17（16）</td><td>19.40</td><td>0.484（20）</td><td>0.403（21）</td><td>0.591（12）</td></tr><tr><td>上海市洛川学校</td><td>0.484（20）</td><td>0.442（19）</td><td>-0.03（23）</td><td>-0.27（21）</td><td>19.80</td><td>0.535（17）</td><td>0.623（9）</td><td>0.500（18）</td></tr><tr><td>上海市北海中学</td><td>0.438（21）</td><td>0.480（16）</td><td>+0.07（17）</td><td>-0.21（19）</td><td>21.80</td><td>0.411（22）</td><td>0.394（22）</td><td>0.403（23）</td></tr><tr><td>上海市普陀区教育学院附属学校</td><td>0.415（22）</td><td>0.341（24）</td><td>+0.13（18）</td><td>-0.37（22）</td><td>23.30</td><td>0.294（27）</td><td>0.235（29）</td><td>0.228（31）</td></tr><tr><td>上海市曹杨第二中学附属实验中学</td><td>0.373（23）</td><td>0.342（23）</td><td>-0.22（26）</td><td>-0.44（23）</td><td>24.25</td><td>0.449（21）</td><td>0.573（16）</td><td>0.435（20）</td></tr><tr><td>上海市沙田学校</td><td>0.360（24）</td><td>0.331（26）</td><td>-0.21（25）</td><td>-0.82（26）</td><td>24.80</td><td>0.301（25）</td><td>0.249（27）</td><td>0.294（27）</td></tr><tr><td>上海市文达学校</td><td>0.358（25）</td><td>0.375（21）</td><td>-0.03（21）</td><td>-0.61（25）</td><td>25.50</td><td>0.242（31）</td><td>0.213（32）</td><td>0.143（32）</td></tr><tr><td>上海市洵阳中学</td><td>0.287（26）</td><td>0.331（25）</td><td>-0.28（24）</td><td>-0.65（24）</td><td>27.40</td><td>0.290（28）</td><td>0.288（26）</td><td>0.251（29）</td></tr><tr><td>上海市子长学校</td><td>0.262（27）</td><td>0.210（32）</td><td>-0.75（31）</td><td>-1.07（31）</td><td>27.60</td><td>0.297（26）</td><td>0.293（25）</td><td>0.407（22）</td></tr><tr><td>上海市宜川中学附属学校</td><td>0.248（28）</td><td>0.314（27）</td><td>-0.58（28）</td><td>-0.92（27）</td><td>28.40</td><td>0.252（29）</td><td>0.238（28）</td><td>0.313（26）</td></tr><tr><td>上海市新杨中学</td><td>0.246（29）</td><td>0.244（30）</td><td>-0.44（27）</td><td>-0.85（28）</td><td>28.60</td><td>0.245（30）</td><td>0.222（31）</td><td>0.278（28）</td></tr><tr><td>上海市桃浦中学</td><td>0.242（30）</td><td>0.233（31）</td><td>-0.92（32）</td><td>-1.35（32）</td><td>28.30</td><td>0.304（24）</td><td>0.299（24）</td><td>0.372（24）</td></tr><tr><td>上海市延河中学</td><td>0.240（31）</td><td>0.248（29）</td><td>-0.71（30）</td><td>-0.94（30）</td><td>28.60</td><td>0.311（23）</td><td>0.383（23）</td><td>0.328（25）</td></tr><tr><td>上海市曹杨中学</td><td>0.203（32）</td><td>0.250（28）</td><td>-0.54（29）</td><td>-0.93（29）</td><td>30.20</td><td>0.218（32）</td><td>0.234（30）</td><td>0.235（30）</td></tr></tbody></table></div>
+<blockquote><strong>一致性小结</strong>：加权 P 与等权 P 的 Spearman = 0.9655；<br>加权 P 与加权 Z = 0.9718；加权综合与 Z/ZR 综合 = 0.9758 / 0.9897。<br>「第一梯队是晋元高级中学附属学校、江宁学校、中远实验学校、曹杨第二中学附属学校」这批成员对口径稳健；「谁是第一」对口径敏感。</blockquote>
+<h3 id="sec-2-3">2.3 与单一口径的一致性（口径稳健性证据）</h3>
+<ul><li><strong>加权 vs 等权（本次变更）</strong>：综合口径 Spearman = <strong>0.9842</strong>； 32 所中 8 所不变、10 所变动 1 位、10 所变动 2 位、<strong>最大 北海中学 变动 5 位</strong>。差异集中在名额结构特殊的学校（如 北海中学 在两条低线上名额占比偏低）。</li><li><strong>P vs Z / ZR</strong>：Spearman = 0.9718 / 与 ZR 综合 0.9897—— 三种尺度高度一致，差异来自「用名次、用 μ/σ、还是用中位/IQR」。</li><li><strong>4 年校可入榜</strong>：曹杨第二中学附属实验中学（2022 年未参与）因 P 为年内标准化而可比，按 4 年数据列加权综合第 25；精度低一年，引用须标注。</li><li><strong>时间权重</strong>：线性/指数/近 3 年与等权榜 Spearman 0.936/0.821/0.882，变动 ≥3 位 12/17/18 所（附录 A.2）。</li></ul>
+<hr>
+<h2 id="sec-3">3 结构与异质性</h2>
+<p>本章回答三个结构性问题：名额规模会不会影响位次（3.1）、只看单条线会看到什么（3.2）、「名额切得更深」有没有机械效应（3.3）。</p>
+<h3 id="sec-3-1">3.1 规模与竞争强度（区属年均名额三分位）</h3>
+<div class="tw"><table><thead><tr><th>档</th><th>数量</th><th>全样本名次区间（加权口径）</th></tr></thead><tbody><tr><td>大规模（年均 &gt;20.4）</td><td>10 所</td><td>第 1–31 名</td></tr><tr><td>中规模（11.2–20.4）</td><td>10 所</td><td>第 3–29 名</td></tr><tr><td>小规模（≤11.2）</td><td>11 所</td><td>第 8–27 名</td></tr></tbody></table></div>
+<ul><li><strong>事实</strong>：三档的全样本名次区间<strong>大面积重叠</strong>——大规模档里既有全区第 1，也有第 31。</li><li><strong>事实（符号与显著性）</strong>：<code>Spearman(区属年均名额, 加权均名) = -0.483</code>、 <code>(…, P综合) = 0.49</code>——<strong>中等强度、方向为「名额越多位次略好」</strong>；控制线难度后的<strong>同线内</strong>检验 ρ = <strong>−0.170</strong>（n=742，逐线口径）。</li><li><strong>推断</strong>：规模<strong>不是</strong>决定名次的因素（档内离散远大于档间差异），但<strong>也不是无关变量</strong>，方向为「略偏大校」。<strong>本指标没有系统性压低大校</strong>，梅陇的全身第 6 不能归因于其规模。</li></ul>
+<hr>
+<h3 id="sec-3-2-8">3.2 单线视角：四条区属线各自的五年均名（前 8）</h3>
+<p><strong>华二普陀线</strong></p>
+<div class="tw"><table><thead><tr><th>名次</th><th>初中</th><th>该线均名</th><th>该线均分</th></tr></thead><tbody><tr><td>1</td><td>华东师范大学第四附属中学</td><td>5.50</td><td>759.1</td></tr><tr><td>2</td><td>上海市真北中学</td><td>6.50</td><td>757.4</td></tr><tr><td>3</td><td>上海市长征中学</td><td>9.20</td><td>757.3</td></tr><tr><td>4</td><td>上海市梅陇中学</td><td>9.30</td><td>757.0</td></tr><tr><td>5</td><td>上海市江宁学校</td><td>10.00</td><td>756.7</td></tr><tr><td>6</td><td>华东师范大学附属外国语实验学校</td><td>10.30</td><td>757.0</td></tr><tr><td>7</td><td>上海市中远实验学校</td><td>13.70</td><td>753.5</td></tr><tr><td>8</td><td>上海市北海中学</td><td>14.10</td><td>755.1</td></tr></tbody></table></div>
+<p><strong>曹杨二中线</strong></p>
+<div class="tw"><table><thead><tr><th>名次</th><th>初中</th><th>该线均名</th><th>该线均分</th></tr></thead><tbody><tr><td>1</td><td>上海市曹杨第二中学附属学校</td><td>6.80</td><td>748.1</td></tr><tr><td>2</td><td>上海市梅陇中学</td><td>8.80</td><td>746.8</td></tr><tr><td>3</td><td>上海市中远实验学校</td><td>9.20</td><td>746.4</td></tr><tr><td>4</td><td>华东师范大学附属外国语实验学校</td><td>9.50</td><td>746.6</td></tr><tr><td>5</td><td>上海市江宁学校</td><td>11.20</td><td>745.2</td></tr><tr><td>6</td><td>上海市真北中学</td><td>11.50</td><td>746.7</td></tr><tr><td>7</td><td>华东师范大学第四附属中学</td><td>11.60</td><td>745.7</td></tr><tr><td>8</td><td>上海市晋元高级中学附属学校</td><td>12.20</td><td>744.5</td></tr></tbody></table></div>
+<p><strong>晋元线</strong></p>
+<div class="tw"><table><thead><tr><th>名次</th><th>初中</th><th>该线均名</th><th>该线均分</th></tr></thead><tbody><tr><td>1</td><td>上海市晋元高级中学附属学校</td><td>5.80</td><td>736.6</td></tr><tr><td>2</td><td>上海市江宁学校</td><td>8.20</td><td>735.2</td></tr><tr><td>3</td><td>上海市晋元高级中学附属学校南校</td><td>9.40</td><td>733.8</td></tr><tr><td>4</td><td>上海市曹杨中学附属学校</td><td>11.50</td><td>734.6</td></tr><tr><td>5</td><td>上海市中远实验学校</td><td>11.60</td><td>733.3</td></tr><tr><td>6</td><td>上海市梅陇中学</td><td>12.20</td><td>732.3</td></tr><tr><td>7</td><td>上海市曹杨第二中学附属学校</td><td>12.80</td><td>732.6</td></tr><tr><td>8</td><td>上海市真北中学</td><td>13.80</td><td>734.1</td></tr></tbody></table></div>
+<p><strong>宜川线</strong></p>
+<div class="tw"><table><thead><tr><th>名次</th><th>初中</th><th>该线均名</th><th>该线均分</th></tr></thead><tbody><tr><td>1</td><td>上海市晋元高级中学附属学校</td><td>8.10</td><td>722.5</td></tr><tr><td>2</td><td>同济大学第二附属中学</td><td>11.00</td><td>721.6</td></tr><tr><td>3</td><td>上海市江宁学校</td><td>11.80</td><td>720.7</td></tr><tr><td>4</td><td>上海师范大学附属第二实验学校</td><td>12.50</td><td>720.7</td></tr><tr><td>5</td><td>上海市铜川学校</td><td>12.80</td><td>720.3</td></tr><tr><td>6</td><td>华东师范大学附属外国语实验学校</td><td>13.40</td><td>720.9</td></tr><tr><td>7</td><td>上海市真北中学</td><td>14.50</td><td>719.2</td></tr><tr><td>8</td><td>上海市中远实验学校</td><td>14.60</td><td>720.3</td></tr></tbody></table></div>
+<p><strong>事实</strong>：四条线的第一名<strong>各不相同</strong>（华二普陀→华东师大四附中、曹杨二中→曹二附属学校、<br>晋元→晋元附校、宜川→晋元附校）——「谁是第一」取决于看哪条线。</p>
+<h4 id="sec-3-2-1-32-n-4">3.2.1 只看曹杨二中线的完整排名（32 所，n≥4 年）</h4>
+<div class="tw"><table><thead><tr><th>名次</th><th>初中</th><th>曹二线均名</th><th>曹二线均分</th></tr></thead><tbody><tr><td>1</td><td>上海市曹杨第二中学附属学校</td><td>6.80</td><td>748.1</td></tr><tr><td>2</td><td>上海市梅陇中学</td><td>8.80</td><td>746.8</td></tr><tr><td>3</td><td>上海市中远实验学校</td><td>9.20</td><td>746.4</td></tr><tr><td>4</td><td>华东师范大学附属外国语实验学校</td><td>9.50</td><td>746.6</td></tr><tr><td>5</td><td>上海市江宁学校</td><td>11.20</td><td>745.2</td></tr><tr><td>6</td><td>上海市真北中学</td><td>11.50</td><td>746.7</td></tr><tr><td>7</td><td>华东师范大学第四附属中学</td><td>11.60</td><td>745.7</td></tr><tr><td>8</td><td>上海市晋元高级中学附属学校</td><td>12.20</td><td>744.5</td></tr><tr><td>9</td><td>上海市曹杨中学附属学校</td><td>13.50</td><td>744.8</td></tr><tr><td>10</td><td>上海市万里城实验学校</td><td>14.10</td><td>742.2</td></tr><tr><td>11</td><td>上海市长征中学</td><td>14.20</td><td>744.0</td></tr><tr><td>12</td><td>上海外国语大学尚阳外国语学校</td><td>16.10</td><td>741.4</td></tr><tr><td>13</td><td>上海市子长学校</td><td>17.80</td><td>738.1</td></tr><tr><td>14</td><td>上海市北海中学</td><td>18.00</td><td>740.7</td></tr><tr><td>15</td><td>上海市普陀区教育学院附属中学</td><td>18.90</td><td>742.3</td></tr><tr><td>16</td><td>同济大学第二附属中学</td><td>18.90</td><td>741.0</td></tr><tr><td>17</td><td>上海师范大学附属第二实验学校</td><td>19.10</td><td>741.5</td></tr><tr><td>18</td><td>上海市晋元高级中学附属学校南校</td><td>20.20</td><td>737.4</td></tr><tr><td>19</td><td>上海市铜川学校</td><td>20.40</td><td>740.1</td></tr><tr><td>20</td><td>上海市沙田学校</td><td>20.50</td><td>739.6</td></tr><tr><td>21</td><td>上海市怒江中学</td><td>20.90</td><td>734.4</td></tr><tr><td>22</td><td>上海理工大学附属普陀实验学校</td><td>22.60</td><td>737.7</td></tr><tr><td>23</td><td>上海市洵阳中学</td><td>23.00</td><td>732.5</td></tr><tr><td>24</td><td>上海市曹杨中学</td><td>24.50</td><td>737.1</td></tr><tr><td>25</td><td>上海市普陀区教育学院附属学校</td><td>24.70</td><td>734.3</td></tr><tr><td>26</td><td>上海市文达学校</td><td>25.10</td><td>735.9</td></tr><tr><td>27</td><td>上海市曹杨第二中学附属实验中学（4 年）</td><td>27.25</td><td>734.4</td></tr><tr><td>28</td><td>上海市宜川中学附属学校</td><td>27.70</td><td>731.8</td></tr><tr><td>29</td><td>上海市新杨中学</td><td>28.10</td><td>735.9</td></tr><tr><td>30</td><td>上海市桃浦中学</td><td>28.60</td><td>717.9</td></tr><tr><td>31</td><td>上海市洛川学校</td><td>29.80</td><td>732.2</td></tr><tr><td>32</td><td>上海市延河中学</td><td>31.90</td><td>724.6</td></tr></tbody></table></div>
+<h4 id="sec-3-2-2-3-6">3.2.2 单线口径有多稳？——与全身口径同向，但名次会漂移 3–6 位</h4>
+<ul><li>Spearman(曹杨二中单线均名, base4 均名) = <strong>+0.845</strong>； Spearman(华二普陀单线均名, base4 均名) = <strong>+0.843</strong>——<strong>方向一致</strong>。</li><li>但位次漂移可观：与 base4 均名名次相比，平均绝对变动——华二普陀 <strong>4.4</strong> 位（最大 11）、曹杨二中 <strong>3.5</strong> 位（最大 19）、晋元 <strong>4.9</strong> 位（最大 14）、宜川 <strong>6.3</strong> 位（最大 18）。</li><li><strong>机理</strong>：每条线每校每年只有 1–5 个名额，「最低分」= 极小样本极值。同一所学校四条线的名次落差可达十余位——梅陇 13.5（华二普陀 9.3 / 曹二 8.8 / 晋元 12.2 / 宜川 22.3），安生 15.7、进华 15.2、洛川 14.4。</li><li><strong>推断</strong>：单线视角适合「看趋势、看个例」，<strong>不适合替代主口径做综合排名</strong>；它对梅陇这类「顶线强、底线弱」的学校尤其敏感。</li></ul>
+<hr>
+<h3 id="sec-3-3">3.3 名额深度效应：两种检验的分歧与结论</h3>
+<div class="tw"><table><thead><tr><th>检验</th><th>n</th><th>Spearman</th><th>方向解读</th></tr></thead><tbody><tr><td>跨样本：区属年均名额 vs 加权均名</td><td>31</td><td><strong>-0.483</strong></td><td>名额越多，名次越<strong>好</strong></td></tr><tr><td>跨样本：区属年均名额 vs P综合</td><td>31</td><td><strong>+0.49</strong></td><td>同上（P 越大越好，互为镜像）</td></tr><tr><td>同线内：该校该线名额 vs 该线名次</td><td>742</td><td><strong>−0.170</strong></td><td>控制线难度后，仍略偏大校</td></tr><tr><td>├ 华二普陀线</td><td>185</td><td>−0.130</td><td></td></tr><tr><td>├ 曹杨二中线</td><td>188</td><td>−0.306</td><td></td></tr><tr><td>├ 晋元线</td><td>186</td><td>−0.218</td><td></td></tr><tr><td>└ 宜川线</td><td>183</td><td>−0.090</td><td></td></tr></tbody></table></div>
+<p><strong>事实</strong>：两种检验的符号<strong>一致为负</strong>——名额越多的校，位次反而<strong>略好</strong>（n=31 时 p≈0.0015，<br>属中等强度关联）。这与「名额多→切得深→线更低」的机械直觉<strong>相反</strong>。<br><strong>推断（机理）</strong>：名额按在籍人数比例分配，切点在各校内的相对分位大致恒定，<br>机械深度效应被抵消；残留的负号来自「大规模校整体生源更强」的选择效应。<br><strong>因此：本指标并未系统性压低大校</strong>——梅陇的第 6（综合口径）不能归因于它的规模。<br>（注意：这不等于「规模决定水平」——三档名次区间仍大面积交织，见 3.1。）</p>
+<p><strong>事实（切点深度的直接量化）</strong>：名额按在校生比例分配，因此各校名额占本校「名额批次」的比例<br>几乎一致，4 条线的<strong>切点落在同一深度上</strong>。以规模最大的梅陇为例（4 线名额合计年均 62.4 个）：</p>
+<div class="tw"><table><thead><tr><th>线</th><th>年均名额</th><th>占本校名额批次</th><th>切点位置（名额批次内）</th></tr></thead><tbody><tr><td>华二普陀</td><td>7.0</td><td>11.2%</td><td>前 <strong>11%</strong></td></tr><tr><td>曹杨二中</td><td>18.2</td><td>29.2%</td><td>前 29%</td></tr><tr><td>晋元</td><td>18.6</td><td>29.8%</td><td>前 30%</td></tr><tr><td>宜川</td><td>18.6</td><td>29.8%</td><td>前 30%</td></tr></tbody></table></div>
+<p><strong>事实（占比的校际离散）</strong>：3 条低线的名额占比在 31 所间高度一致<br>（宜川 0.227–0.333、中位 0.299；晋元 0.227–0.326；曹二 0.214–0.318），<br>而<strong>华二普陀线离散明显更大（0.079–0.250，极差 0.171）</strong>——<br>门槛最高的线其名额份额的校际差异达 3 倍，这正是同线内检验中华二普陀 ρ 最负的来源。<br><strong>推断</strong>：因此「切得更深→线更低」的机械效应在<strong>低线上被完全抵消</strong>，只在线难度差异最大的顶线上留下痕迹；<br>规模本身不构成对大校的系统性压低。</p>
+<h3 id="sec-3-4-2-5">3.4 指标的有效边界：切点只测到「全校前 2%–5%」这一段</h3>
+<blockquote>本节回答一个前置问题：<strong>这个排名到底在测什么、没测什么。</strong> 结论 18 已声明「不能衡量学校好坏」，<br>此处给出可量化的边界。</blockquote>
+<ul><li><strong>事实（覆盖缺口）</strong>：名额到校只覆盖考生的一部分。区内 4 条区属线名额合计每年 <strong>598–721 个</strong> （5 年合计 3273 个），按普陀中考规模估算约相当于考生的 <strong>17%</strong>（<strong>估算值</strong>，仓库无普陀考生数）。再结合上表的名额占比，切点约落在<strong>全校前 1.9%（华二普陀）到前 5.1%（其余三线）</strong>—— 即本指标只观测到<strong>每个学校最前面 2%–5% 的那批学生</strong>， <strong>占考生 83% 的「5%–50%」这一整段完全不可见</strong>。</li><li><strong>事实（实质并列）</strong>：在<strong>全身口径</strong>下，前 5 名里存在三所实质并列—— 真北中学 0.7116、<strong>梅陇中学 0.7102</strong>、华东师范大学附属外国语实验学校 0.7100，极差仅 <strong>0.0015 分位</strong>；到综合口径（含头/尾分组）才拉开为 0.7260 / 0.7193 / 0.6940。 <strong>引用「第几名」时须给区间或同时给出三位数值</strong>，否则会把噪声当序差。</li><li><strong>推断（为什么会有「公认最好」与本榜不一致）</strong>：公众认知里的「最好」主要来自 <strong>整体中考均分、市重点录取率、整体均分排名</strong>——这些覆盖<strong>全体学生</strong>；本指标测的是<strong>名额到校通道的入围门槛</strong>。两者测的不是同一件事，可以同时成立、 <strong>不可互相替代</strong>。特别地，<strong>顶端厚、5%–2% 段薄</strong>的学校（本区典型：梅陇头部第 2、尾部第 9）在任何平均型综合分里都会吃亏。</li><li><strong>要回答「哪所学校整体更好」，本数据集缺少的三类数据</strong>： ① 各校毕业生规模（可将名额占比换成真实切点分位）； ② 统一招生批次的校均分/最高分； ③ 名额到校落榜学生在统招批次的出口结果。在补齐之前，<strong>任何「梅陇是不是最好」的判断都不能由本报告的数据得出</strong>。</li></ul>
+<hr>
+<h2 id="sec-4">4 趋势与收敛</h2>
+<blockquote>本章全部基于<strong>名额加权主口径</strong>的逐年均分。<code>rel</code> = 该校加权 base4 均分 − 当年 31 所五年全勤的中位分。</blockquote>
+<h3 id="sec-4-1">4.1 逐年离散度</h3>
+<div class="tw"><table><thead><tr><th>年</th><th>IQR</th><th>σ</th><th>中位</th><th>中位 ±5 分内占比</th><th>±10 分内占比</th></tr></thead><tbody><tr><td>2022</td><td>13.3</td><td>8.49</td><td>734.7</td><td>39%</td><td>77%</td></tr><tr><td>2023</td><td>9.6</td><td>6.57</td><td>727.2</td><td>48%</td><td>90%</td></tr><tr><td>2024</td><td>9.9</td><td>6.86</td><td>729.4</td><td>61%</td><td>81%</td></tr><tr><td>2025</td><td>5.8</td><td>3.98</td><td>727.1</td><td>77%</td><td>100%</td></tr><tr><td>2026</td><td>5.2</td><td>4.43</td><td>740.2</td><td>77%</td><td>94%</td></tr></tbody></table></div>
+<ul><li><strong>事实</strong>：IQR 五年降 8.1 分（-61%）、σ 从 8.49 降到 4.43，中位 ±5 分内占比从 39% 升到 77%——<strong>校际差距持续收窄</strong>，2025 年最集中（IQR 5.8、σ 3.98）。</li></ul>
+<h3 id="sec-4-2">4.2 收敛回归（扣除整体效应）</h3>
+<p>对「首末变化量 Δrel」回归「起始 rel」（n=31）：</p>
+<p>``<code><br>Δrel = -0.124 + (-0.861) × rel_2022      b&lt;0 ⇒ 整体收敛<br>R² = 0.745      残差 σ = 4.27 分<br></code>``</p>
+<ul><li><strong>约 75% 的五年变化量可由「起点高低」解释</strong>：普陀的排名变动大部分是一场统一的均值回归，不是 N 个独立故事。</li></ul>
+<h3 id="sec-4-3-z-1-10">4.3 超出整体收敛的个案（|残差 z| ≥ 1，全表 10 所）</h3>
+<div class="tw"><table><thead><tr><th>初中</th><th>残差 z</th><th>rel 起点 → 终点</th><th>近 3 年 Sen</th></tr></thead><tbody><tr><td>沙田学校</td><td>-2.77</td><td>+1.00 → -11.82</td><td>-2.40</td></tr><tr><td>桃浦中学</td><td>-1.70</td><td>-21.38 → -10.35</td><td>+0.04</td></tr><tr><td>普陀区教育学院附属学校</td><td>-1.40</td><td>+7.44 → -5.08</td><td>-1.15</td></tr><tr><td>新杨中学</td><td>-1.27</td><td>-10.01 → -6.96</td><td>-1.83</td></tr><tr><td>文达学校</td><td>-1.16</td><td>+7.44 → -4.06</td><td>+4.10</td></tr><tr><td>晋元高级中学附属学校南校</td><td>-1.05</td><td>-7.19 → -5.61</td><td>-7.45</td></tr><tr><td>上海理工大学附属普陀实验学校（上升）</td><td>+2.11</td><td>-3.44 → +8.42</td><td>+4.21</td></tr><tr><td>中远实验学校（上升）</td><td>+1.30</td><td>+6.11 → +6.29</td><td>+0.88</td></tr><tr><td>同济大学第二附属中学（上升）</td><td>+1.18</td><td>-1.42 → +4.72</td><td>+1.22</td></tr><tr><td>延河中学（上升）</td><td>+1.08</td><td>-24.62 → +1.08</td><td>+2.58</td></tr></tbody></table></div>
+<ul><li><strong>推断（必须成对表述）</strong>：「下降超出」不等于「学校变差」——它是<strong>相对全区收敛轨道</strong>的偏离；反向同理。「近 3 年 Sen」列为正者，说明近端已转向。</li></ul>
+<h3 id="sec-4-4-sen-spearman">4.4 趋势方向（Sen 与 Spearman 同号）</h3>
+<div class="tw"><table><thead><tr><th>趋势判定</th><th>学校数</th><th>学校</th></tr></thead><tbody><tr><td>上升（Sen 与 ρ 同正）</td><td>18</td><td>上海外国语大学尚阳外国语学校、万里城实验学校、子长学校、宜川中学附属学校、延河中学、怒江中学、新杨中学、晋元高级中学附属学校、晋元高级中学附属学校南校、曹杨中学、桃浦中学、梅陇中学、洛川学校、洵阳中学、铜川学校、长征中学、上海理工大学附属普陀实验学校、同济大学第二附属中学</td></tr><tr><td>下降（Sen 与 ρ 同负）</td><td>12</td><td>北海中学、文达学校、普陀区教育学院附属中学、普陀区教育学院附属学校、曹杨中学附属学校、曹杨第二中学附属学校、江宁学校、沙田学校、真北中学、上海师范大学附属第二实验学校、华东师范大学第四附属中学、华东师范大学附属外国语实验学校</td></tr><tr><td>未检出趋势</td><td>1</td><td>（名单见趋势分析 CSV）</td></tr></tbody></table></div>
+<ul><li><strong>事实</strong>：上升 4 所中若 Sen 与 ρ 同号才计入；未检出趋势的学校<strong>不代表水平未变</strong>，只是 5 个时点无法与噪声区分。</li></ul>
+<hr>
+<h2 id="sec-5">5 逐校个案</h2>
+<blockquote>个案顺序按<strong>加权综合名次</strong>排列；数字均为加权主口径。</blockquote>
+<h3 id="sec-5-1-1">5.1 晋元高级中学附属学校（加权综合第 1）</h3>
+<ul><li><strong>事实</strong>：加权综合 P=0.827（全身 1 / 头部 9 / 尾部 1）；等权综合第 2；加权均名 5.60；区属年均计划 44.6</li><li><strong>事实（趋势）</strong>：rel +3.54 → +4.08（Δ +0.54），Sen +0.02、ρ +0.10、近 3 年 Sen -0.09、收敛残差 z +0.87</li></ul>
+<h3 id="sec-5-2-2">5.2 江宁学校（加权综合第 2）</h3>
+<ul><li><strong>事实</strong>：加权综合 P=0.795（全身 2 / 头部 6 / 尾部 2）；等权综合第 1；加权均名 8.20；区属年均计划 20.8</li><li><strong>事实（趋势）</strong>：rel +3.17 → +2.33（Δ -0.84），Sen -0.14、ρ -0.30、近 3 年 Sen -0.06、收敛残差 z +0.47</li></ul>
+<h3 id="sec-5-3-3">5.3 曹杨第二中学附属学校（加权综合第 3）</h3>
+<ul><li><strong>事实</strong>：加权综合 P=0.765（全身 4 / 头部 1 / 尾部 6）；等权综合第 5；加权均名 9.60；区属年均计划 33.2</li><li><strong>事实（趋势）</strong>：rel +5.77 → +2.58（Δ -3.20），Sen -0.77、ρ -0.70、近 3 年 Sen +0.05、收敛残差 z +0.45</li></ul>
+<h3 id="sec-5-4-4">5.4 中远实验学校（加权综合第 4）</h3>
+<ul><li><strong>事实</strong>：加权综合 P=0.751（全身 3 / 头部 7 / 尾部 4）；等权综合第 4；加权均名 8.80；区属年均计划 20.4</li><li><strong>事实（趋势）</strong>：rel +6.11 → +6.29（Δ +0.18），Sen -0.22、ρ +0.10、近 3 年 Sen +0.88、收敛残差 z +1.30（超出收敛）</li></ul>
+<h3 id="sec-5-5-5">5.5 真北中学（加权综合第 5）</h3>
+<ul><li><strong>事实</strong>：加权综合 P=0.726（全身 5 / 头部 5 / 尾部 7）；等权综合第 3；加权均名 12.40；区属年均计划 11.2</li><li><strong>事实（趋势）</strong>：rel +9.45 → -0.32（Δ -9.77），Sen -2.57、ρ -0.90、近 3 年 Sen -0.20、收敛残差 z -0.35</li></ul>
+<h3 id="sec-5-6">5.6 梅陇中学的三个口径与逐线分解</h3>
+<ul><li><strong>事实</strong>：区属年均名额 <strong>62.4 个/年</strong>（2023 年峰值 68 个，2026 年 61 个），为第二名晋元附校（44.6 个/年）的 1.4 倍。</li><li><strong>事实（逐线五年的均分）</strong>：华二普陀 <strong>757.0（全区第 1）</strong>｜曹杨二中 746.8｜晋元 732.3｜宜川 716.0 ——顶线与底线相差 41 分。</li><li><strong>事实（三口径）</strong>：加权综合第 6、全身第 6、 <strong>头部第 2</strong>、尾部第 9。</li><li><strong>推断</strong>：梅陇是「<strong>尖子层全区前列、门槛尾部中后段</strong>」的偏科型；只报单一综合名次会掩盖这一点。</li><li><strong>切点深度（见 3.4）</strong>：这 4 条线的名额占其名额批次的 11.2%–29.8%，即切点只测到<strong>全校前约 2%–5%</strong> 段——「顶端厚、5%–2% 段薄」的形状会被任何平均型综合分压低。</li><li><strong>不要归因于规模</strong>：全区层面名额与名次为中等强度负相关（名额越多位次略好），其晋元/宜川线上的切点分位与江宁几乎相同（0.293 vs 0.295）。</li><li><strong>混淆警告</strong>：<strong>上海市普陀区梅陇实验中学</strong>（校代码 071085）是<strong>另一所学校</strong>——2025 年起才有名额到校数据（仅 2 年，未达入榜门槛 n≥4），其两年 base4 均名 11.75。引用「梅陇」时必须写明是哪一所。</li></ul>
+<h3 id="sec-5-7-10">5.7 超出收敛的个案（10 所）</h3>
+<ul><li><strong>下降超出</strong>（残差 z 由负到正排列）：沙田学校、桃浦中学、普陀区教育学院附属学校、新杨中学、文达学校、晋元高级中学附属学校南校。其中沙田学校 z 最低（rel +1.00 → -11.82，近 3 年 Sen -2.40）；文达学校近 3 年 Sen 已转正（+4.10）。</li><li><strong>上升超出</strong>：上海理工大学附属普陀实验学校、中远实验学校、同济大学第二附属中学、延河中学；其中上理工附属普陀实验 z 最高（rel -3.44 → +8.42）。</li><li><strong>判读</strong>：这些名单<strong>同时披露</strong>方向与近端斜率，避免用「端点改善」掩盖近端走弱，反之亦然。</li></ul>
+<hr>
+<h2 id="sec-a">附录 A 口径敏感性与稳健性</h2>
+<p>本附录汇总「换口径会怎样」的全部证据：时间权重（A.1）、单指标方法（A.2）、三组口径的 Z/ZR 版本（A.3）。<br>结论统一是：第一梯队成员对口径稳健，中后段位次与「谁是第一」对口径敏感。</p>
+<h3 id="sec-a-1">A.1 时间权重敏感性（加权主口径）</h3>
+<div class="tw"><table><thead><tr><th>权重方案（2022→2026）</th><th>与等权榜 Spearman</th><th>变动 ≥3 位的学校数</th><th>变动最大的学校</th></tr></thead><tbody><tr><td>线性 1:2:3:4:5</td><td>+0.936</td><td>12（38%）</td><td>延河中学 -8</td></tr><tr><td>指数 1:2:4:8:16</td><td>+0.821</td><td>17（53%）</td><td>真北中学 +13</td></tr><tr><td>近 3 年 0:0:1:1:1</td><td>+0.882</td><td>18（56%）</td><td>真北中学 +10</td></tr></tbody></table></div>
+<ul><li><strong>事实（主口径 P 的时间权重）</strong>：以「五年等权」为基准，线性/指数/近 3 年三种加权的 Spearman 为 0.936/0.821/0.882，变动 ≥3 位的学校数分别为 12/17/18（共 32 所）。</li><li><strong>事实</strong>：指数权重下 2026 年独占约 51.6% 的权重；<strong>加权把权重集中到最新一期，并不等于更准</strong>。</li><li><strong>判读</strong>：等权 = 长期画像、加权 = 当前水平；若要「当前强弱」，应显式选窗口或显式建趋势（本章 4.4）。</li></ul>
+<h3 id="sec-a-2">A.2 单指标口径的敏感性</h3>
+<ul><li><strong>加权 vs 等权</strong>：全身口径 Spearman = <strong>0.9655</strong>；综合口径 <strong>0.9842</strong>。</li><li><strong>P vs Z / ZR</strong>：加权 P 与加权 Z = <strong>0.9718</strong>；加权综合与 Z 综合 = <strong>0.9758</strong>、与 ZR 综合 = <strong>0.9897</strong>。</li><li><strong>结论</strong>：三种尺度（名次 / μ-σ / 中位-IQR）给出的第一梯队成员一致；「谁是第一」对尺度敏感。</li></ul>
+<h3 id="sec-a-3-z-zr">A.3 三组结构口径的 Z / ZR 版本（对照）</h3>
+<p><strong>表 A.3-1</strong> 三组等权结构在 <strong>Z</strong>（μ/σ）与 <strong>ZR</strong>（中位/(IQR/1.349)）下的综合值与名次（主口径为 P）。</p>
+<div class="tw"><table><thead><tr><th>初中</th><th>P综合（名次）</th><th>Z综合（名次）</th><th>ZR综合（名次）</th></tr></thead><tbody><tr><td>上海市晋元高级中学附属学校</td><td>0.827（1）</td><td>+0.801（1）</td><td>+0.822（1）</td></tr><tr><td>上海市江宁学校</td><td>0.795（2）</td><td>+0.763（2）</td><td>+0.781（2）</td></tr><tr><td>上海市曹杨第二中学附属学校</td><td>0.765（3）</td><td>+0.673（4）</td><td>+0.620（4）</td></tr><tr><td>上海市中远实验学校</td><td>0.751（4）</td><td>+0.649（5）</td><td>+0.671（3）</td></tr><tr><td>上海市真北中学</td><td>0.726（5）</td><td>+0.730（3）</td><td>+0.518（5）</td></tr><tr><td>上海市梅陇中学</td><td>0.719（6）</td><td>+0.557（7）</td><td>+0.504（6）</td></tr><tr><td>华东师范大学附属外国语实验学校</td><td>0.694（7）</td><td>+0.639（6）</td><td>+0.487（7）</td></tr><tr><td>华东师范大学第四附属中学</td><td>0.684（8）</td><td>+0.533（8）</td><td>+0.404（8）</td></tr><tr><td>上海师范大学附属第二实验学校</td><td>0.654（9）</td><td>+0.460（10）</td><td>+0.349（10）</td></tr><tr><td>上海市曹杨中学附属学校</td><td>0.650（10）</td><td>+0.517（9）</td><td>+0.353（9）</td></tr><tr><td>上海外国语大学尚阳外国语学校</td><td>0.645（11）</td><td>+0.421（11）</td><td>+0.297（11）</td></tr><tr><td>上海市长征中学</td><td>0.614（12）</td><td>+0.340（13）</td><td>+0.252（12）</td></tr><tr><td>同济大学第二附属中学</td><td>0.548（13）</td><td>+0.195（14）</td><td>+0.129（13）</td></tr><tr><td>上海市普陀区教育学院附属中学</td><td>0.540（14）</td><td>+0.358（12）</td><td>+0.103（15）</td></tr><tr><td>上海市万里城实验学校</td><td>0.527（15）</td><td>+0.160（15）</td><td>+0.106（14）</td></tr><tr><td>上海市晋元高级中学附属学校南校</td><td>0.503（16）</td><td>+0.043（19）</td><td>-0.092（16）</td></tr><tr><td>上海理工大学附属普陀实验学校</td><td>0.495（17）</td><td>+0.036（20）</td><td>-0.132（17）</td></tr><tr><td>上海市铜川学校</td><td>0.483（18）</td><td>+0.098（16）</td><td>-0.171（18）</td></tr><tr><td>上海市怒江中学</td><td>0.465（19）</td><td>-0.039（22）</td><td>-0.324（20）</td></tr><tr><td>上海市洛川学校</td><td>0.463（20）</td><td>-0.060（23）</td><td>-0.399（21）</td></tr><tr><td>上海市普陀区教育学院附属学校</td><td>0.442（21）</td><td>+0.050（18）</td><td>-0.420（22）</td></tr><tr><td>上海市北海中学</td><td>0.438（22）</td><td>+0.063（17）</td><td>-0.212（19）</td></tr><tr><td>上海市沙田学校</td><td>0.391（23）</td><td>-0.199（25）</td><td>-0.687（26）</td></tr><tr><td>上海市文达学校</td><td>0.362（24）</td><td>-0.039（21）</td><td>-0.613（25）</td></tr><tr><td>上海市曹杨第二中学附属实验中学</td><td>0.348（25）</td><td>-0.199（26）</td><td>-0.501（23）</td></tr><tr><td>上海市洵阳中学</td><td>0.337（26）</td><td>-0.189（24）</td><td>-0.603（24）</td></tr><tr><td>上海市宜川中学附属学校</td><td>0.313（27）</td><td>-0.449（28）</td><td>-0.735（27）</td></tr><tr><td>上海市子长学校</td><td>0.302（28）</td><td>-0.686（31）</td><td>-1.068（31）</td></tr><tr><td>上海市新杨中学</td><td>0.268（29）</td><td>-0.392（27）</td><td>-0.800（28）</td></tr><tr><td>上海市延河中学</td><td>0.262（30）</td><td>-0.644（30）</td><td>-0.956（30）</td></tr><tr><td>上海市桃浦中学</td><td>0.259（31）</td><td>-0.824（32）</td><td>-1.291（32）</td></tr><tr><td>上海市曹杨中学</td><td>0.239（32）</td><td>-0.472（29）</td><td>-0.851（29）</td></tr></tbody></table></div>
+<ul><li><strong>事实</strong>：<code>Spearman(P综合, Z综合) = 0.9758</code>、<code>(P综合, ZR综合) = 0.9897</code>—— 三种尺度高度一致；<strong>ZR 与 P 的第一梯队成员一致</strong>，Z 口径会把个别中段学校换入前 4。</li><li><strong>判读</strong>：P 回答「通常排第几」，Z/ZR 回答「领先多少分」；引用 Z/ZR 名次须注明尺度。</li></ul>
+<hr>
+<h2 id="sec-b">附录 B 验证记录</h2>
+<ul><li>数据侧（2.2 七维度校验）：<code>.trellis/tasks/archive/2026-10/10-01-putuo-junior-high/validation/data-validation.md</code></li><li>主口径与单线视角（2.4）：<code>.trellis/tasks/archive/2026-10/10-01-putuo-metric-singleline/validation/conclusion-review.md</code></li><li>时间加权（2.4）：<code>.trellis/tasks/archive/2026-10/10-02-p-weight-sensitivity/validation/conclusion-review.md</code></li><li>多口径总表（2.4）：<code>.trellis/tasks/10-02-putuo-restructure/validation/conclusion-review.md</code></li><li><strong>名额加权 v3 与宽表扩容（2.4）</strong>：<code>.trellis/tasks/10-02-putuo-weighted-metric/validation/</code> （独立复算 189 格、回归校验、新旧名次差异清单 <code>rank-diff.md</code>）</li><li><strong>排名口径有效边界（2.4，含梅陇专项回源）</strong>：<code>.trellis/tasks/10-02-putuo-metric-boundary/validation/</code> （40 项检查 0 不通过；原始 PDF 回源 25 格分数线 + 20 格名额 + 2023 转录行全部一致）</li></ul>
+<footer>
+  <p>数据与结论均来自官方 PDF，每个数字可回源到具体文件与页码。
+     分析口径、方法与局限见页面内「局限声明」一节。</p>
+  <p>仓库：<a href="https://github.com/iStarFire/Shanghai-XueQuFang">https://github.com/iStarFire/Shanghai-XueQuFang</a></p>
+</footer>
+</main>
+</body>
+</html>
