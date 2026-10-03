@@ -223,6 +223,21 @@ def main():
            [c for c in P5 if Wd[c]['trend_class'] == '明显下降'
             and Wd[c]['reversed_2y'] == '近两年续降'], ['上海市市南中学'])
         ck('报告已说明卢湾案例', int('卢湾中学为什么' in t), 1)
+        # 「下滑最快」这类表述必须限定窗口：卢湾五年降幅第 1，但近两年是上升第 2
+        top5_dec = sorted(P5, key=lambda c: R['SEN'][c])[:1]
+        ck('五年 SEN 最低者 = 卢湾（降幅第 1）', top5_dec, ['上海市卢湾中学'])
+        top5_rise = sorted(P5, key=lambda c: -R['SEN_2Y'][c])[:2]
+        ck('近两年 SEN 最高前 2 含卢湾（上升第 2）',
+           int('上海市卢湾中学' in top5_rise), 1)
+        # 报告里出现的「近 N 年 SEN」数字必须与宽表一致（防编造数值）
+        import re as _r
+        seg = t.split('### 5.1')[1].split('### 5.2')[0] if '### 5.1' in t else ''
+        bad_num = []
+        for nm, val in _r.findall(r'([一-鿿]{2,6}?)(?:中学|学校)?\s*\+(\d+\.\d{2})', seg):
+            hit = [c for c in P5 if c.startswith(nm)]
+            if hit and abs(float(Wd[hit[0]]['sen_2y']) - float(val)) > 0.005:
+                bad_num.append((nm, val, Wd[hit[0]]['sen_2y']))
+        ck('5.1 节引用的近两年 SEN 数值与宽表一致', bad_num, [])
 
     print('\n' + '=' * 62)
     print(f'总计 {N} 项检查，不通过 {len(FAILS)} 项')
