@@ -187,8 +187,9 @@ def main():
                 continue
             w = Wd[hit[0]]
             r5 = int(w['rank_P_wq'])
-            for col, key, acc in ((cs[10], 'rank_P_2y', bad_d2y),
-                                  (cs[11], 'rank_P_recent3', bad_d3),
+            # 列序：…10=近3年 11=近2年 12=2026（窗口 3→2→1 年递减）
+            for col, key, acc in ((cs[10], 'rank_P_recent3', bad_d3),
+                                  (cs[11], 'rank_P_2y', bad_d2y),
                                   (cs[12], 'rank_P_2026', bad_d26)):
                 m = _re.fullmatch(r'\*\*(\d+)\*\*（([+−-]?\d+)）', col)
                 if not m:
@@ -198,6 +199,11 @@ def main():
                 if rk != int(w[key]) or d != r5 - int(w[key]):
                     acc.append((nm, col, w[key], r5 - int(w[key])))
         ck('主表列数 = 14', bad_tc, [])
+        # 列序断言：窗口长度须递减 3→2→1，防止将来调序时错位
+        ck('主表时间窗口列序 = 近3年→近2年→2026',
+           [c for c in rows[0].strip('|').split('|')][10:13],
+           ['**近 3 年（名次·变化）**', '**近 2 年（名次·变化）**',
+            '**2026（名次·变化）**'])
         ck('近 3 年 名次与变化与宽表一致', bad_d3, [])
         ck('2026 名次与变化与宽表一致', bad_d26, [])
         ck('近 2 年 名次与变化与宽表一致', bad_d2y, [])

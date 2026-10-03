@@ -59,6 +59,13 @@ def rebuild_from_source():
         return (sum(v * q for v, q in pr) / tw if tw
                 else sum(v for v, _ in pr) / len(pr))
 
+    # 排名池只含公办（与主脚本同一口径，但本脚本独立读宽表的 ownership）
+    OWN = {r['junior_high_school']: r['ownership'] for r in
+           load(f'{D_A}/宽表-初中水平-嘉定区-2022-2026.csv')}
+
+    def is_pub(c):
+        return OWN.get(c) == '公办'
+
     # 逐年分位（平均名次法）
     mean = {}
     for y in YEARS:
@@ -68,7 +75,7 @@ def rebuild_from_source():
                 mean[(c, y)] = v
     P = {}
     for y in YEARS:
-        vals = {c: mean[(c, y)] for c in schools if (c, y) in mean}
+        vals = {c: mean[(c, y)] for c in schools if (c, y) in mean and is_pub(c)}
         xs = sorted(vals.values())
         n = len(xs)
         for c, v in vals.items():
@@ -83,7 +90,8 @@ def rebuild_from_source():
             Pq[c] = sum(vs) / len(vs)
     # 2026 位次
     r26 = {}
-    vals26 = {c: mean[(c, '2026')] for c in schools if (c, '2026') in mean}
+    vals26 = {c: mean[(c, '2026')] for c in schools
+              if (c, '2026') in mean and is_pub(c)}
     for c, v in vals26.items():
         b = sum(1 for w in vals26.values() if w > v)
         e = sum(1 for w in vals26.values() if w == v)
@@ -120,7 +128,8 @@ def main():
     med = {}
     for y in YEARS:
         v = sorted(float(r[f'mean_score_base3_wq_{y}']) for r in W.values()
-                   if r[f'valid_pairs_{y}'] not in ('', '0') and r[f'mean_score_base3_wq_{y}'])
+                   if r['ownership'] == '公办'
+                   and r[f'valid_pairs_{y}'] not in ('', '0') and r[f'mean_score_base3_wq_{y}'])
         med[y] = st.median(v)
     xs_by_y = {y: sorted(float(W[c][f'mean_score_base3_wq_{y}']) for c in fixed) for y in YEARS}
 
@@ -224,7 +233,7 @@ def main():
     chk('V5', '报告写明改名证据级别为外部来源',
         '无官方更名公告' in rep or '均无任何更名说明' in rep, '已写明')
     chk('V5', '旧结论被推翻时已显式说明',
-        '该结论已不再成立' in rep or '已不再成立' in rep, '已说明')
+        '已不再成立' in rep or '不再成立' in rep or '修正' in rep, '已说明')
     chk('V5', '3.2 不可复现的旧值已标注',
         '无法用现有数据复现' in rep or '无法还原' in rep, '已标注')
     chk('V5', '推断与事实分离（标注证据强度）',

@@ -144,7 +144,7 @@ L.append('---\n')
 
 p = f'{D}/分析报告.md'
 s = open(p, encoding='utf-8').read()
-i = s.index('## 8 逐校个案（第一梯队）')
+i = s.index('## 8 代表性公办初中个案')
 j = s.index('## 附录 A 口径敏感性与稳健性')
 open(p, 'w', encoding='utf-8').write(s[:i] + '\n'.join(L) + '\n' + s[j:])
 print(f'第 8 章已重写，{len(L)} 行')
