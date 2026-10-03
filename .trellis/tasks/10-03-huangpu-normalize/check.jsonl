@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/quality/data-validation.md", "reason": "PDF 抽取与完整性校验规范，归一后须重跑相关门禁"}
+{"file": ".trellis/spec/data/field-conventions.md", "reason": "字段与命名约定，决定归一后的名称规范"}
