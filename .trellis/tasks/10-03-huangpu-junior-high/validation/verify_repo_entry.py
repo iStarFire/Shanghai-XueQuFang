@@ -37,8 +37,12 @@ def ck(name, got, exp):
 
 ROOT = find_root()
 idx = f'{ROOT}/index.html'
-topics = [n for n in sorted(os.listdir(f'{ROOT}/analysis'))
-          if os.path.isdir(f'{ROOT}/analysis/{n}') and not n.startswith('.')]
+# 在建项目（目录已建、报告网页尚未生成）。显式列出，避免「目录存在但无 index.html」
+# 既被当成在建项目而漏检、也误报为入口页缺卡片。
+IN_PROGRESS = {'黄浦区公办初中名额分配到校分析'}
+_all = [n for n in sorted(os.listdir(f'{ROOT}/analysis'))
+        if os.path.isdir(f'{ROOT}/analysis/{n}') and not n.startswith('.')]
+topics = [n for n in _all if n not in IN_PROGRESS]
 
 print('=' * 62)
 print('根入口页 index.html')
@@ -52,7 +56,10 @@ if not os.path.exists(idx):
 h = io.open(idx, encoding='utf-8').read()
 cards = re.findall(r'href="(analysis/([^/"]+)/index\.html)"', h)
 ck('字符数 > 3000（非空壳）', len(h) > 3000, True)
-ck('卡片数 = analysis/ 下课题目录数', len(cards), len(topics))
+ck('入口页卡片数 = 已建成课题数（不含在建）', len(cards), len(topics))
+_miss = [n for n in _all if n not in IN_PROGRESS
+         and not os.path.exists(f'{ROOT}/analysis/{n}/index.html')]
+ck('已建成课题缺 index.html（会被误当作在建而漏检）', _miss, [])
 ck('每个课题都有卡片', sorted(c[1] for c in cards), topics)
 ck('卡片指向的页面均存在（href 需 URL 解码后按文件系统检查）',
    [c[0] for c in cards
@@ -61,10 +68,12 @@ ck('含 <title>（页面标题未退化）', bool(re.search(r'<title>.+</title>'
 ck('卡片标题文本齐全', len(re.findall(r'<h3[^>]*>', h)) >= len(topics), True)
 
 print('=' * 62)
-print(f'课题清单（{len(topics)} 个）')
+print(f'课题清单（已建成 {len(topics)} 个）')
 print('=' * 62)
 for t in topics:
     print(f'  - {t}')
+if IN_PROGRESS:
+    print(f'在建（暂不要求入口页卡片）: {"、".join(sorted(IN_PROGRESS))}')
 print('=' * 62)
 print(f'总计 {PASS + FAIL} 项检查，不通过 {FAIL} 项')
 for m in MSGS:
