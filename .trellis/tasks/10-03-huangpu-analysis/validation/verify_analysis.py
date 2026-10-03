@@ -173,27 +173,41 @@ def main():
         ck('2.1 主表 17 行齐备', len(rows), 17)
         miss = [c for c in short if not any(c in l for l in rows)]
         ck('2.1 主表遗漏的校', miss, [])
-        # 2026 三列必须与宽表一致（名次 / 分位 P / 位次变化）
-        bad26 = []
+        # 近3年 / 2026 两列为合并格式「名次（变化）」，须与宽表逐格一致
+        import re as _re
+        bad_tc, bad_d3, bad_d26 = [], [], []
         for l in rows:
-            cells = [c.strip().replace('**', '') for c in l.strip('|').split('|')]
-            if len(cells) < 15:
-                bad26.append((cells[1], '列数不足'))
+            cs = [c.strip() for c in l.strip('|').split('|')]
+            if len(cs) != 13:
+                bad_tc.append((cs[1], f'列数={len(cs)}'))
                 continue
-            nm, r5, r26, p26, d = cells[1], cells[0], cells[6], cells[7], cells[8]
+            nm = cs[1]
             hit = [c for c in P5 if c.replace('上海市', '') == nm]
             if not hit:
                 continue
             w = Wd[hit[0]]
-            exp_d = int(w['rank_P_wq']) - int(w['rank_P_2026'])
-            if int(r5) != int(w['rank_P_wq']) or int(r26) != int(w['rank_P_2026']) \
-                    or abs(float(p26) - float(w['P_2026'])) > 1e-9 or int(d) != exp_d:
-                bad26.append((nm, r5, r26, p26, d))
-        ck('2026 三列与宽表一致（名次/分位P/位次变化）', bad26, [])
-        ck('位次变化 = rank_P_wq − rank_P_2026（抽查卢湾）',
-           int(1 - 2), -1)
+            r5 = int(w['rank_P_wq'])
+            for col, key, acc in ((cs[10], 'rank_P_recent3', bad_d3),
+                                  (cs[11], 'rank_P_2026', bad_d26)):
+                m = _re.fullmatch(r'\*\*(\d+)\*\*（([+−-]?\d+)）', col)
+                if not m:
+                    acc.append((nm, col, '格式'))
+                    continue
+                rk, d = int(m.group(1)), int(m.group(2).replace('−', '-'))
+                if rk != int(w[key]) or d != r5 - int(w[key]):
+                    acc.append((nm, col, w[key], r5 - int(w[key])))
+        ck('主表列数 = 13（两列合并后）', bad_tc, [])
+        ck('近 3 年 名次与变化与宽表一致', bad_d3, [])
+        ck('2026 名次与变化与宽表一致', bad_d26, [])
         ck('2026 当年池与五年全勤池同一批学校',
            sorted(POOL_Y['2026']), sorted(P5))
+        # 两套独立口径互证：近 3 年升幅前 3 应与 SEN「明显上升」组**完全重合**
+        # （实测 3/3：金陵 +5、比乐 +5、尚文 +4）——名次窗口与回归斜率互相印证
+        up3 = sorted(P5, key=lambda c: -(int(Wd[c]['rank_P_wq'])
+                                        - int(Wd[c]['rank_P_recent3'])))[:3]
+        cls_up = {c for c in P5 if Wd[c]['trend_class'] == '明显上升'}
+        ck('近 3 年升幅前 3 与 SEN「明显上升」组完全重合', len(set(up3) & cls_up), 3)
+        ck('SEN「明显上升」组恰为 3 所', len(cls_up), 3)
 
     print('\n' + '=' * 62)
     print(f'总计 {N} 项检查，不通过 {len(FAILS)} 项')
