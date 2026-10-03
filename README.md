@@ -21,6 +21,7 @@
 - [嘉定区公办初中名额分配到校分析](https://istarfire.github.io/Shanghai-XueQuFang/analysis/%E5%98%89%E5%AE%9A%E5%8C%BA%E5%85%AC%E5%8A%9E%E5%88%9D%E4%B8%AD%E5%90%8D%E9%A2%9D%E5%88%86%E9%85%8D%E5%88%B0%E6%A0%A1%E5%88%86%E6%9E%90/index.html)
 - [徐汇区公办初中名额分配到校分析](https://istarfire.github.io/Shanghai-XueQuFang/analysis/%E5%BE%90%E6%B1%87%E5%8C%BA%E5%85%AC%E5%8A%9E%E5%88%9D%E4%B8%AD%E5%90%8D%E9%A2%9D%E5%88%86%E9%85%8D%E5%88%B0%E6%A0%A1%E5%88%86%E6%9E%90/index.html)
 - [普陀区公办初中名额分配到校分析](https://istarfire.github.io/Shanghai-XueQuFang/analysis/%E6%99%AE%E9%99%80%E5%8C%BA%E5%85%AC%E5%8A%9E%E5%88%9D%E4%B8%AD%E5%90%8D%E9%A2%9D%E5%88%86%E9%85%8D%E5%88%B0%E6%A0%A1%E5%88%86%E6%9E%90/index.html)
+- [黄浦区公办初中名额分配到校分析](https://istarfire.github.io/Shanghai-XueQuFang/analysis/%E9%BB%84%E6%B5%A6%E5%8C%BA%E5%85%AC%E5%8A%9E%E5%88%9D%E4%B8%AD%E5%90%8D%E9%A2%9D%E5%88%86%E9%85%8D%E5%88%B0%E6%A0%A1%E5%88%86%E6%9E%90/index.html)
 
 **两条同步路径不同，不要混**：
 
@@ -36,6 +37,7 @@
 | 徐汇 | `analysis/徐汇区公办初中名额分配到校分析/工具/build_html.py` | `build_wide.py` + `build_rank_v2.py` + `build_trend.py`（117 列） |
 | 普陀 | `analysis/普陀区公办初中名额分配到校分析/工具/build_html_pt.py` | **`build_v3.py`**（199 列） |
 | 嘉定 | `analysis/嘉定区公办初中名额分配到校分析/工具/build_html_jd.py` | **`build_v3_jd.py`**（191 列） |
+| 黄浦 | `analysis/黄浦区公办初中名额分配到校分析/工具/build_html_hp.py` | **`hp_core.py`** + `build_v3_hp.py`（95 列） |
 
 > ⚠️ **不要跑 `build_wide_pt.py` / `build_wide_jd.py`**：它们是 v1 旧版，会把宽表覆盖成
 > 11 列 / 74 列的旧格式，**摧毁原始数据列**。宽表一律用上表的 v3 脚本重建。
@@ -64,7 +66,8 @@ Shanghai-XueQuFang/
 ├── analysis/              # 分析产物（一个课题一个中文子目录）
 │   ├── 徐汇区公办初中名额分配到校分析/
 │   ├── 普陀区公办初中名额分配到校分析/
-│   └── 嘉定区公办初中名额分配到校分析/
+│   ├── 嘉定区公办初中名额分配到校分析/
+│   └── 黄浦区公办初中名额分配到校分析/
 │       ├── index.html      # 结论网页版（由 分析报告.md 生成，勿手改）
 │       ├── 宽表-*.csv       # 核心交付物：逐线逐年原始分数/名额 + 全部派生指标
 │       ├── 趋势分析-*.csv   # rel / SEN / 收敛回归（两式）

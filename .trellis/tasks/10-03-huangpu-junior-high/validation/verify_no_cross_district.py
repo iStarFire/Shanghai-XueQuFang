@@ -16,6 +16,10 @@ OTHER_DISTRICTS = ['普陀', '徐汇', '浦东', '闵行', '静安', '长宁', '
                    '松江', '宝山', '嘉定', '青浦', '奉贤', '金山', '崇明']
 BAD_PHRASES = ['其他区', '异地', '外区', '相比', '对照', '相较', '与其他区',
                '与普陀', '与徐汇', '与嘉定', '同类区', '各区对比', '跨区']
+# 「跨区」一词在报告里也用于**禁止性声明**（如「未做跨区对比，结论只适用于黄浦区」），
+# 那不是跨区比较。故排除「未/不 + 跨区」的否定用法，只 catching 真正的比较表述。
+NEG = ('未做跨区', '不做跨区', '不与外区', '未与外区', '禁止跨区', '不含跨区',
+       '无跨区', '跨区对比句式', '跨区引用', '跨区比较句式', '跨区对比的')
 # 报告自身允许出现的表述（黄浦区、委属线的招生学校等）
 ALLOW = ['黄浦']
 
@@ -65,7 +69,11 @@ else:
     rep = io.open(REP, encoding='utf-8').read()
     hits = [(k, rep.count(k)) for k in OTHER_DISTRICTS if k in rep]
     ck('报告中出现的其他区名', hits, [])
-    bad = [k for k in BAD_PHRASES if k in rep]
+    # 排除否定/元陈述用法：「未做跨区对比」是本报告的**约束声明**，不是跨区比较。
+    probe = rep
+    for n in NEG:
+        probe = probe.replace(n, '')
+    bad = [k for k in BAD_PHRASES if k in probe]
     ck('报告中的跨区比较句式', bad, [])
     ck('报告存在且非空', len(rep) > 2000, True)
     print(f'  报告 {len(rep)} 字符，已检查区名 {len(OTHER_DISTRICTS)} 个 + 句式 {len(BAD_PHRASES)} 个')

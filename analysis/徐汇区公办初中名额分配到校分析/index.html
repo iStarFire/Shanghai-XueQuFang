@@ -71,7 +71,10 @@ th:first-child{background:var(--code-bg);z-index:3}
 nav.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
         padding:.9em 1.1em;margin:1.4em 0}
 nav.toc h2{font-size:.95rem;margin:0 0 .5em;padding:0;border:0;color:var(--muted)}
-nav.toc ol{margin:0;padding-left:1.3em;font-size:.92rem}
+/* 标题已自带编号（1. / 0. / A1 等），故关闭 <ol> 的自动编号，
+   否则会渲染成「4. 1 数据与口径」双重序号。四个区的生成器同源，
+   此前均存在此问题，2026-10 逐个修复。 */
+nav.toc ol{margin:0;padding-left:1.3em;font-size:.92rem;list-style:none}
 nav.toc li{margin:.22em 0}
 nav.toc a{text-decoration:none}
 /* 下载区 */

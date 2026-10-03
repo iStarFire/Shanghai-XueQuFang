@@ -39,7 +39,9 @@ ROOT = find_root()
 idx = f'{ROOT}/index.html'
 # 在建项目（目录已建、报告网页尚未生成）。显式列出，避免「目录存在但无 index.html」
 # 既被当成在建项目而漏检、也误报为入口页缺卡片。
-IN_PROGRESS = {'黄浦区公办初中名额分配到校分析'}
+# 黄浦已于 2026-10-03 建成（报告 + 7 个 CSV + 网页 + 门禁 99 项全过），
+# 故不再是「在建」，须计入入口页卡片数。
+IN_PROGRESS = set()
 _all = [n for n in sorted(os.listdir(f'{ROOT}/analysis'))
         if os.path.isdir(f'{ROOT}/analysis/{n}') and not n.startswith('.')]
 topics = [n for n in _all if n not in IN_PROGRESS]
