@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="黄浦区公办初中「名额分配到校」的排名、校际差距变化与升降趋势分析（2022–2026）">
+<title>黄浦区公办初中名额到校分析（2022–2026） · 上海学区房数据分析</title>
+<style>
+:root{
+  --bg:#f7f8fa; --card:#fff; --fg:#1a1d21; --muted:#5b6470; --line:#e3e6ea;
+  --accent:#1f6feb; --accent-soft:#eaf1fd; --warn:#b26a00; --warn-soft:#fff6e5;
+  --ok:#1a7f37; --code-bg:#f0f2f5; --radius:10px;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12141a; --card:#1a1d24; --fg:#e6e8eb; --muted:#9aa4b2; --line:#2a2f38;
+    --accent:#6ea8fe; --accent-soft:#1c2739; --warn:#e2a03f; --warn-soft:#2a2314;
+    --ok:#5ec27b; --code-bg:#232830;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",
+       "Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  overflow-wrap:break-word;
+}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 64px}
+header.top{
+  background:var(--card);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;backdrop-filter:saturate(150%) blur(8px);
+}
+header.top .wrap{padding-top:12px;padding-bottom:12px}
+.crumb{font-size:.82rem;color:var(--muted)}
+.crumb a{color:var(--accent);text-decoration:none}
+h1{font-size:clamp(1.35rem,4.6vw,1.9rem);line-height:1.35;margin:.5em 0 .3em}
+h2{font-size:clamp(1.15rem,3.8vw,1.45rem);margin:2em 0 .6em;
+   padding-left:.55em;border-left:4px solid var(--accent);line-height:1.4}
+h3{font-size:clamp(1.02rem,3.2vw,1.18rem);margin:1.6em 0 .5em;color:var(--fg)}
+h4{font-size:1rem;margin:1.3em 0 .4em;color:var(--muted)}
+p{margin:.7em 0}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line);margin:2em 0}
+strong{font-weight:650}
+code{background:var(--code-bg);padding:.12em .38em;border-radius:5px;
+     font-family:var(--mono);font-size:.88em}
+blockquote{
+  margin:1em 0;padding:.8em 1em;background:var(--accent-soft);
+  border-left:4px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;
+  font-size:.95em;color:var(--fg);
+}
+blockquote strong{color:var(--warn)}
+ul,ol{padding-left:1.35em;margin:.7em 0}
+li{margin:.3em 0}
+/* 表格：移动端横向滚动，首列吸附 */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1.1em 0;
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:100%}
+th,td{padding:.55em .7em;text-align:left;border-bottom:1px solid var(--line);
+      white-space:nowrap}
+th{background:var(--code-bg);font-weight:650;position:sticky;top:0;z-index:1}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:nth-child(even){background:color-mix(in srgb,var(--code-bg) 45%,transparent)}
+td:first-child,th:first-child{position:sticky;left:0;background:var(--card);
+      box-shadow:1px 0 0 var(--line);z-index:2;white-space:normal;min-width:8.5em}
+th:first-child{background:var(--code-bg);z-index:3}
+/* 目录 */
+nav.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+        padding:.9em 1.1em;margin:1.4em 0}
+nav.toc h2{font-size:.95rem;margin:0 0 .5em;padding:0;border:0;color:var(--muted)}
+nav.toc ol{margin:0;padding-left:1.3em;font-size:.92rem}
+nav.toc li{margin:.22em 0}
+nav.toc a{text-decoration:none}
+/* 下载区 */
+.dl{display:flex;flex-wrap:wrap;gap:.6em;margin:1.2em 0}
+.dl a{display:inline-flex;align-items:center;gap:.4em;background:var(--card);
+      border:1px solid var(--line);border-radius:999px;padding:.45em .95em;
+      font-size:.88rem;text-decoration:none;color:var(--fg)}
+.dl a:hover{border-color:var(--accent);color:var(--accent)}
+/* 入口页卡片 */
+.cards{display:grid;gap:14px;grid-template-columns:1fr;margin-top:1.6em}
+@media(min-width:680px){.cards{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+      padding:1.1em 1.2em;text-decoration:none;color:inherit;transition:.15s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card h3{margin:0 0 .4em;font-size:1.05rem;color:var(--accent)}
+.card p{margin:0;font-size:.9rem;color:var(--muted)}
+.tag{display:inline-block;font-size:.75rem;padding:.1em .55em;border-radius:999px;
+     background:var(--accent-soft);color:var(--accent);margin-bottom:.5em}
+footer{color:var(--muted);font-size:.85rem;margin-top:3em;padding-top:1.2em;
+       border-top:1px solid var(--line)}
+@media print{
+  header.top{position:static}body{background:#fff}
+  .tw{overflow:visible}.dl,nav.toc{display:none}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="crumb"><a href="../">← 上海学区房数据分析</a></div>
+  <h1>黄浦区公办初中名额到校分析（2022–2026）</h1>
+</div></header>
+<main class="wrap">
+<nav class="toc"><h2>本页目录</h2><ol><li><a href="#sec-x1">摘要</a></li><li><a href="#sec-1">1 口径与池定义</a></li><li><a href="#sec-2">2 目标一：公办初中排名</a></li><li><a href="#sec-3">3 目标二：公办校间的差距是否在缩小</a></li><li><a href="#sec-4">4 目标三：哪些在上升、哪些在下降</a></li><li><a href="#sec-5">5 目标四：代表性公办初中个案</a></li><li><a href="#sec-6">6 结论的证据强度与反向证据</a></li><li><a href="#sec-7">7 不可由本报告回答的问题</a></li><li><a href="#sec-8">8 局限声明</a></li><li><a href="#sec-9">9 交付物</a></li></ol></nav>
+<div class="dl"><a href="宽表-初中水平-黄浦区-2022-2026.csv">⬇ 宽表 CSV（含逐线逐年原始数据）</a><a href="趋势分析-黄浦区-2022-2026.csv">⬇ 趋势分析 CSV（rel / SEN / 收敛回归）</a><a href="单线视角-黄浦区-2022-2026.csv">⬇ 单线视角 CSV（逐校逐线）</a><a href="排序表-名额分配到校-黄浦区-2022-2026.csv">⬇ 排序表 CSV（主口径排名 + 逐年分位）</a><a href="收敛分析-黄浦区-2022-2026.csv">⬇ 收敛分析 CSV（逐年离散度 × 双口径）</a><a href="rank-多口径总表-黄浦区-2022-2026.csv">⬇ 排名表 CSV（多口径总表）</a><a href="rank-加权敏感性-黄浦区-2022-2026.csv">⬇ 排名表 CSV（加权敏感性）</a><a href="分析报告.md">⬇ 分析报告（Markdown）</a></div>
+<blockquote>分析黄浦区<strong>公办初中</strong>在名额到校通道上的排名、校际差距变化、升降趋势，<br>并对头部与升降最明显的学校做个案。<br>数据源：5 份官方分数线 PDF（952 条）+ 5 份官方到校计划 PDF（1384 条），<br>均已通过数据正确性门禁（94 + 28 项）。</blockquote>
+<h2 id="sec-x1">摘要</h2>
+<ol><li><strong>排名</strong>：五年综合第一是<strong>卢湾中学</strong>（<code>P_wq</code> 0.863），但它同时是<strong>下滑最快</strong>的学校之一（SEN −3.75 分/年）——「强」与「升」在本区<strong>不同向</strong>。</li><li><strong>差距</strong>：校际差距<strong>总体在缩小</strong>，主辅两口径同向（IQR 逐年斜率 −1.56 / −2.07）， <strong>但 2025 年出现一次异常趋同</strong>（IQR 2.4、σ 2.8），2026 年已回弹到 9.2。 <strong>不是持续缩小。</strong></li><li><strong>趋势</strong>：17 所中<strong>明显上升 3 所</strong>（尚文、金陵、比乐）、<strong>明显下降 3 所</strong> （卢湾、市南、中山学校）、其余 11 所平稳。</li><li><strong>个案</strong>：头部 5 所里 4 所五年在下滑；上升最快的是<strong>金陵中学</strong>（SEN +4.18）但它综合排名仅第 14，属「低基数快速回升」。</li></ol>
+<hr>
+<h2 id="sec-1">1 口径与池定义</h2>
+<h3 id="sec-1-1">1.1 只分析在办公办学校</h3>
+<div class="tw"><table><thead><tr><th>排除项</th><th>名单</th><th>原因</th></tr></thead><tbody><tr><td>民办（5 所）</td><td>上海市民办明珠中学、上海市民办立达中学、上海市震旦外国语中学、上海康德双语实验学校、上海民办永昌学校</td><td>用户要求排除；且 4 所仅 2024 年起参与、康德仅 2024/2026 两年，无五年数据</td></tr><tr><td>已并入他校（1 所）</td><td>上海市黄浦学校</td><td><strong>2024 年并入大同初级中学</strong>（官方写法「上海市大同初级中学（原黄浦学校）」），2025 起不再单独招生，无法构成五年趋势</td></tr></tbody></table></div>
+<blockquote><strong>黄浦学校不是停办，是并校。</strong> 学生并入大同继续就读。它在 2022–2024 的<strong>当年排名中出现</strong>，<br>单列一张三年榜（见 2.3），但不进五年主表、不做趋势分析。</blockquote>
+<h3 id="sec-1-2">1.2 排名池按「当年在办学校」（用户明确要求）</h3>
+<blockquote>「每年的排序是以当年的公办学校量为准，而不是以最后的 17 所为准」</blockquote>
+<p>分位 P <strong>一律在当年池内计算</strong>，否则当年在办学校会被凭空剔除。</p>
+<div class="tw"><table><thead><tr><th>年</th><th>当年池 n</th><th>构成</th></tr></thead><tbody><tr><td>2022</td><td><strong>18</strong></td><td>五年全勤 17 所 + 黄浦学校</td></tr><tr><td>2023</td><td><strong>18</strong></td><td>同上</td></tr><tr><td>2024</td><td><strong>18</strong></td><td>同上（黄浦学校为并入大同的首年，仍独立记名）</td></tr><tr><td>2025</td><td><strong>17</strong></td><td>黄浦学校已并入</td></tr><tr><td>2026</td><td><strong>17</strong></td><td>—</td></tr></tbody></table></div>
+<ul><li><strong>五年主表池</strong> = 五年全勤 <strong>17 所</strong>（综合排名需要 5 年数据）</li><li><strong>三年榜池</strong> = 2022–2024 有数据的 <strong>18 所</strong></li></ul>
+<h3 id="sec-1-3">1.3 指标定义</h3>
+<p>记号：$s_{c,y,l}$ = 初中 $c$ 在年份 $y$ 报考招生学校 $l$ 的最低分；$q_{c,y,l}$ = 对应名额。</p>
+<p><strong>名额加权均分</strong>（原始量纲，跨年不可比）</p>
+<p>$$\bar{s}_{c,y}=\frac{\sum_l q_{c,y,l}\cdot s_{c,y,l}}{\sum_l q_{c,y,l}}$$</p>
+<p>只对<strong>同时有计划名额与分数线</strong>的组合计算。2022–2026 名额未用满的组合数依次为<br><strong>2 / 3 / 6 / 0 / 7</strong> 个（见 6 章局限声明）。</p>
+<p><strong>分位 P（主口径）</strong>：在当年池内按加权均分升序取分位，0 = 最弱，1 = 最强。<br>选它而非分数的原因：分数绝对值受当年卷面难度影响，跨年不可比；分位每年含义相同。</p>
+<p><strong>rel</strong>：该校加权均分 − <strong>当年池中位</strong>，跨年可比。<br><strong>SEN</strong>：<code>rel</code> 对年份的<strong>最小二乘回归斜率</strong>（单位：分/年），负 = 持续下滑。<br><strong>离散度</strong>：IQR（主）、σ、<strong>CV = σ/μ</strong>（跨年可比）、极差、头尾差（前 20% 均值 − 后 20% 均值）、<br>校内线间极差（每校 <code>max_l s − min_l s</code> 的均值）。</p>
+<h3 id="sec-2-0">2.0 表中指标怎么读</h3>
+<div class="tw"><table><thead><tr><th>列（宽表列名）</th><th>定义</th><th>算法</th><th>读法 / 单位</th></tr></thead><tbody><tr><td><strong>P_wq</strong>（主排序）</td><td>五年平均分位</td><td>名额加权均分 → <strong>当年池</strong>分位 → 五年等权平均</td><td>0–1，<strong>越大越强</strong>。位置可比，<strong>不是分值可比</strong></td></tr><tr><td><strong>rel 均名</strong></td><td>高于当年池中位多少分</td><td>加权均分 − 当年池中位，再五年平均</td><td>单位「分」，<strong>跨年可比</strong>（每年都减掉了当年难度）</td></tr><tr><td><strong>名额</strong></td><td>名额合计的年均</td><td>五年 <code>quota_y</code> 平均</td><td>单位「个/年」。<strong>是招生规模，不等于办学水平</strong></td></tr><tr><td><strong>SEN</strong></td><td>五年的下滑／上升速度</td><td><code>rel</code> 对年份做<strong>最小二乘回归</strong>的斜率</td><td>单位「分/年」，<strong>负 = 持续下滑</strong>。本榜 11 所为负、6 所为正</td></tr><tr><td><strong>等权名次</strong></td><td>分数链换成等权算术平均后的名次</td><td><code>rank_P_eq</code>，按 <code>P_eq</code> 排</td><td>与主列<strong>同量纲</strong>（都是分位 P），可直接并列</td></tr><tr><td><strong>Z 名次</strong></td><td>换成标准分（当年池 μ/σ）后的名次</td><td><code>rank_Z</code>，按五年均 <code>Z</code> 排</td><td>抗极值，依赖当年池离散度</td></tr><tr><td><strong>线性</strong></td><td>时间权重 1:2:3:4:5 的名次</td><td><code>rank_P_lin</code></td><td>2026 权重是 2022 的 5 倍，温和偏近期</td></tr><tr><td><strong>指数</strong></td><td>时间权重 1:2:4:8:16 的名次</td><td><code>rank_P_exp</code></td><td>2026 权重是 2022 的 <strong>16 倍</strong></td></tr><tr><td><strong>近 3 年</strong></td><td>只用 2024–2026 的名次</td><td><code>rank_P_recent3</code></td><td><strong>丢弃 2022–2023</strong>，三个时间权重里最激进</td></tr><tr><td><strong>趋势</strong></td><td>SEN 的残差 z 分档</td><td><code>sen_z</code>：<code>z ≥ 1</code> 明显上升／<code>z ≤ −1</code> 明显下降／其余平稳</td><td>阈值来自<strong>相对分布</strong>，不是绝对值</td></tr></tbody></table></div>
+<blockquote><strong>为什么主排序用 P 而不是分数</strong>：<code>P</code> 是「排第几」，每年含义相同；分数绝对值受当年难度影响。<br><code>P_wq</code> 与 <code>rel 均名</code> 的区别就是「位置」与「相对位置的距离（分）」。</blockquote>
+<hr>
+<h2 id="sec-2">2 目标一：公办初中排名</h2>
+<h3 id="sec-2-1-17">2.1 五年综合排名（池 = 五年全勤 17 所）</h3>
+<div class="tw"><table><thead><tr><th>名</th><th>初中</th><th>P_wq</th><th>rel 均名</th><th>名额</th><th>SEN</th><th>等权名次</th><th>Z 名次</th><th>线性</th><th>指数</th><th>近 3 年</th><th>趋势</th></tr></thead><tbody><tr><td>1</td><td>卢湾中学</td><td>0.8632</td><td>+9.59</td><td>59.6</td><td>−3.749</td><td>1</td><td>1</td><td>1</td><td>2</td><td>2</td><td>明显下降</td></tr><tr><td>2</td><td>大同初级中学</td><td>0.8309</td><td>+6.93</td><td>80.0</td><td>−2.334</td><td>3</td><td>2</td><td>2</td><td>3</td><td>4</td><td>平稳</td></tr><tr><td>3</td><td>上海外国语大学附属大境初级中学</td><td>0.7846</td><td>+5.80</td><td>62.8</td><td>−0.726</td><td>2</td><td>3</td><td>3</td><td>1</td><td>3</td><td>平稳</td></tr><tr><td>4</td><td>格致初级中学</td><td>0.7816</td><td>+5.20</td><td>110.8</td><td>−1.945</td><td>7</td><td>4</td><td>5</td><td>5</td><td>5</td><td>平稳</td></tr><tr><td>5</td><td>尚文中学</td><td>0.6794</td><td>+1.78</td><td>39.8</td><td>+2.341</td><td>6</td><td>7</td><td>4</td><td>4</td><td>1</td><td>明显上升</td></tr><tr><td>6</td><td>黄浦区教育学院附属中山学校</td><td>0.6610</td><td>+3.73</td><td>46.4</td><td>−2.642</td><td>4</td><td>6</td><td>6</td><td>7</td><td>6</td><td>明显下降</td></tr><tr><td>7</td><td>向明初级中学</td><td>0.6596</td><td>+5.51</td><td>91.8</td><td>−1.925</td><td>5</td><td>5</td><td>7</td><td>6</td><td>8</td><td>平稳</td></tr><tr><td>8</td><td>敬业初级中学</td><td>0.4500</td><td>−1.30</td><td>39.2</td><td>+0.669</td><td>12</td><td>8</td><td>8</td><td>8</td><td>7</td><td>平稳</td></tr><tr><td>9</td><td>第十中学</td><td>0.4213</td><td>−1.65</td><td>56.6</td><td>−0.599</td><td>11</td><td>10</td><td>9</td><td>10</td><td>12</td><td>平稳</td></tr><tr><td>10</td><td>光明初级中学</td><td>0.3949</td><td>−0.72</td><td>22.8</td><td>−0.279</td><td>8</td><td>9</td><td>10</td><td>14</td><td>11</td><td>平稳</td></tr><tr><td>11</td><td>市八初级中学</td><td>0.3831</td><td>−2.12</td><td>32.6</td><td>−1.491</td><td>10</td><td>12</td><td>13</td><td>11</td><td>15</td><td>平稳</td></tr><tr><td>12</td><td>上海交通大学附属黄浦实验中学</td><td>0.3257</td><td>−2.84</td><td>47.0</td><td>+0.203</td><td>9</td><td>11</td><td>14</td><td>13</td><td>13</td><td>平稳</td></tr><tr><td>13</td><td>市南中学</td><td>0.3206</td><td>−3.37</td><td>37.2</td><td>−2.643</td><td>15</td><td>14</td><td>15</td><td>15</td><td>16</td><td>明显下降</td></tr><tr><td>14</td><td>金陵中学</td><td>0.2809</td><td>−6.11</td><td>20.0</td><td>+4.182</td><td>13</td><td>13</td><td>11</td><td>9</td><td>9</td><td>明显上升</td></tr><tr><td>15</td><td>上海音乐学院附属黄浦比乐中学</td><td>0.2721</td><td>−6.87</td><td>45.4</td><td>+3.134</td><td>14</td><td>15</td><td>12</td><td>12</td><td>10</td><td>明显上升</td></tr><tr><td>16</td><td>清华中学</td><td>0.1838</td><td>−9.17</td><td>14.2</td><td>+0.104</td><td>16</td><td>16</td><td>16</td><td>16</td><td>14</td><td>平稳</td></tr><tr><td>17</td><td>上海理工大学附属储能中学</td><td>0.1426</td><td>−7.62</td><td>22.6</td><td>−1.016</td><td>17</td><td>17</td><td>17</td><td>17</td><td>17</td><td>平稳</td></tr></tbody></table></div>
+<p><strong>精度提示</strong>：第 2–4 名（0.831 / 0.785 / 0.782）极差仅 0.049，第 5–7 名（0.679 / 0.661 / 0.660）<br>极差 0.019 —— 引用时应给区间而非精确名次。第 13–15 名（0.321 / 0.281 / 0.272）同样密集。</p>
+<h3 id="sec-2-2-5">2.2 前 5 名在各口径下是否稳定</h3>
+<div class="tw"><table><thead><tr><th>口径</th><th>前 5 名成员</th></tr></thead><tbody><tr><td><strong>等权 P（主）</strong></td><td>卢湾、大同、大境、格致、尚文</td></tr><tr><td>等权 P</td><td>卢湾、<strong>大境</strong>、大同、<strong>中山学校</strong>、<strong>向明</strong></td></tr><tr><td>Z</td><td>卢湾、大同、大境、格致、<strong>向明</strong></td></tr><tr><td>线性 1:5</td><td>卢湾、大同、大境、<strong>尚文</strong>、格致</td></tr><tr><td>指数 1:16</td><td><strong>大境</strong>、卢湾、大同、尚文、格致</td></tr><tr><td>近 3 年</td><td><strong>尚文</strong>、卢湾、大境、大同、格致</td></tr></tbody></table></div>
+<p><strong>只有「卢湾、大同、大境」三所在 6 种口径下都进前 5</strong>；格致在 5/6 种口径下进前 5；<br>尚文在偏近期口径下进前 5（近 3 年排名第 1）；中山学校只在等权 P 口径下进前 5。<br>→ 前 5 应表述为「<strong>卢湾、大同、大境、格致</strong>四所较稳，<strong>尚文为偏近期新锐</strong>」。</p>
+<h3 id="sec-2-3">2.3 逐年排名（各用当年在办学校池）</h3>
+<div class="tw"><table><thead><tr><th>年</th><th>n</th><th>第 1</th><th>第 2</th><th>第 3</th></tr></thead><tbody><tr><td>2022</td><td>18</td><td>卢湾（1.000）</td><td>中山学校（0.941）</td><td>向明（0.882）</td></tr><tr><td>2023</td><td>18</td><td>大同（1.000）</td><td>卢湾（0.941）</td><td>大境（0.882）</td></tr><tr><td>2024</td><td>18</td><td>卢湾（1.000）</td><td><strong>黄浦学校</strong>（0.941）</td><td>格致（0.882）</td></tr><tr><td>2025</td><td>17</td><td><strong>尚文</strong>（1.000）</td><td><strong>比乐</strong>（0.938）</td><td>敬业（0.875）</td></tr><tr><td>2026</td><td>17</td><td>大境（1.000）</td><td>卢湾（0.938）</td><td>向明（0.875）</td></tr></tbody></table></div>
+<p><strong>逐年第一分散在 4 所学校</strong>（卢湾 2 次、大同/尚文/大境各 1 次），无学校垄断。<br>2025 年前 3 名与五年综合榜差异最大（尚文、比乐、敬业在综合榜分别排第 5、15、8）。</p>
+<hr>
+<h2 id="sec-3">3 目标二：公办校间的差距是否在缩小</h2>
+<p><strong>结论：总体在缩小，但 2025 年出现一次异常趋同，2026 年已回弹 —— 不是持续缩小。</strong></p>
+<h3 id="sec-3-1">3.1 离散度逐年（双口径）</h3>
+<p>主口径 = 当年池（贴合「当年在办学校」）；辅口径 = 固定 17 所池（剥离池量变化影响）。</p>
+<div class="tw"><table><thead><tr><th>年</th><th>n</th><th>IQR</th><th>σ</th><th>CV</th><th>极差</th><th>头尾差</th><th>固定池 IQR</th><th>固定池 CV</th><th>校内线间极差</th></tr></thead><tbody><tr><td>2022</td><td>18</td><td>12.6</td><td>9.7</td><td>0.0137</td><td>36.6</td><td>27.2</td><td>14.7</td><td>0.0141</td><td>70.8</td></tr><tr><td>2023</td><td>18</td><td>11.4</td><td>7.9</td><td>0.0112</td><td>30.1</td><td>21.3</td><td>12.2</td><td>0.0116</td><td>57.4</td></tr><tr><td>2024</td><td>18</td><td>11.2</td><td>6.4</td><td>0.0091</td><td>21.1</td><td>16.6</td><td>11.2</td><td>0.0090</td><td>64.8</td></tr><tr><td><strong>2025</strong></td><td>17</td><td><strong>2.4</strong></td><td><strong>2.8</strong></td><td><strong>0.0040</strong></td><td><strong>9.4</strong></td><td><strong>8.3</strong></td><td>2.4</td><td>0.0040</td><td><strong>75.6</strong></td></tr><tr><td>2026</td><td>17</td><td>9.2</td><td>6.3</td><td>0.0087</td><td>23.4</td><td>18.6</td><td>9.2</td><td>0.0087</td><td>67.6</td></tr></tbody></table></div>
+<ul><li><strong>IQR 逐年斜率</strong>：当年池 <strong>b = −1.562</strong>｜固定池 <strong>b = −2.066</strong> → <strong>两者同向为负</strong></li><li>首尾：当年池 12.6 → 9.2；固定池 14.7 → 9.2</li><li>按判读规则（主辅同向才给方向结论）→ <strong>可给出「差距缩小」的方向结论</strong></li></ul>
+<p><strong>两个口径只在 2022、2023 有差异</strong>（IQR 差 2.1 / 0.8 点），2024 起完全一致。<br>差异来源是黄浦学校水平居中（加权均分 708.0 / 703.3 / 711.1），<br>把它剔除反而在 2022 抬高了 IQR。<strong>池量 18→17 对结论没有实质影响。</strong></p>
+<h3 id="sec-3-2-2025">3.2 2025 年异常趋同（关键发现）</h3>
+<p>2025 年 17 所公办加权均分<strong>全部挤在 692.6 – 702.0</strong>（极差 9.4），<br>而 2024 为 690.9–712.0（极差 21.1）、2026 为 701.5–724.9（极差 23.4）。</p>
+<p><strong>已排除数据错误</strong>：2025 年原始分数分布正常 —— 极差 101.0、均值 702.3、σ 24.5，<br>与 2024（99.5 / 705.3 / 21.7）和 2026（92.5 / 720.6 / 22.5）同量级。</p>
+<p><strong>反常组合</strong>：2025 年<strong>校际趋同的同时，校内的线间极差反而扩大</strong><br>（75.6 vs 2024 的 64.8、2026 的 67.6，为五年最大）。<br>即「各校之间拉平了，但每校内部的招生学校线差距拉大了」。</p>
+<p><strong>判读</strong>：这不是「持续缩小」的证据，而是<strong>一年异常</strong>。2026 年 IQR 回升到 9.2、<br>极差回到 23.4，与 2024 相当。<strong>本报告无法解释 2025 年为何趋同</strong><br>（是否与名额分配政策调整有关，官方数据不足以判断），列为「不可由本报告回答的问题」。</p>
+<h3 id="sec-3-3">3.3 「差距缩小」的真实幅度</h3>
+<p>若只看首尾，IQR 从 12.6 降到 9.2（−27%）；但<strong>中间过程是 12.6 → 11.4 → 11.2 → 2.4 → 9.2</strong>，<br>即 2025 年一步到位跌到 2.4，再反弹。<strong>用首尾两点描述会掩盖这个过程</strong>，<br>所以本报告同时给出逐年 IQR 回归斜率（−1.56），它比首尾差更能反映整体方向。</p>
+<hr>
+<h2 id="sec-4">4 目标三：哪些在上升、哪些在下降</h2>
+<p><strong>结论：17 所中明显上升 3 所、明显下降 3 所、平稳 11 所。</strong></p>
+<p>分类依据是 <code>sen_z</code>（SEN 在 17 所中的残差 z），阈值 <code>|z| ≥ 1</code>，<strong>不用绝对值</strong>——<br>因为各校量级差异大，绝对阈值不可比。</p>
+<div class="tw"><table><thead><tr><th>初中</th><th>SEN</th><th>z</th><th>分类</th><th>2022 rel</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th><th>近 3 年 SEN</th><th>剔 2024 SEN</th><th>ρ</th></tr></thead><tbody><tr><td>卢湾中学</td><td>−3.749</td><td>−1.55</td><td><strong>明显下降</strong></td><td>+19.73</td><td>+13.43</td><td>+7.12</td><td>−0.01</td><td>+7.71</td><td>+0.29</td><td>−2.91</td><td>−0.7</td></tr><tr><td>市南中学</td><td>−2.643</td><td>−1.02</td><td><strong>明显下降</strong></td><td>+3.88</td><td>−1.74</td><td>−6.20</td><td>−5.15</td><td>−7.62</td><td>−0.71</td><td>−2.76</td><td>−0.9</td></tr><tr><td>黄浦区教育学院附属中山学校</td><td>−2.642</td><td>−1.02</td><td><strong>明显下降</strong></td><td>+14.42</td><td>−0.28</td><td>+3.17</td><td>+0.55</td><td>+0.79</td><td>−1.19</td><td>−2.57</td><td>−0.3</td></tr><tr><td>大同初级中学</td><td>−2.334</td><td>−0.87</td><td>平稳</td><td>+10.79</td><td>+14.10</td><td>+2.82</td><td>+1.53</td><td>+5.41</td><td>+1.30</td><td>−1.90</td><td>−0.6</td></tr><tr><td>格致初级中学</td><td>−1.945</td><td>−0.69</td><td>平稳</td><td>+7.27</td><td>+10.19</td><td>+5.26</td><td>+1.27</td><td>+2.01</td><td>−1.63</td><td>−1.66</td><td>−0.8</td></tr><tr><td>向明初级中学</td><td>−1.925</td><td>−0.68</td><td>平稳</td><td>+11.69</td><td>+7.91</td><td>+2.57</td><td>−1.28</td><td>+6.66</td><td>+2.05</td><td>−1.23</td><td>−0.7</td></tr><tr><td>市八初级中学</td><td>−1.491</td><td>−0.47</td><td>平稳</td><td>+1.56</td><td>+5.41</td><td>−10.75</td><td>−7.22</td><td>+0.42</td><td>+5.58</td><td>−0.98</td><td>−0.5</td></tr><tr><td>上海理工大学附属储能中学</td><td>−1.016</td><td>−0.24</td><td>平稳</td><td>−3.21</td><td>−11.04</td><td>−6.68</td><td>−6.77</td><td>−10.42</td><td>−1.87</td><td>−1.28</td><td>−0.4</td></tr><tr><td>上海外国语大学附属大境初级中学</td><td>−0.726</td><td>−0.10</td><td>平稳</td><td>+6.21</td><td>+11.43</td><td>+2.75</td><td>+0.65</td><td>+7.97</td><td>+2.61</td><td>−0.09</td><td>−0.2</td></tr><tr><td>第十中学</td><td>−0.599</td><td>−0.04</td><td>平稳</td><td>+0.83</td><td>+0.11</td><td>−7.08</td><td>+0.00</td><td>−2.11</td><td>+2.48</td><td>−0.92</td><td>−0.7</td></tr><tr><td>光明初级中学</td><td>−0.279</td><td>+0.11</td><td>平稳</td><td>−3.00</td><td>+1.95</td><td>+1.22</td><td>−0.68</td><td>−3.08</td><td>−2.15</td><td>−0.32</td><td>−0.4</td></tr><tr><td>清华中学</td><td>+0.104</td><td>+0.30</td><td>平稳</td><td>−14.39</td><td>−2.59</td><td>−13.97</td><td>+0.59</td><td>−15.46</td><td>−0.75</td><td>−1.27</td><td>−0.1</td></tr><tr><td>上海交通大学附属黄浦实验中学</td><td>+0.203</td><td>+0.34</td><td>平稳</td><td>−0.83</td><td>−2.58</td><td>−9.31</td><td>−0.76</td><td>−0.72</td><td>+4.29</td><td>−0.07</td><td>0.6</td></tr><tr><td>敬业初级中学</td><td>+0.669</td><td>+0.57</td><td>平稳</td><td>−1.88</td><td>−3.77</td><td>−1.22</td><td>+1.61</td><td>−1.22</td><td>+0.00</td><td>+0.35</td><td>0.8</td></tr><tr><td>尚文中学</td><td>+2.341</td><td>+1.37</td><td><strong>明显上升</strong></td><td>−8.04</td><td>+5.11</td><td>+4.55</td><td>+2.14</td><td>+5.15</td><td>+0.30</td><td>+2.62</td><td>0.6</td></tr><tr><td>上海音乐学院附属黄浦比乐中学</td><td>+3.134</td><td>+1.75</td><td><strong>明显上升</strong></td><td>−16.87</td><td>−5.26</td><td>−9.38</td><td>+1.98</td><td>−4.82</td><td>+2.28</td><td>+2.32</td><td>0.8</td></tr><tr><td>金陵中学</td><td>+4.182</td><td>+2.25</td><td><strong>明显上升</strong></td><td>−13.05</td><td>−15.95</td><td>−1.33</td><td>−0.23</td><td>+0.00</td><td>+0.67</td><td>+3.94</td><td>0.9</td></tr></tbody></table></div>
+<h3 id="sec-4-1">4.1 三条重要提醒</h3>
+<ol><li><strong>SEN 与近 3 年 SEN 方向常常相反</strong>。11 所「平稳」学校里有 7 所的近 3 年 SEN 为正（如市八 +5.58、交大附中黄浦实验 +4.29），说明<strong>近三年在回升</strong>，只是五年尺度上还没翻正。分类只描述五年尺度，不应解读为「今年在退步」。</li><li><strong>ρ（Spearman，排名与学年的关系）全部为负或接近 0</strong>，无一家呈强单调上升（最高 +0.9），说明<strong>没有学校在持续单向上升</strong>。</li><li><strong>大同初级中学有结构断点（structural break）</strong>：2024 年起并入原黄浦学校。其「剔 2024 SEN」为 −1.90（vs 全期 −2.33），<strong>剔除后结论不变</strong>，故断点未影响其分类。</li></ol>
+<hr>
+<h2 id="sec-5">5 目标四：代表性公办初中个案</h2>
+<p>选校规则（可复现，非主观挑选）：头部 = 主口径前 5；明显上升 = <code>sen_z ≥ 1</code> 中 <code>P_wq</code> 最高者；<br>明显下降 = <code>sen_z ≤ −1</code> 中 <code>P_wq</code> 最低者。</p>
+<h3 id="sec-5-1">5.1 头部五所</h3>
+<div class="tw"><table><thead><tr><th>学校</th><th>五年 P 轨迹（2022→2026）</th><th>名额轨迹</th><th>SEN</th><th>判读</th></tr></thead><tbody><tr><td><strong>卢湾中学</strong>（第 1）</td><td>1.00 → 0.94 → 1.00 → <strong>0.44</strong> → 0.94</td><td>64→67→53→55→59</td><td>−3.75</td><td><strong>强但不稳</strong>：2022/2024 两次第一，2025 跌到第 10 位，2026 回到第 2。五年看是下滑。</td></tr><tr><td><strong>大同初级中学</strong>（第 2）</td><td>0.82 → <strong>1.00</strong> → 0.71 → 0.81 → 0.81</td><td>83→83→72→78→84</td><td>−2.33</td><td><strong>高位稳定</strong>：五年始终在前 5，2023 年第一。2024 起并入原黄浦学校，规模未涨（占比反而最低 9.1%）。</td></tr><tr><td><strong>大境初级中学</strong>（第 3）</td><td>0.65 → 0.76 → 0.76 → 0.76 → <strong>1.00</strong></td><td>63→59→59→55→64</td><td>−0.73</td><td><strong>最稳且缓升</strong>：指数权重下排第 1，2026 年第一，SEN 仅 −0.73（17 所中第 3 稳）。</td></tr><tr><td><strong>格致初级中学</strong>（第 4）</td><td>0.76 → 0.65 → 0.76 → 0.76 → 0.71</td><td>106→106→96→110→136</td><td>−1.95</td><td><strong>规模最大</strong>（名额 110.8，最多）但 5 个口径下有 1 个掉出前 5（等权 P 第 7）。</td></tr><tr><td><strong>尚文中学</strong>（第 5）</td><td>0.18 → 0.65 → 0.82 → <strong>1.00</strong> → 0.75</td><td>51→40→31→37→40</td><td><strong>+2.34</strong></td><td><strong>偏近期新锐</strong>：2022 年排第 16，2025 年第一。近 3 年口径排名第 1。</td></tr></tbody></table></div>
+<p><strong>头部五所的共同点</strong>：五所中 <strong>4 所的 SEN 为负</strong>（卢湾 −3.75、大同 −2.33、格致 −1.95），<br>唯一上升的是尚文。<strong>「头部」与「上升」在本区不同向。</strong></p>
+<h3 id="sec-5-2-sen-z-1">5.2 明显上升（<code>sen_z ≥ 1</code>）</h3>
+<p><strong>金陵中学</strong>（综合第 14，SEN +4.18，全榜最强上升）</p>
+<div class="tw"><table><thead><tr><th>年</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th></tr></thead><tbody><tr><td>分位 P</td><td>0.118</td><td><strong>0.000</strong></td><td>0.412</td><td>0.375</td><td>0.500</td></tr><tr><td>加权均分</td><td>696.6</td><td>687.5</td><td>703.5</td><td>699.6</td><td>717.0</td></tr><tr><td>名额</td><td>32</td><td>24</td><td>15</td><td>15</td><td>14</td></tr></tbody></table></div>
+<ul><li><strong>低基数回升</strong>：2023 年是当年池<strong>最后一名</strong>（P=0），五年回到中位（P=0.5）</li><li>Spearman ρ = <strong>+0.9</strong>，是 17 所中方向性最强的</li><li>但<strong>名额从 32 降到 14</strong>（−56%），规模收缩伴随分数上升 → 可能是生源变好（择校）或招生规模调整，<strong>本报告无法区分</strong></li></ul>
+<p><strong>上海音乐学院附属黄浦比乐中学</strong>（第 15，SEN +3.13，ρ=+0.8）<br>分位 P 轨迹 0.06 → 0.24 → 0.06 → 0.81 → 0.31，波动大但 2025 明显跳升（当年第 2）。</p>
+<p><strong>尚文中学</strong>（第 5，SEN +2.34，ρ=+0.6）见 5.1 —— 上升组里综合排名最高。</p>
+<h3 id="sec-5-3-sen-z-1">5.3 明显下降（<code>sen_z ≤ −1</code>）</h3>
+<p><strong>卢湾中学</strong>（第 1，SEN −3.75）—— 见 5.1。<strong>最典型：排名第一却在退。</strong><br>分位 P 轨迹 1.00 → 0.94 → 1.00 → 0.44 → 0.94，2025 年单年暴跌 0.56 后 2026 回到 0.94。<br><strong>五年 SEN 为负主要是 2025 那一年造成的</strong>，近 3 年 SEN 已转正（+0.29）。<br>→ 判读为「<strong>单年波动</strong>」而非「持续退步」更合适。</p>
+<p><strong>市南中学</strong>（第 13，SEN −2.643，ρ=−0.9）<br>分位 P 轨迹 0.65 → 0.35 → 0.35 → 0.13 → 0.13。<strong>方向性最强的持续下降</strong>：<br>前 3 年 0.65/0.35/0.35，近 2 年停在 0.13（当年池 17 所中的第 15–16 位）。<br>加权均分 713.5 → 701.7 → 698.7 → 694.7 → 709.3，2026 虽有回升但仍低于 2022。</p>
+<p><strong>黄浦区教育学院附属中山学校</strong>（第 6，SEN −2.642）<br>分位 P 轨迹 0.94 → 0.41 → 0.76 → 0.56 → 0.63。<strong>波动型下滑</strong>：<br>2022 年第 2、2023 年跌到第 9、2024 回到第 3。近 3 年 SEN −1.19 仍为负。<br>ρ = −0.3，是三所下降校中方向性最弱的 → 更接近「震荡」而非「单向下行」。</p>
+<hr>
+<h2 id="sec-6">6 结论的证据强度与反向证据</h2>
+<div class="tw"><table><thead><tr><th>结论</th><th>证据</th><th>反向证据</th><th>未排除的替代解释</th></tr></thead><tbody><tr><td>卢湾中学综合第一</td><td>6 种口径都在前 2</td><td>等权 P 口径下排第 1、大境第 2，差距仅 0.004</td><td>名额加权使其占优；未做名额规模分层</td></tr><tr><td>校际差距在缩小</td><td>IQR 斜率 −1.56（当年池）/−2.07（固定池），同向为负</td><td>2025 单年 IQR 2.4，2026 回弹至 9.2</td><td>2025 异常原因不明；五年窗口偏短</td></tr><tr><td>17 所中 6 所升降明显</td><td><code>sen_z</code> 相对分布，阈值可复现</td><td>11 所「平稳」里有 7 所近 3 年 SEN 已转正</td><td>五年尺度掩盖了近三年回升</td></tr><tr><td>头部 5 所中 4 所在退</td><td>SEN 全为负</td><td>卢湾 2026 回到第 2，近 3 年 SEN 转正</td><td>单年波动被五年斜率放大</td></tr><tr><td>金陵上升最快</td><td>SEN +4.18、ρ=+0.9</td><td>名额同期从 32 降到 14（−56%）</td><td>规模收缩与分数上升混淆，无法区分因果</td></tr></tbody></table></div>
+<h2 id="sec-7">7 不可由本报告回答的问题</h2>
+<ol><li><strong>2025 年为何出现异常趋同</strong>（IQR 骤降到 2.4、校内极差同时升到 75.6）—— 官方数据不足以判断是否与名额分配政策调整有关。</li><li><strong>各校「生源质量」的绝对水平</strong>——无在校生规模，名额占比无法换成真实分位。</li><li><strong>名次变化是生源变化还是招生规模调整</strong>——两者在本数据中无法分离。</li><li><strong>统招批次的表现</strong>——本报告只看名额到校通道。</li><li><strong>2027 年趋势</strong>——不外推。</li></ol>
+<h2 id="sec-8">8 局限声明</h2>
+<ol><li>名额到校只反映<strong>末位录取考生</strong>成绩，不等于学校整体水平。</li><li>指标只测到每校名额批次最前端，覆盖率需另算，本报告不外推。</li><li><strong>计划名额存在未用满</strong>：2022–2026 分别有 2 / 3 / 6 / 0 / 7 个「计划 1 个名额但无分数线」的组合（康德最典型：2024 计划 7 所只录 2 所、2026 计划 7 所只录 1 所），故<strong>名额数 ≠ 实际录取数</strong>。</li><li><strong>2022 年官方表无「是否同分优待」列</strong>，该年无法判断是否存在同分优待。</li><li><strong>2024 年起大同初级中学并入原黄浦学校学生</strong>，其趋势含成分变化（结构断点）；已另算「剔除 2024」的 SEN（−1.90），结论未变。</li><li><strong>池量 18→17（2025，黄浦学校并出）</strong>，已用双口径（当年池 / 固定池）剥离，两口径 2024 起完全一致，但主口径仍受此影响。</li><li><strong>黄浦学校仅 3 年数据</strong>，不做趋势分析；其在 2022–2024 的当年排名中出现。</li><li>未做跨区对比，结论只适用于黄浦区。</li></ol>
+<h2 id="sec-9">9 交付物</h2>
+<p>均在 <code>analysis/黄浦区公办初中名额分配到校分析/</code>：</p>
+<div class="tw"><table><thead><tr><th>文件</th><th>内容</th><th>粒度</th></tr></thead><tbody><tr><td><code>宽表-初中水平-黄浦区-2022-2026.csv</code></td><td><strong>唯一事实源</strong>，90 列：逐年 wq/eq/P/Z/rel/quota/hi/lo + 5 年汇总 + 全部名次 + 断点标记</td><td>校（18 行）</td></tr><tr><td><code>排序表-名额分配到校-黄浦区-2022-2026.csv</code></td><td>主口径排名 + 逐年分位与名次</td><td>校（17 行）</td></tr><tr><td><code>rank-多口径总表-黄浦区-2022-2026.csv</code></td><td>逐年 P 与名次 + 五年 P_wq + 三年榜 P</td><td>校（18 行）</td></tr><tr><td><code>rank-加权敏感性-黄浦区-2022-2026.csv</code></td><td>4 种时间权重的名次与最大位移</td><td>校（17 行）</td></tr><tr><td><code>趋势分析-黄浦区-2022-2026.csv</code></td><td>rel 首末、SEN 三式、sen_z、分类、断点标记</td><td>校（17 行）</td></tr><tr><td><code>收敛分析-黄浦区-2022-2026.csv</code></td><td>逐年 IQR/σ/CV/极差/头尾差 × 双口径 + 校内极差</td><td>年（5 行）</td></tr><tr><td><code>单线视角-黄浦区-2022-2026.csv</code></td><td>15 所招生学校 × 每校逐线均分与名额</td><td>校 × 线（202 行）</td></tr></tbody></table></div>
+<blockquote>宽表是唯一事实源：<code>P_wq</code> 与 <code>rank_P_wq</code> 均落在宽表内，可不依赖其他文件独立复算。<br>数据修正记录见 <code>data/黄浦区/学校/来源.md</code>。</blockquote>
+<footer>
+  <p>数据与结论均来自官方 PDF，每个数字可回源到具体文件与页码。
+     分析口径、方法与局限见页面内「局限声明」一节。</p>
+  <p>仓库：<a href="https://github.com/iStarFire/Shanghai-XueQuFang">https://github.com/iStarFire/Shanghai-XueQuFang</a></p>
+</footer>
+</main>
+</body>
+</html>

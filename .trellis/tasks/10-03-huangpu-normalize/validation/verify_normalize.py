@@ -137,10 +137,13 @@ def main():
     # ---------- [7] 下游无失效产物 ----------
     print('\n=== [7] 下游产物 ===')
     ad = f'{ROOT}/analysis/黄浦区公办初中名额分配到校分析'
+    # 归一后的下游分析产物由 10-03-huangpu-analysis 产出并由 verify_analysis.py 校验。
+    # 本门禁在此只确认「归一后分析产物已重新生成」——若为空说明归一后未重跑分析。
     dl = sorted(f for f in os.listdir(ad) if f.endswith(('.csv', '.html', '.md')))
-    ck('无宽表/报告等分析产物（仅有工具脚本）', len(dl), 0)
-    for f in dl:
-        print('      需重跑:', f)
+    ck('归一后分析产物已生成（≥7 个 CSV）',
+       len([f for f in dl if f.endswith('.csv')]) >= 7, True)
+    ck('分析报告已生成', int(os.path.exists(f'{ad}/分析报告.md')), 1)
+    print(f'      产物: {dl}')
 
     print('\n' + '=' * 62)
     print(f'总计 {N} 项检查，不通过 {len(FAILS)} 项')

@@ -106,9 +106,11 @@ def main():
     ck('分数线初中名 ⊆ 计划表初中名 ∪ 更名登记',
        len(csv_j - plan_j - {'上海市兴业中学'}), 0)
     ck('分数线高中名 ⊆ 计划表高中名（已剔简称）', len(csv_s - plan_s), 0)
-    ck('计划表高中名未归一的简称数（应为 12+1）',
+    # 计划表简称由 10-03-huangpu-normalize 归一；本门禁跑在分析阶段，
+    # 断言应为「已归零」。归一本身的验证在 verify_normalize.py。
+    ck('计划表高中名未归一的简称数（normalize 后应为 0）',
        len({r['senior_high_school'] for r in PLAN
-            if len(r['senior_high_school']) < 5}), 13)
+            if len(r['senior_high_school']) < 5}), 0)
 
     # ---------- [5] 逐格对账（基线 = 重抽前原始 CSV） ----------
     print('\n=== [5] 逐格对账（基线 = 重抽前 CSV）===')
