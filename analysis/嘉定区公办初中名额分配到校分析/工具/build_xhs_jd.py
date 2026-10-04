@@ -274,7 +274,8 @@ def fig_main():
     inner = (head('嘉定区 · 初中「名额分配到校」',
                   f'{len(RANK)} 所入榜 + {len(NEW4)} 所新开办',
                   '2022–2026 五年公开数据 · 名额加权区属市重点线口径 · 分位 P 主排序')
-             + f'<div class="card"><div class="h2"><div class="num">1</div>排名表</div>'
+             + '<div class="card"><div class="h2"><div class="num">1</div>排名表'
+               '（浅绿底 = 主口径前 5）</div>'
              '<table><tr><th>#</th><th>初中</th><th>数据跨度</th><th>P 分位</th>'
              '<th>均名(分)</th><th>名额</th>'
              '<th>近3年<br>排名</th><th>近2年<br>排名</th><th>26年<br>排名</th>'
@@ -285,6 +286,10 @@ def fig_main():
              f'<span>五年全勤 <b>{FULL5}</b> 所</span>'
              f'<span>新开办（不参与主排序）<b>{len(NEW4)}</b> 所</span>'
              f'<span>民办未入榜 <b>{PRIV}</b> 所</span></div>'
+             '<div class="note">底色：<b>浅绿 = 主口径前 5 名</b>；'
+             '主口径第 6 名<b>中科院上海实验学校</b>在 Z / 线性 / 指数 / 近3年 / 近2年 '
+             '5 种口径下会顶替同济进入前 5，故<b>跨口径稳定的头部共 6 校</b>'
+             '（这 6 校在 8 种口径下最差名次为 10）。</div>'
              '<div class="note">读法：<b>P 分位</b>越大越强（位置可比，不是分值可比）；'
              '<b>均名</b>是高于当年全区中位多少分（跨年可比）；<b>名额</b>是招生规模，'
              '<b>是学校规模的代理</b>，不等于办学水平。</div>'

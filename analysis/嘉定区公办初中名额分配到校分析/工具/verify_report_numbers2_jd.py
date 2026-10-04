@@ -67,9 +67,11 @@ def has(txt, s):
 
 print('=== A. 核心结论关键统计量 ===')
 rows = sorted(RK, key=lambda r: int(r['rank_P_wq_all']))
+# 与 H4 同口径：极差按报告列出的显示值算，便于读者复算
+_pd = [round(float(r['P_wq_all']), 3) for r in rows]
 core = sec(r'\*\*A\. 排名')
-sp_r2 = abs(float(rows[0]['P_wq_all']) - float(rows[1]['P_wq_all']))
-sp_r35 = abs(float(rows[4]['P_wq_all']) - float(rows[2]['P_wq_all']))
+sp_r2 = abs(_pd[0] - _pd[1])
+sp_r35 = abs(_pd[4] - _pd[2])
 for label, val in (('第1–2名极差', f'{sp_r2:.3f}'), ('第3–5名极差', f'{sp_r35:.3f}')):
     checked += 1
     if val not in core:
@@ -203,7 +205,10 @@ checked += 1
 if '全部为前 5' in rep:
     bad.append(('第7章', '旧断言', '仍含「全部为前 5」，与实际不符'))
 # H4 2.0 精度提示三组极差
-_p5 = sorted([float(r['P_wq_all']) for r in RK], reverse=True)
+# 极差按**报告中列出的显示值**（四舍五入 3 位）计算，而非 CSV 精确值。
+# 理由：报告 2.0 节把 0.848 / 0.836 / 0.815 明写在表里，读者复算得 0.033；
+# 若门禁用精确值（0.847521−0.815092=0.032429→0.032）会把正确值判为错误。
+_p5 = sorted([round(float(r['P_wq_all']), 3) for r in RK], reverse=True)
 for lab, a, b in (('1-2', 0, 1), ('3-5', 2, 4), ('6-8', 5, 7)):
     v = f'{_p5[a] - _p5[b]:.3f}'
     checked += 1
