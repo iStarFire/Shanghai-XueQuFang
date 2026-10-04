@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/data/index.md", "reason": "名额与分数的口径定义；本任务要判定「名额是不是规模的代理」，必须先确认既有口径语义"}
+{"file": ".trellis/spec/quality/data-validation.md", "reason": "数据校验规范与历史陷阱清单（陷阱 7 改名归并、陷阱 8 名称相似、陷阱 14 断言须在写文件之前）；本任务要改 build_v3_jd.py 与报告写入"}
+{"file": ".trellis/spec/analysis/index.md", "reason": "分析与结论验证规范；本任务属结论修正（推翻已提交结论），须按规范留下反向证据与不确定性声明"}
+{"file": ".trellis/spec/guides/index.md", "reason": "共享思考指南；用于检查「规则推论」与「实测验证」的边界，避免把规则层结论写成实测结论"}
+{"file": "analysis/嘉定区公办初中名额分配到校分析/工具/build_v3_jd.py", "reason": "本任务要改的两个点：ranks_of 的取池逻辑（L325-327）与输出清空规则（L462-468）"}
+{"file": "analysis/嘉定区公办初中名额分配到校分析/工具/verify_report_numbers2_jd.py", "reason": "既有第二层数字门禁，本任务需在其中补入「近 2 年列口径」与「规模代理表述」的断言"}
+{"file": "data/嘉定区/学校/来源.md", "reason": "登记本次新增的官方规则证据（2023/2024/2026 原文出处）与口径变更说明"}

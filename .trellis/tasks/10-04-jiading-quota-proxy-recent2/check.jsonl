@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/quality/data-validation.md", "reason": "数据正确性校验的判定标准与历史失败样例；用于校验 recent2 扩池后的 31 所名次与 25 所变动清单"}
+{"file": ".trellis/spec/analysis/index.md", "reason": "结论可靠性验证的九个维度；本任务的核心风险是「用规则推论冒充实测结论」，须按规范逐条验证"}
+{"file": ".trellis/spec/guides/index.md", "reason": "检查「事实/推断分离」与「反向证据」是否齐备；结论修正后第 7 章须重新给出反向证据"}
+{"file": "analysis/嘉定区公办初中名额分配到校分析/工具/build_v3_jd.py", "reason": "被检对象：ranks_of 取池与清空规则的改动是否只影响 recent2，而未波及主排序与其余口径"}
+{"file": "analysis/嘉定区公办初中名额分配到校分析/宽表-初中水平-嘉定区-2022-2026.csv", "reason": "独立复算 recent2 的原始数据源（P_wq_2025 / P_wq_2026），校验脚本不得复用 build 函数"}

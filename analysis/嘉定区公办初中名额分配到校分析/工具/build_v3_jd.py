@@ -322,8 +322,18 @@ for c in schools:
         AGG['P'][(k, 'wq', c)] = num_ / den if den else None
 
 
-def ranks_of(getter):
-    ok = [(c, getter(c)) for c in TABLE if getter(c) is not None]
+# 「近 2 年」的排名池：TABLE + **2025 与 2026 两年都有** P_wq 的新开办校。
+# 注意不能只判「recent2 有值」——只有 2026 一年的学校（嘉一实验）其 recent2 也会等于单年值，
+# 对「近 2 年」无意义，会让池虚增为 32 所。必须要求两年齐备。
+RECENT2_POOL = TABLE + [
+    c for c in NEW
+    if (c, 2025) in YEAR_PZR[('all', 'wq')] and (c, 2026) in YEAR_PZR[('all', 'wq')]]
+assert len(RECENT2_POOL) == 31, f'近 2 年池应为 31 所，实际 {len(RECENT2_POOL)}'
+
+
+def ranks_of(getter, pool=None):
+    pool = TABLE if pool is None else pool
+    ok = [(c, getter(c)) for c in pool if getter(c) is not None]
     return {c: i for i, (c, _) in enumerate(sorted(ok, key=lambda t: -t[1]), 1)}
 
 
@@ -338,7 +348,10 @@ for chain in ('eq', 'wq'):
         RK[(t, chain)] = ranks_of(lambda c, t=t, ch=chain: AGG[t][('all', ch, c)])
         RK[(t + '_comb', chain)] = ranks_of(lambda c, t=t, ch=chain: AGG[t][('comb', ch, c)])
 for k in W_TIME:
-    RK[(k, 'wq')] = ranks_of(lambda c, k=k: AGG['P'][(k, 'wq', c)])
+    # 仅 recent2 改用扩池；其余口径（lin/exp/recent3）必须保持 TABLE，
+    # 否则会顺带改动已交付的名次（验收 A9/A10）。
+    _pool = RECENT2_POOL if k == 'recent2' else None
+    RK[(k, 'wq')] = ranks_of(lambda c, k=k: AGG['P'][(k, 'wq', c)], _pool)
 
 # ---------- 输出 1：宽表 ----------
 wide_cols = ['junior_high_school', 'junior_high_school_former_names',
@@ -460,10 +473,18 @@ AGG_COLS += ['Z_wq_comb', 'rank_Z_wq_comb', 'ZR_wq_comb', 'rank_ZR_wq_comb']
 AGG_COLS += [x for k in W_TIME for x in (f'P_{k}', f'rank_P_{k}')]
 
 _n_blank = 0
+# 新开办校的「近 2 年」两列**保留**：它们有 2025/2026 两年成绩，该口径对它们有效，
+# 保留后与原 28 所同池（31 所）可比。其余聚合列仍清空（它们没有五年/近三年数据）。
+# 民办校不适用于任何排名口径，全部清空。
+KEEP_FOR_NEW = ('P_recent2', 'rank_P_recent2')
 for _d in rows_out:
     if _d['row_type'] == 'ranked':
         continue
     for _col in AGG_COLS:
+        # 只有在 RECENT2_POOL 内（2025+2026 两年齐备）的新校才保留；
+        # 嘉一实验仅 2026 一年，不属该池，recent2 同样清空。
+        if _col in KEEP_FOR_NEW and _d['junior_high_school'] in RECENT2_POOL:
+            continue
         if _d.get(_col) not in ('', None):
             _d[_col] = ''
             _n_blank += 1

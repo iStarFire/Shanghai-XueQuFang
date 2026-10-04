@@ -12,12 +12,16 @@
   --accent:#1f6feb; --accent-soft:#eaf1fd; --warn:#b26a00; --warn-soft:#fff6e5;
   --ok:#1a7f37; --code-bg:#f0f2f5; --radius:10px;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  /* 未参与主排序的行（新开办学校）：浅色模式下暖黄底 + 橙色左条 */
+  --disclosed-bg:#fff8e6; --disclosed-bar:#e2a03f; --disclosed-fg:#6b5410;
 }
 @media (prefers-color-scheme:dark){
   :root{
     --bg:#12141a; --card:#1a1d24; --fg:#e6e8eb; --muted:#9aa4b2; --line:#2a2f38;
     --accent:#6ea8fe; --accent-soft:#1c2739; --warn:#e2a03f; --warn-soft:#2a2314;
     --ok:#5ec27b; --code-bg:#232830;
+    /* 未参与主排序的行（新开办学校）：深色模式下用暗底 + 亮色条 */
+    --disclosed-bg:#2b2412; --disclosed-bar:#e2a03f; --disclosed-fg:#f0d9a8;
   }
 }
 *{box-sizing:border-box}
@@ -64,6 +68,12 @@ th,td{padding:.55em .7em;text-align:left;border-bottom:1px solid var(--line);
 th{background:var(--code-bg);font-weight:650;position:sticky;top:0;z-index:1}
 tbody tr:last-child td{border-bottom:0}
 tbody tr:nth-child(even){background:color-mix(in srgb,var(--code-bg) 45%,transparent)}
+/* 未参与主排序的行（报告正文中以 ^ 标记）：底色 + 左侧色条。
+   放在 even 规则之后，用 !important 覆盖斑马纹，避免隔行底色把高亮冲掉。 */
+tbody tr.row-disclosed{background:var(--disclosed-bg)!important;
+  box-shadow:inset 3px 0 0 var(--disclosed-bar)}
+tbody tr.row-disclosed td{color:var(--disclosed-fg)}
+tbody tr.row-disclosed td:first-child{font-weight:600}
 td:first-child,th:first-child{position:sticky;left:0;background:var(--card);
       box-shadow:1px 0 0 var(--line);z-index:2;white-space:normal;min-width:8.5em}
 th:first-child{background:var(--code-bg);z-index:3}
@@ -109,10 +119,10 @@ footer{color:var(--muted);font-size:.85rem;margin-top:3em;padding-top:1.2em;
 <main class="wrap">
   <p>围绕上海学区房的数据采集、整理、校验与分析结论。所有数字均可回源到官方原始文件与页码。</p>
   <div class="cards">
-<a class="card" href="analysis/嘉定区公办初中名额分配到校分析/index.html"><span class="tag">徐汇区</span><h3>嘉定区公办初中名额分配到校分析</h3><p></p></a>
-<a class="card" href="analysis/徐汇区公办初中名额分配到校分析/index.html"><span class="tag">徐汇区</span><h3>徐汇区公办初中名额分配到校分析（2022–2026）</h3><p>2022–2026 年名额分配到校计划数与最低分数线，整理为 117 列初中宽表，给出「名额到校通道竞争强度」的排名与稳定性结论</p></a>
-<a class="card" href="analysis/普陀区公办初中名额分配到校分析/index.html"><span class="tag">徐汇区</span><h3>普陀区公办初中名额分配到校分析</h3><p></p></a>
-<a class="card" href="analysis/黄浦区公办初中名额分配到校分析/index.html"><span class="tag">徐汇区</span><h3>黄浦区公办初中名额分配到校分析</h3><p></p></a>
+<a class="card" href="analysis/嘉定区公办初中名额分配到校分析/index.html"><span class="tag">嘉定区</span><h3>嘉定区公办初中名额分配到校分析</h3><p>2022–2026 年名额分配到校计划数与最低分数线，给出区属市重点线口径的排名、规模结构、收敛检验与指标有效边界</p></a>
+<a class="card" href="analysis/徐汇区公办初中名额分配到校分析/index.html"><span class="tag">徐汇区</span><h3>徐汇区公办初中名额分配到校分析</h3><p></p></a>
+<a class="card" href="analysis/普陀区公办初中名额分配到校分析/index.html"><span class="tag">普陀区</span><h3>普陀区公办初中名额分配到校分析</h3><p></p></a>
+<a class="card" href="analysis/黄浦区公办初中名额分配到校分析/index.html"><span class="tag">黄浦区</span><h3>黄浦区公办初中名额分配到校分析</h3><p></p></a>
   </div>
   <footer>
     <p>所有原始文件与结论均可回源核验。仓库：
