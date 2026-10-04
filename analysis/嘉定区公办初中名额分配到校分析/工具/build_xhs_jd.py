@@ -368,8 +368,8 @@ def fig_case():
     """子图 3 —— 对应报告第 8 章：代表性公办初中个案。"""
     u = lambda v: f'{v:+.2f}'.replace('-', '−')
     inner = (head('子课题 03 · 对应报告第 8 章', '代表性个案',
-                  '选人标准在分析前预注册：头部 5 + 明显上升 3 + 明显下降 3')
-             + '<div class="card"><div class="h2"><div class="num">1</div>头部 5 所</div>'
+                  '选人标准在分析前预注册：主口径前 5 + 明显上升 3 + 明显下降 3')
+             + '<div class="card"><div class="h2"><div class="num">1</div>主口径前 5 名</div>'
              '<table><tr><th>#</th><th>初中</th><th>P 分位</th><th>均名(分)</th>'
              '<th>名额</th><th>五年斜率</th><th>近3年斜率</th></tr>')
     for r in RANK[:5]:
@@ -380,11 +380,13 @@ def fig_case():
                   f'<td>{r["P"]:.3f}</td><td>{u(r["rel"])}</td><td>{r["q"]:.1f}</td>'
                   f'<td>{u(r["sen"])}</td><td>{r3}</td></tr>')
     top5k = [k for k in WQ if SH(k) in TOP5]
-    inner += ('</table><div class="note">头部 5 所的五年斜率：'
+    inner += ('</table><div class="note">这 5 校的五年斜率：'
               + '、'.join(f'{SH(r["junior_high_school"])} {float(r["sen"]):+.2f}'
                           for r in sorted([x for x in CLS if x['junior_high_school'] in top5k],
                                           key=lambda r: float(r['sen']))).replace('-', '−')
-              + ' —— <b>名次高不等于趋势好</b>。</div></div>')
+              + ' —— <b>名次高不等于趋势好</b>。'
+              '主口径第 6 名<b>中科院上海实验学校</b>在 Z / 线性 / 指数 / 近3年 / 近2年 '
+              '5 种口径下会顶替同济进入前 5，故<b>跨口径稳定的头部共 6 校</b>。</div></div>')
     for title, keys in (('明显上升 3 所', CASES_UP), ('明显下降 3 所', CASES_DOWN)):
         inner += (f'<div class="card"><div class="h2"><div class="num">'
                   f'{"2" if keys is CASES_UP else "3"}</div>{title}</div><table>'
