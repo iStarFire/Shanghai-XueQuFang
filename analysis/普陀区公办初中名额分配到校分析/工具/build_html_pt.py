@@ -385,17 +385,23 @@ def build_dl():
     return f'<div class="dl">{links}</div>'
 
 
-def topic_meta():
-    """从报告里取标题与一句摘要，供入口页使用。"""
-    md = open(REPORT, encoding='utf-8').read()
+def topic_meta(topic_dir):
+    """从**指定课题**的报告取标题，供入口页使用。
+
+    ⚠️ 此前用模块级 REPORT（指向本区报告），对其他区调用时读到的是**本区**标题，
+    导致徐汇卡片显示普陀标题。必须按目录取。
+    """
+    rp = os.path.join(ROOT, 'analysis', topic_dir, '分析报告.md')
+    if not os.path.exists(rp):
+        return topic_dir
+    md = open(rp, encoding='utf-8').read()
     m = re.search(r'^#\s+(.+)$', md, re.M)
-    title = re.sub(r'\*\*|`', '', m.group(1)).strip() if m else '未命名课题'
-    return title
+    return re.sub(r'\*\*|`', '', m.group(1)).strip() if m else topic_dir
 
 
 def main():
     md = open(REPORT, encoding='utf-8').read()
-    h1 = topic_meta()
+    h1 = topic_meta('普陀区公办初中名额分配到校分析')
     # 报告首行的 H1 已由页头承载，正文里再去掉一次，避免标题重复出现
     md_body = re.sub(r'^#\s+.*?\n', '', md, count=1)
     body, toc = md_to_html(md_body)
@@ -422,16 +428,34 @@ def main():
         p = f'{adir}/{name}'
         if not os.path.isdir(p) or not os.path.exists(f'{p}/index.html'):
             continue
-        t = topic_meta() if name == '徐汇区公办初中名额分配到校分析' else name
+        t = topic_meta(name) if name == '徐汇区公办初中名额分配到校分析' else name
         sub = {'徐汇区公办初中名额分配到校分析':
                '2022–2026 年名额分配到校计划数与最低分数线，'
                '整理为 117 列初中宽表，给出「名额到校通道竞争强度」的排名与稳定性结论'}.get(name, '')
+        # tag 取目录名前缀（去「区公办初中名额分配到校分析」后缀）——
+        # 此前**硬编码为「徐汇区」**，导致所有区卡片都显示徐汇（与 build_html_jd.py 同源缺陷）。
+        _tag = name.split('区公办初中')[0] + '区' if '区公办初中' in name else name[:6]
         cards.append(
             f'<a class="card" href="analysis/{name}/index.html">'
-            f'<span class="tag">徐汇区</span><h3>{html.escape(t)}</h3>'
+            f'<span class="tag">{html.escape(_tag)}</span><h3>{html.escape(t)}</h3>'
             f'<p>{html.escape(sub)}</p></a>')
+    # 入口页 CSS 需包含 row-disclosed（嘉定报告用 ^ 标记新开办学校行并高亮）。
+    # 各区生成器共用同一入口页，**任一生成器都不应删掉其他区需要的样式**。
+    css = CSS
+    if 'row-disclosed' not in css:
+        css += (
+            '\n/* 未参与主排序的行（新开办学校，报告正文中以 ^ 标记）：'
+            '浅色暖黄底 + 橙色左条；深色模式用暗底 + 亮色条 */\n'
+            ':root{--disclosed-bg:#fff8e6;--disclosed-bar:#e2a03f;--disclosed-fg:#6b5410}\n'
+            '@media (prefers-color-scheme:dark)'
+            '{:root{--disclosed-bg:#2b2412;--disclosed-bar:#e2a03f;--disclosed-fg:#f0d9a8}}\n'
+            '/* 放在 even 规则之后并用 !important 覆盖斑马纹，避免隔行底色冲掉高亮 */\n'
+            'tbody tr.row-disclosed{background:var(--disclosed-bg)!important;'
+            'box-shadow:inset 3px 0 0 var(--disclosed-bar)}\n'
+            'tbody tr.row-disclosed td{color:var(--disclosed-fg)}\n'
+        )
     home = HOME.format(
-        title=SITE_NAME, css=CSS, site=SITE_NAME,
+        title=SITE_NAME, css=css, site=SITE_NAME,
         desc='围绕上海学区房的数据采集、整理、校验与分析结论。'
              '所有数字均可回源到官方原始文件与页码。',
         cards='\n'.join(cards) or '<p>暂无课题。</p>',

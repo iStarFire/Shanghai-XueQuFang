@@ -38,7 +38,10 @@ GROUPS = {'all': QU4, 'head': HEAD2, 'tail': TAIL2}
 ALL9 = [f for _, f, _ in HS]
 W_TIME = {'lin': {2022: 1, 2023: 2, 2024: 3, 2025: 4, 2026: 5},
           'exp': {2022: 1, 2023: 2, 2024: 4, 2025: 8, 2026: 16},
-          'recent3': {2022: 0, 2023: 0, 2024: 1, 2025: 1, 2026: 1}}
+          'recent3': {2022: 0, 2023: 0, 2024: 1, 2025: 1, 2026: 1},
+          # 3.1 新增：近 2 年（与嘉定口径一致，权重 0/0/0/1/1）
+          'recent2': {2022: 0, 2023: 0, 2024: 0, 2025: 1, 2026: 1}}
+
 
 
 def load(p):
@@ -57,6 +60,45 @@ def num(v, nd=4):
 score_rows = load(f'{D_S}/名额到校最低分数线-普陀区-2022-2026.csv')
 plan_rows = load(f'{D_S}/名额到校计划-普陀区-2022-2026.csv')
 roster = {r['school_name']: r for r in load(f'{D_S}/初中名录-公办民办-普陀区-2026.csv')}
+
+# ---- 排除「已并入他校」的行（1.1）：晋元西校 = 晋元附校（075069），2022 计划表同一行 ----
+# 依据：【普陀】【2022】名额到校计划.pdf 第 2 页文本层 L52-L65 —— 该行含
+# 075069 与 075083 **两个代码、两个校名，但只有一组名额（总计 49）**。
+# 原 CSV 把这组数字各写了一遍给两个 code，使 2022 名额合计 660 = PDF 权威 611 + 49。
+# 分数线表 2022 年 35 所计划校中唯独缺西校，佐证其不独立计量。
+# 计划表已加 `merged_into` 列标注；此处排除，避免重复计入名额。
+MERGED = {(r['junior_high_school_code'], r['year'])
+          for r in plan_rows if r.get('merged_into')}
+_before = sum(int(r['quota']) for r in plan_rows if r['year'] == '2022')
+plan_rows = [r for r in plan_rows
+             if (r['junior_high_school_code'], r['year']) not in MERGED]
+score_rows = [r for r in score_rows
+              if (r['junior_high_school_code'], r['year']) not in MERGED
+              or not r.get('junior_high_school_code')]
+_after = sum(int(r['quota']) for r in plan_rows if r['year'] == '2022')
+assert _after == 611, f'排除并入校后 2022 名额合计={_after}，应为 PDF 权威值 611'
+assert _before - _after == 49, f'排除量应为 49，实际 {_before - _after}'
+print(f'已排除并入他校行 {len(MERGED)} 组；2022 名额 {_before} → {_after}（= PDF 611）')
+
+# ---- 同一性归并（1.2）：兴陇中学 = 曹杨二中附属实验中学（同一官方代码 071048）----
+# 依据：计划表中 071048 的年份**不重叠**（兴陇仅 2022、曹二实验 2023-2026），
+# 属改名而非代码复用错误（后者会同年出现两次）。在**读取阶段**改写校名，
+# 使两校合并为一行 5 年数据，避免同一所学校被拆成两行分别参与排名。
+ALIAS = {'上海市兴陇中学': '上海市曹杨第二中学附属实验中学'}
+for _rows in (score_rows, plan_rows):
+    for _r in _rows:
+        _n = _r['junior_high_school']
+        if _n in ALIAS:
+            _r['junior_high_school'] = ALIAS[_n]
+            _r['alias_of'] = _n
+# 断言：归并后同一代码不得再对应两个校名，否则说明判断有误
+_names_by_code = {}
+for _r in plan_rows:
+    _names_by_code.setdefault(_r['junior_high_school_code'], set()).add(_r['junior_high_school'])
+_dup = {k: v for k, v in _names_by_code.items() if len(v) > 1}
+assert not _dup, f'归并后仍有代码对应多校名，归并判断有误：{_dup}'
+assert len([r for r in plan_rows if r['junior_high_school'] == '上海市曹杨第二中学附属实验中学']) > 0, \
+    '归并目标校名未出现在计划表中'
 
 S = {}   # (校, 高中, 年) -> 分数
 for r in score_rows:
@@ -164,11 +206,51 @@ TABLE = RANKED + FOUR_YEAR
 assert COV  # 保留引用
 
 # ---------- 趋势链（加权主口径） ----------
-rel = {}
-for c in RANKED:
-    for y in YEARS:
-        vals = sorted(YEAR_MEAN[('all', 'wq')][(x, y)] for x in RANKED if (x, y) in YEAR_MEAN[('all', 'wq')])
-        rel[(c, y)] = YEAR_MEAN[('all', 'wq')][(c, y)] - st.median(vals)
+WIDE_SCHOOLS = [c for c in schools if COV(c) >= 1]
+ROWS_BY_NAME = {}
+
+EXITED = {
+    '上海市光新学校': '暂停招生（2024 年起初中部停招，2025 年起无毕业生；学校仍存在）',
+    '上海市武宁中学': '已并入同济大学第二附属中学（普陀区发改委 2022-08-22）；学校仍存在',
+}
+# ownership 回退：两校经公开资料核为公办（光新=公办九年一贯制、武宁=公立初级中学），
+# 但**不在 2026 名录内**，故不能从 roster 取到；此处显式登记，不留空。
+OWNERSHIP_FALLBACK = {
+    '上海市光新学校': '公办',
+    '上海市武宁中学': '公办',
+}
+FORMER_NAMES = {'上海市曹杨第二中学附属实验中学': '上海市兴陇中学'}
+
+
+
+# ---- 2.3 逐年相对位置 rel ----
+# 口径对齐嘉定（build_v3_jd.py）：rel = 当年名额加权均分 − **当年池中位**。
+# 嘉定用「当年有数据的公办池（PUB）中位」，刻意不用五年全勤池（换池会改变 rel 均名与 SEN）。
+# 普陀额外**排除 exited 校**（光新/武宁已退出名额到校体系，其分数是历史遗留，纳入会污染基准）。
+OWNER = {c: (roster.get(c, {}).get('ownership', '') or OWNERSHIP_FALLBACK.get(c, ''))
+         for c in WIDE_SCHOOLS}
+REL_POOL, REL_MED, REL = {}, {}, {}
+for _y in YEARS:
+    # 注意 YEAR_MEAN 的键是 (c, y)，不是 (y, c)
+    _pool = [c for c in WIDE_SCHOOLS
+             if (c, _y) in YEAR_MEAN[('all', 'wq')]
+             and OWNER.get(c) == '公办' and c not in EXITED]
+    assert _pool, f'{_y} 年 rel 基准池为空——检查 OWNER 取值与 exited 过滤'
+    REL_POOL[_y] = len(_pool)
+    _med = st.median(sorted(YEAR_MEAN[('all', 'wq')][(c, _y)] for c in _pool))
+    REL_MED[_y] = _med
+    for _c in WIDE_SCHOOLS:
+        if (_c, _y) in YEAR_MEAN[('all', 'wq')]:
+            REL[(_c, _y)] = YEAR_MEAN[('all', 'wq')][(_c, _y)] - _med
+print('rel 基准池（当年公办非退出）：'
+      + ' '.join(f'{y}={REL_POOL[y]}所/中位{REL_MED[y]:.2f}' for y in YEARS))
+
+
+# 趋势链与宽表共用同一 rel（口径 = 当年公办非退出池中位，见 2.3 注释）。
+# 原实现以 RANKED（五年全勤）为基准，与宽表口径不一致，会出现两个 rel。
+# 实测两种中位数差 ≤0.51 分且为**同量平移**，故 delta_rel / sen 不受影响。
+rel = {k: v for k, v in REL.items() if k[0] in RANKED}
+assert rel, '趋势链 rel 为空：REL 未覆盖 RANKED'
 
 
 def sen_slope(pts):
@@ -214,6 +296,8 @@ for c, pr, rs in zip(RANKED, pred, resid):
 
 # ---------- 输出 1：宽表（扩容） ----------
 wide_cols = ['junior_high_school', 'junior_high_school_code', 'ownership',
+             'row_type', 'exit_reason', 'junior_high_school_former_names',
+             'rel_avg', 'rel_pool_n',
              'years_included', 'years_list', 'ranked']
 for s, full, _ in HS:
     for y in YEARS:
@@ -224,7 +308,7 @@ for s, full, _ in HS:
 for y in YEARS:
     wide_cols += [f'mean_score_base4_eq_{y}', f'mean_score_base4_wq_{y}',
                   f'rank_base4_eq_{y}', f'rank_base4_wq_{y}',
-                  f'valid_pairs_{y}', f'quota4_{y}',
+                  f'valid_pairs_{y}', f'quota4_{y}', f'rel_{y}',
                   f'P_eq_{y}', f'P_wq_{y}', f'Z_eq_{y}', f'Z_wq_{y}', f'ZR_eq_{y}', f'ZR_wq_{y}']
 wide_cols += [
     'quota4_avg', 'quota_all_avg',
@@ -237,22 +321,63 @@ wide_cols += [
     'P_eq_all', 'rank_P_eq_all', 'P_eq_head', 'rank_P_eq_head',
     'P_eq_tail', 'rank_P_eq_tail', 'P_eq_comb', 'rank_P_eq_comb',
     'Z_wq_comb', 'rank_Z_wq_comb', 'ZR_wq_comb', 'rank_ZR_wq_comb',
-    'P_lin', 'rank_P_lin', 'P_exp', 'rank_P_exp', 'P_recent3', 'rank_P_recent3',
 ]
+# 时间权重列**由 W_TIME 动态生成**：此前是硬编码清单，新增档位会静默丢列
+# （P_recent2 曾整列缺失而无人察觉）。W_TIME 是唯一事实源。
+for _k in W_TIME:
+    wide_cols += [f'P_{_k}', f'rank_P_{_k}']
+assert not (set(f'P_{k}' for k in W_TIME) & set(wide_cols[:-2 * len(W_TIME)])), \
+    '时间权重列重复'
+for _k in W_TIME:
+    assert f'P_{_k}' in wide_cols and f'rank_P_{_k}' in wide_cols, \
+        f'W_TIME 中的 {_k} 未进入 wide_cols，会静默丢列'
 
-WIDE_SCHOOLS = [c for c in schools if COV(c) >= 1]
+
+# ---- 2.1 ownership 补全 + 2.2 row_type 分类 ----
+# 2026 名录只覆盖当年在读学校，光新（暂停招生）与武宁（已并入同济二附中）
+# 已退出名录 ⇒ ownership 为空。此处按 1.1 官网核实结论补全，并按四分类打 row_type。
+# 依据见 data/普陀区/学校/初中校名别名表-普陀区.csv（evidence 列）。
+
+# 3.2 / 3.3 按口径取池：「近 N 年」列的池 = 当年有该 N 年全部数据的公办非退出校。
+# 主排序（all/head/tail/comb）与 lin/exp 维持主池 TABLE（32 所），不动。
+def _has_all_years(c, ys):
+    return all((c, y) in YEAR_MEAN[('all', 'wq')] for y in ys)
+
+
+_PUB_OK = lambda c: OWNER.get(c) == '公办' and c not in EXITED
+POOL_BY_TIME = {
+    'recent2': sorted(c for c in WIDE_SCHOOLS if _PUB_OK(c) and _has_all_years(c, [2025, 2026])),
+    'recent3': sorted(c for c in WIDE_SCHOOLS if _PUB_OK(c) and _has_all_years(c, [2024, 2025, 2026])),
+}
+def row_type_of(c, own, n_years):
+    """四分类：民办排除 / 退出 / 入榜 / 短样本。互斥且穷尽。"""
+    if own == '民办':
+        return 'excluded_private'
+    if c in EXITED:
+        return 'exited'
+    if n_years >= 4:
+        return 'ranked'
+    return 'short_sample'
+
+
 rows_out = []
 for c in WIDE_SCHOOLS:
     cov = [y for y in YEARS if (c, y) in YEAR_MEAN[('all', 'wq')]]
     q4 = [sum(Q.get((c, h, y), 0) for h in QU4) for y in cov]
     qa = [sum(Q.get((c, h, y), 0) for h in ALL9) for y in cov]
+    own = roster.get(c, {}).get('ownership', '') or OWNERSHIP_FALLBACK.get(c, '')
     d = {'junior_high_school': c, 'junior_high_school_code': CODE.get(c, ''),
-         'ownership': roster.get(c, {}).get('ownership', ''),
+         'ownership': own,
+         'exit_reason': EXITED.get(c, ''),
+         'junior_high_school_former_names': FORMER_NAMES.get(c, ''),
+         'row_type': row_type_of(c, own, len(cov)),
+         
          'years_included': len(cov), 'years_list': ';'.join(str(y) for y in cov),
          'ranked': 1 if c in TABLE else 0}
     for s, full, _ in HS:
         for y in YEARS:
             d[f'score_{s}_{y}'] = S.get((c, full, y), '')
+    ROWS_BY_NAME[d['junior_high_school']] = d
     for s, full, _ in HS:
         for y in YEARS:
             d[f'quota_{s}_{y}'] = Q.get((c, full, y), '')
@@ -263,6 +388,7 @@ for c in WIDE_SCHOOLS:
         d[f'rank_base4_wq_{y}'] = num(YEAR_RANK[('all', 'wq')].get((c, y)), 2)
         d[f'valid_pairs_{y}'] = sum(1 for h in QU4 if (c, h, y) in S)
         d[f'quota4_{y}'] = sum(Q.get((c, h, y), 0) for h in QU4)
+        d[f'rel_{y}'] = num(REL.get((c, y)), 4)
         for chain, tag in (('eq', 'eq'), ('wq', 'wq')):
             t = YEAR_PZR[('all', chain)].get((c, y))
             d[f'P_{tag}_{y}'] = num(t[0], 6) if t else ''
@@ -303,8 +429,22 @@ if MISSING:
     print('缺少部分分组数据的 (校, 链, 指标, 可用组数)：', MISSING[:8], '共', len(MISSING))
 
 
-def ranks_of(dic):
-    ok = [(c, dic[c]) for c in TABLE if dic[c] is not None]
+def ranks_of(dic, pool=None):
+    """跨年聚合名次 = 顺序秩（降序 1..N），保证名次唯一便于排名表。
+
+    注意：当年位次 rank_base4_{y} 用的是**平均秩**（并列同名次），
+    两者口径不同是有意的 —— 聚合名次须唯一，当年位次须反映并列。
+    代价：若聚合值出现并列，顺序秩会给出不同名次（并列者实际应同分）。
+    故此处显式检测并列并警告，避免静默失真（嘉定 Spearman 并列问题的同类防护）。
+    """
+    _pool = TABLE if pool is None else pool
+    ok = [(c, dic[c]) for c in _pool if dic.get(c) is not None]
+    vals = [v for _, v in ok]
+    dup = sorted({v for v in vals if vals.count(v) > 1})
+    if dup:
+        _names = [c for c, v in ok if v in dup]
+        print(f'⚠️ 聚合口径 {len(ok)} 所中有 {len(dup)} 个并列值，'
+              f'顺序秩会区分并列者：{[(c, round(v, 6)) for c, v in ok if v in dup]}')
     o = sorted(ok, key=lambda t: -t[1])
     return {c: i for i, (c, _) in enumerate(o, 1)}
 
@@ -323,8 +463,14 @@ for c in WIDE_SCHOOLS:
         num_ = sum(w[y] * YEAR_PZR[('all', 'wq')][(c, y)][0] for y in cov if w[y] > 0)
         den = sum(w[y] for y in cov if w[y] > 0)
         P_agg[(k, 'wq', c)] = num_ / den if den else None
+# 3.4 lin/exp 维持主池；recent2/recent3 用各自「有该 N 年全部数据」的池
 for k in W_TIME:
-    RK[(k, 'wq')] = ranks_of({c: P_agg[(k, 'wq', c)] for c in TABLE})
+    _pool = POOL_BY_TIME.get(k, TABLE)
+    RK[(k, 'wq')] = ranks_of({c: P_agg[(k, 'wq', c)] for c in _pool}, pool=_pool)
+    _got = sorted(RK[(k, 'wq')].values())
+    assert _got == list(range(1, len(_got) + 1)), \
+        f'{k} 名次不连续或缺号：{_got[:5]}…{_got[-3:]}（池 {len(_pool)} 所）'
+    print(f'  口径 {k:<8} 池 {len(_pool):>2} 所  名次 1–{len(_got)} 连续无缺号')
 print('入榜样本:', len(TABLE), '｜4 年校:', [c for c in FOUR_YEAR])
 
 # 写回宽表聚合列
@@ -353,6 +499,42 @@ for c in WIDE_SCHOOLS:
     for k in W_TIME:
         d[f'P_{k}'] = num(P_agg.get((k, 'wq', c)), 6)
         d[f'rank_P_{k}'] = R((k, 'wq'))
+    _rv = [REL[(c, y)] for y in YEARS if (c, y) in REL]
+    d['rel_avg'] = num(st.fmean(_rv), 4) if _rv else ''
+    d['rel_pool_n'] = REL_POOL.get(cov[-1], '') if cov else ''
+
+# ============ 2.1 / 2.2 值域断言（写盘前全部完成，规范陷阱 14）============
+_own = [d['ownership'] for d in rows_out]
+_blank = [d['junior_high_school'] for d in rows_out if not d['ownership'].strip()]
+assert not _blank, f'ownership 存在空值：{_blank}'
+assert set(_own) <= {'公办', '民办'}, f'ownership 值域越界：{set(_own)}'
+
+_RT = {'ranked', 'short_sample', 'exited', 'excluded_private'}
+_rt = [d['row_type'] for d in rows_out]
+assert set(_rt) <= _RT, f'row_type 值域越界：{set(_rt) - _RT}'
+# 四类互斥且穷尽：每行恰一类，且 exited/excluded_private 不进排名
+for d in rows_out:
+    n_own, n_rt = d['ownership'], d['row_type']
+    if n_own == '民办':
+        assert n_rt == 'excluded_private', f'{n_own} 民办行 row_type={n_rt}'
+        assert d['ranked'] == 0, '民办不得入榜'
+    elif n_rt == 'exited':
+        assert d['exit_reason'].strip(), f'{d["junior_high_school"]} exited 但缺 exit_reason'
+        assert d['ranked'] == 0, '退出校不得入榜'
+    elif n_rt == 'ranked':
+        assert d['years_included'] >= 4, f'{d["junior_high_school"]} years={d["years_included"]} 不应 ranked'
+        assert d['ranked'] == 1, 'ranked 行与 ranked 标记不一致'
+    else:
+        assert d['years_included'] < 4, f'{d["junior_high_school"]} years={d["years_included"]} 应为 short_sample'
+# former_names 有值时，对应旧名不得再作为独立行出现
+_names = {d['junior_high_school'] for d in rows_out}
+for d in rows_out:
+    _fn = d['junior_high_school_former_names']
+    if _fn.strip():
+        assert _fn not in _names, f'旧名 {_fn} 仍作为独立行存在，归并未生效'
+        assert d['row_type'] == 'ranked', f'{d["junior_high_school"]} 有 former_names 却非 ranked'
+print(f'2.1/2.2 断言通过：ownership 无空值（{sorted(set(_own))}）；'
+      f'row_type {sorted(set(_rt))}；四类互斥穷尽')
 
 with open(f'{D_A}/宽表-初中水平-普陀区-2022-2026.csv', 'w', newline='', encoding='utf-8-sig') as f:
     w = csv.DictWriter(f, fieldnames=wide_cols)

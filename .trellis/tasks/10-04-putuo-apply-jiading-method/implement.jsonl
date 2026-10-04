@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/data/index.md", "reason": "数据口径定义；本任务要新增逐年派生列与 row_type，须先确认字段规范与缺失值语义（不得用 0 代替空）"}
+{"file": ".trellis/spec/quality/data-validation.md", "reason": "校验规范与历史陷阱清单：陷阱 7 改名归并、陷阱 14 断言须在写文件之前、陷阱 16 表格列数、陷阱 17 秩相关并列、陷阱 18 政策结论须回引原文"}
+{"file": ".trellis/spec/analysis/index.md", "reason": "结论可靠性验证规范；本任务要新增收敛与趋势两章，须按规范留下反向证据与不确定性声明"}
+{"file": "analysis/普陀区公办初中名额分配到校分析/工具/build_wide_pt.py", "reason": "被改对象：读取阶段加别名映射、补逐年派生列与 row_type；须先做幂等性验证"}
+{"file": "data/普陀区/学校/初中校名别名表-普陀区.csv", "reason": "兴陇→曹二实验的判断错误（标成停办待核实），实际同代码 071048，须改为已归并并加 evidence 列"}
+{"file": "data/普陀区/学校/初中名录-公办民办-普陀区-2026.csv", "reason": "ownership 的唯一来源，但 41 所全部标注「依校名初判，待核实」——排名池依赖它，证据强度须在局限声明写明"}
