@@ -1,0 +1,11 @@
+{"type": "spec", "path": ".trellis/spec/quality/data-validation.md", "reason": "25 条陷阱：写文件截断、分批替换回滚、生成顺序依赖、共用文件覆盖、一行两实体、硬编码清单漏项、虚构出处"}
+{"type": "spec", "path": ".trellis/spec/analysis/conclusion-verification.md", "reason": "4.1 验证脚本自身出错会伪造原报告有错；五个必须显著标注的情况"}
+{"type": "spec", "path": ".trellis/spec/analysis/method-guidelines.md", "reason": "分析方法设计规范：口径定义、对比基准、偏差来源、局限声明"}
+{"type": "spec", "path": ".trellis/spec/data/field-conventions.md", "reason": "字段命名与口径约定，避免与嘉定/普陀字段名混淆"}
+{"type": "ref", "path": "analysis/嘉定区公办初中名额分配到校分析/工具/build_v3_jd.py", "reason": "主口径实现参照（名额加权、P/Z/ZR、三组结构、时间权重、RECENT2_POOL）"}
+{"type": "ref", "path": "analysis/嘉定区公办初中名额分配到校分析/工具/build_q2q3_jd.py", "reason": "收敛指标与 Q-Q 回归实现参照（pctl/gini/ols 三指标归一化）"}
+{"type": "ref", "path": "analysis/普陀区公办初中名额分配到校分析/工具/build_v3.py", "reason": "最新管线参照：MERGED 排除、row_type 四分类、rel 基准池、ranks_of 按口径取池、宽表列动态生成"}
+{"type": "ref", "path": "analysis/普陀区公办初中名额分配到校分析/工具/build_tables_pt.py", "reason": "三张新表生成参照（含 tcrit 精确值、MK 正态近似）"}
+{"type": "ref", "path": "analysis/普陀区公办初中名额分配到校分析/工具/build_all_pt.py", "reason": "编排器参照（固定顺序 + cwd 修正）"}
+{"type": "ref", "path": "analysis/普陀区公办初中名额分配到校分析/validation/caliber-decisions.md", "reason": "D1–D8 口径决策记录，判断哪些可直接沿用、哪些需为徐汇调整"}
+{"type": "ref", "path": ".trellis/tasks/10-04-putuo-apply-jiading-method/validation/school-identity.md", "reason": "退出校与归并的核查方法论（官方文件回源 + PDF 文本层取证）"}

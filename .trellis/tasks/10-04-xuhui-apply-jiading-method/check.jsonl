@@ -1,0 +1,8 @@
+{"type": "spec", "path": ".trellis/spec/analysis/conclusion-verification.md", "reason": "2.4 结论可靠性验证：九维度、反模式、必须显著标注的情况"}
+{"type": "spec", "path": ".trellis/spec/quality/data-validation.md", "reason": "门禁判定：断言必须能真正拦住问题、故障注入验证"}
+{"type": "ref", "path": "analysis/普陀区公办初中名额分配到校分析/工具/verify_derived_pt.py", "reason": "独立复算参照（不 import 管线、口径常量重新声明）"}
+{"type": "ref", "path": "analysis/普陀区公办初中名额分配到校分析/工具/verify_vs_baseline_pt.py", "reason": "基线逐格比对参照（值列/名次列分离判定）"}
+{"type": "ref", "path": "analysis/普陀区公办初中名额分配到校分析/工具/verify_tables_pt.py", "reason": "三表独立复算参照（含不完全 beta 手写实现）"}
+{"type": "ref", "path": "analysis/普陀区公办初中名额分配到校分析/工具/verify_conclusion_pt.py", "reason": "核心结论核对参照（避免字符陷阱：Unicode 减号 vs ASCII）"}
+{"type": "task", "path": ".trellis/tasks/10-04-xuhui-apply-jiading-method/prd.md", "reason": "验收标准 A1–A12"}
+{"type": "task", "path": ".trellis/tasks/10-04-xuhui-apply-jiading-method/design.md", "reason": "口径决策 D-XH1（4 条恒定线）与验收判定"}
