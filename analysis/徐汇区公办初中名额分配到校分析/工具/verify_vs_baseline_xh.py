@@ -19,8 +19,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 D_A = ROOT / 'analysis/徐汇区公办初中名额分配到校分析'
-BASE = ROOT / ('.trellis/tasks/10-04-xuhui-apply-jiading-method/'
-               'validation/baseline-wide-premerge.csv')
+
+# 基线文件随 Trellis 任务目录走：任务归档后从 `tasks/<id>/` 移到
+# `tasks/archive/<YYYY-MM>/<id>/`。硬编码任一位置都会在另一种状态下
+# FileNotFoundError —— 本轮归档后即因此失效过一次（归档后未复跑门禁）。
+# 故两种位置都找，且**都找不到就直接报错**，绝不静默跳过校验。
+_BASE_REL = 'validation/baseline-wide-premerge.csv'
+_ARCH = sorted((ROOT / '.trellis/tasks/archive').glob('*/10-04-xuhui-apply-jiading-method'))
+_CANDS = ([ROOT / '.trellis/tasks/10-04-xuhui-apply-jiading-method' / _BASE_REL]
+          + [p / _BASE_REL for p in _ARCH])
+BASE = next((p for p in _CANDS if p.exists()), None)
+if BASE is None:
+    raise SystemExit(
+        '❌ 找不到基线文件 baseline-wide-premerge.csv，已尝试：\n  ' +
+        '\n  '.join(str(p.relative_to(ROOT)) for p in _CANDS) +
+        '\n基线丢失时本门禁无法判定「差异是否落在声明面内」，不得跳过。')
 
 
 def load(p):

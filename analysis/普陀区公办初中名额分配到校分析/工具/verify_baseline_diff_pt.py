@@ -20,9 +20,21 @@ import csv
 import sys
 from pathlib import Path
 
-BASE = Path(__file__).resolve().parents[3] / (
-    '.trellis/tasks/10-04-putuo-apply-jiading-method/validation/'
-    'baseline-wide-premerge.csv')
+_ROOT = Path(__file__).resolve().parents[3]
+_BASE_REL = 'validation/baseline-wide-premerge.csv'
+_TASK_DIR = '.trellis/tasks/10-04-putuo-apply-jiading-method'
+# 基线随 Trellis 任务目录走：任务归档后从 `tasks/<id>/` 移到
+# `tasks/archive/<YYYY-MM>/<id>/`。硬编码任一位置都会在另一种状态下失效
+# —— 普陀归档（defc75e）后本门禁即因此 FileNotFoundError，而当时**归档后
+# 未复跑门禁**，导致它空挂了整个提交周期才发现。故两种位置都找，
+# 且**都找不到就直接报错**，绝不静默跳过。
+_ARCH = sorted((_ROOT / '.trellis/tasks/archive').glob('*/10-04-putuo-apply-jiading-method'))
+_CANDS = [_ROOT / _TASK_DIR / _BASE_REL] + [p / _BASE_REL for p in _ARCH]
+BASE = next((p for p in _CANDS if p.exists()), None)
+if BASE is None:
+    raise SystemExit('❌ 找不到基线文件 baseline-wide-premerge.csv，已尝试：\n  ' +
+                     '\n  '.join(str(p) for p in _CANDS) +
+                     '\n基线丢失时本门禁无法判定差异是否落在声明面内，不得跳过。')
 CUR = Path(__file__).resolve().parents[1] / '宽表-初中水平-普陀区-2022-2026.csv'
 
 MERGED = '上海市曹杨第二中学附属实验中学'

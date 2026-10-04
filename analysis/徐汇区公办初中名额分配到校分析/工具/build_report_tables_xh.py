@@ -30,6 +30,37 @@ def f(x, nd=None):
     return f'{v:.{nd}f}' if nd is not None else f'{v:g}'
 
 
+def d(r, key):
+    """该口径名次相对**主口径名次**（`rank_P_wq`）的变化，带符号。
+
+    ⚠️ 与 `rank_chg_5y` / `rank_chg_1y` 语义**不同**，不可混用：
+      · rank_chg_*  = 相对 **2022 年名次**的**跨年**变化（同池、跨时间）
+      · 本函数 d() = 相对**主口径名次**的**换口径**变化（同校、跨时间窗口）
+    零变化显示 `0`（不写 `+0`），负值 = 在该口径下更靠前。
+    """
+    a, b = r.get(key), r.get('rank_P_wq')
+    if a in (None, '') or b in (None, ''):
+        return '—'
+    v = float(a) - float(b)
+    if v == 0:
+        return '0'
+    return f'{v:+.0f}' if v == int(v) else f'{v:+.1f}'
+
+
+def rk(r, key):
+    """名次 + 相对主口径的变化，合成一格（如 `2 (+1)`）。
+
+    位次本身是整数就只显示整数 —— `rank_2026` 存成 `4.00` 是并列平均秩的
+    浮点残留，直接印出来会与相邻的整数名次列不齐。
+    """
+    a = r.get(key)
+    if a in (None, ''):
+        return '—'
+    v = float(a)
+    pos = f'{v:.0f}' if v == int(v) else f'{v:.1f}'
+    return f'{pos} ({d(r, key)})'
+
+
 W = load('宽表-初中水平-徐汇区-2022-2026.csv')
 M = load('rank-多口径总表-徐汇区-2022-2026.csv')
 R2 = load('收敛指标-徐汇区-2022-2026.csv')
@@ -64,14 +95,16 @@ def t_pools():
 
 
 def t_main():
-    out = ['| # | 学校 | P_wq | 名次 | 26 位次 | 5 年变化 | 近 3 年 | 近 2 年 | 年均名额 |',
-           '|---|---|---|---|---|---|---|---|---|']
+    # 列序：# 与「名次」原本都是 rank_P_wq，整列重复 ⇒ 只保留 #。
+    # 「26 位次」按阅读顺序移到「近 2 年」之后。
+    out = ['| # | 学校 | P_wq | 5 年变化 | 近 3 年 | 近 2 年 | 26 位次 | 年均名额 |',
+           '|---|---|---|---|---|---|---|---|']
     for r in [x for x in M if x['row_type'] == 'ranked']:
         # quota6_avg / rel_avg / sen 在**主表**里（宽表没有 quota6_avg）
         out.append(
             f"| {r['rank_P_wq']} | {sh(r['junior_high_school'])} | {f(r['P_wq'], 4)} | "
-            f"{r['rank_P_wq']} | {f(r['rank_2026'], 1)} | {f(r['rank_chg_5y'], 1)} | "
-            f"{r['rank_P_recent3']} | {r['rank_P_recent2']} | {r['quota6_avg']} |")
+            f"{f(r['rank_chg_5y'], 1)} | {rk(r, 'rank_P_recent3')} | "
+            f"{rk(r, 'rank_P_recent2')} | {rk(r, 'rank_2026')} | {r['quota6_avg']} |")
     return '\n'.join(out)
 
 
@@ -83,8 +116,8 @@ def t_time():
         flip = '⚠️ 相反' if a != '—' and b != '—' and \
             float(r['rank_chg_5y']) * float(r['rank_chg_1y']) < 0 else '同向'
         out.append(f"| {r['rank_P_wq']} | {sh(r['junior_high_school'])} | "
-                   f"{r['rank_P_lin']} | {r['rank_P_exp']} | {r['rank_P_recent3']} | "
-                   f"{r['rank_P_recent2']} | {f(r['rank_2026'], 1)} | {flip} |")
+                   f"{r['rank_P_lin']} | {r['rank_P_exp']} | {rk(r, 'rank_P_recent3')} | "
+                   f"{rk(r, 'rank_P_recent2')} | {rk(r, 'rank_2026')} | {flip} |")
     return '\n'.join(out)
 
 

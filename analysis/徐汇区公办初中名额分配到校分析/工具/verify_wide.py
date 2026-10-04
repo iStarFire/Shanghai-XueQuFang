@@ -2,12 +2,34 @@
 
 刻意不复用 build_wide.py 的任何函数，直接从两份长表重新实现一遍算法，
 以「两份独立实现结果一致」作为正确性证据。
+
+⛔⛔⛔ 旧管线脚本，已退役 ⛔⛔⛔
+本脚本属于**旧方法管线**（`build_wide.py` / `build_trend.py`），校验的是旧宽表列名
+（`BASE4` 四条基线线、`quota_zone_total_*`、`mean_score_base4_*` 等）。
+
+阶段 1 起数据层已按**分位主口径**重建（基线线 `QU6` 六条，实际参与 4/5/5/5/6 条，
+派生列名随之全改），本脚本的预期列名**不再存在**。
+
+· 新管线的门禁是 `verify_wide_xh.py` / `verify_tables_xh.py` /
+  `verify_conclusion_xh.py` / `verify_vs_baseline_xh.py`
+· 旧管线保留仅为「与阶段 0 归并前基线做同源比对」提供参照，见
+  `verify_vs_baseline_xh.py`
+· 需要重跑旧管线请先运行 `build_wide.py`（会覆盖当前宽表，**务必先备份**）
+
+保留本文件仅为对照历史实现，不作为门禁。
 """
+import pathlib
 import csv, statistics as st, random, sys
 
 ROOT = "/Users/ivan/workspace/github/Shanghai-XueQuFang"
 D = f"{ROOT}/data/徐汇区/学校"
 OUT = f"{ROOT}/analysis/徐汇区公办初中名额分配到校分析"
+# ---- 旧管线适用性检查：预期列名不存在就明确退出，而不是抛 KeyError ----
+_w = pathlib.Path(__file__).resolve().parents[1] / '宽表-初中水平-徐汇区-2022-2026.csv'
+if _w.exists() and 'quota_zone_total_2022' not in _w.open(encoding='utf-8-sig').readline():
+    print(__doc__)
+    raise SystemExit(2)
+
 YEARS = [2022, 2023, 2024, 2025, 2026]
 BASE4 = ['042001', '042008', '042035', '043015']
 ZONE = {2022: ['042001', '042008', '042035', '043015'],
