@@ -190,8 +190,9 @@ for r in R4:
     if abs(sen - float(r['sen'])) > 5e-4:
         bad.append(('4.3', f'{name[:14]}/sen', f'表={r["sen"]} 复算={sen:.4f}'))
     # Bonferroni 一致性
+    MK_M = len(R4)   # 校正项数 = 参与 MK 的学校数
     checked += 1
-    exp_b = min(1.0, float(r['mk_p']) * 14)
+    exp_b = min(1.0, float(r['mk_p']) * MK_M)   # MK_M = 参与检验的校数（≠ 14，见 build_tables_pt.py 注释）
     if abs(exp_b - float(r['mk_p_bonferroni'])) > 1e-3:
         bad.append(('4.3', f'{name[:14]}/bonf', f'表={r["mk_p_bonferroni"]} 复算={exp_b:.4f}'))
 print(f'4.3 分类覆盖 {len(R4)} 所（全部 n≥4 且 ranked）、SEN 与 Bonferroni 已复算')

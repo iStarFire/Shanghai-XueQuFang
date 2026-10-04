@@ -14,6 +14,12 @@
   rank-加权敏感性-普陀区-2022-2026.csv       （加权主口径下的时间权重敏感性）
 """
 import csv, statistics as st
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+# 共用算法实现：生成侧与校验侧同一份代码（implement.md 6.1，避免假门禁）
+from pt_common import midrank, p_from_rank  # noqa: E402
 
 BASE = "/Users/ivan/workspace/github/Shanghai-XueQuFang"
 D_S = f"{BASE}/data/普陀区/学校"
@@ -138,12 +144,12 @@ def year_stats(mean_map, y):
     med = st.median(xs)
     iqr = xs[n * 3 // 4] - xs[n // 4]
     rs = iqr / 1.349 if iqr else None
+    # 平均秩与分位均**共用** 工具/pt_common.py（implement.md 6.1）：
+    # 生成侧与校验侧必须是同一份代码，否则校验属于「用同一种错误验证自己」。
     out = {}
-    for c, v in vals.items():
-        b = sum(1 for w in xs if w > v)
-        e = sum(1 for w in xs if w == v)
-        r = b + (e + 1) / 2
-        out[c] = (1 - (r - 1) / (n - 1), (v - mu) / sg if sg else None,
+    for c, r in midrank(list(vals.items())).items():
+        v = vals[c]
+        out[c] = (p_from_rank(r, n), (v - mu) / sg if sg else None,
                   (v - med) / rs if rs else None)
     return vals, n, out
 
@@ -168,12 +174,7 @@ for g, lines in GROUPS.items():
         # 名次
         rk = {}
         for y in YEARS:
-            vals = {c: mm[(c, y)] for c in schools if (c, y) in mm}
-            xs = list(vals.values())
-            for c, v in vals.items():
-                b = sum(1 for w in xs if w > v)
-                e = sum(1 for w in xs if w == v)
-                rk[(c, y)] = b + (e + 1) / 2
+            rk.update(midrank([((c, y), mm[(c, y)]) for c in schools if (c, y) in mm]))
         YEAR_RANK[(g, chain)] = rk
 
 # 逐年 P / Z / ZR（两链 × 三组）
@@ -224,9 +225,17 @@ FORMER_NAMES = {'上海市曹杨第二中学附属实验中学': '上海市兴�
 
 
 # ---- 2.3 逐年相对位置 rel ----
-# 口径对齐嘉定（build_v3_jd.py）：rel = 当年名额加权均分 − **当年池中位**。
-# 嘉定用「当年有数据的公办池（PUB）中位」，刻意不用五年全勤池（换池会改变 rel 均名与 SEN）。
-# 普陀额外**排除 exited 校**（光新/武宁已退出名额到校体系，其分数是历史遗留，纳入会污染基准）。
+# 口径对齐嘉定（build_v3_jd.py L219-226）：
+#   · **基准池** = 当年有数据的**公办**校（嘉定用 PUB）；普陀额外**排除 exited 校**
+#     （光新暂停招生 / 武宁并入同济二附中，已退出名额到校体系，其分数是历史遗留，
+#      纳入会污染基准）。这与 2.1 的 row_type 分类一致。
+#   · **赋值范围** = 所有当年有数据的校（与嘉定相同，`for x in schools`），
+#     因此民办与退出校**自身也有 rel 值**。
+# ⚠️ 语义提醒：民办 / 退出校的 rel 含义是「相对公办池中位」，
+#    **不是**「在其同类（民办 / 退出校）中的位置」。引用时必须写明。
+#    趋势分析只用 RANKED，不受影响（见下方 rel 复用处的注释）。
+# 实测：两种基准池（五年全勤 vs 当年公办非退出）的中位数差 ≤0.51 分且为**同量平移**，
+#      故 delta_rel 与 SEN 不受影响（普陀 pool 逐年 32/32/34/36/36）。
 OWNER = {c: (roster.get(c, {}).get('ownership', '') or OWNERSHIP_FALLBACK.get(c, ''))
          for c in WIDE_SCHOOLS}
 REL_POOL, REL_MED, REL = {}, {}, {}

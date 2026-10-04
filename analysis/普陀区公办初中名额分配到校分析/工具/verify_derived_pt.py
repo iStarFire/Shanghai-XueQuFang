@@ -21,6 +21,14 @@ import statistics as st
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+# 当年位次 / 分位复用**生成脚本同一份**平均秩实现（implement.md 6.1）。
+# 此前本文件自带一份重写版 —— 那是「假门禁」隐患：两套实现可能同错而互相「验证通过」，
+# 校验就失去了独立性。现已抽出 工具/pt_common.py，生成侧与校验侧都 import 它。
+# ⚠️ 本 import 必须在**首次使用之前**（L108 用到 midrank）。曾因放在文件末尾
+#    而报 NameError，且当时用 `| grep` 过滤输出把 Traceback 吞掉，误判为通过。
+from pt_common import midrank, midrank as _rank_avg_tie, p_from_rank  # noqa: E402
+
 D_S = Path('../../data/普陀区/学校')
 D_A = Path('.')
 YEARS = [2022, 2023, 2024, 2025, 2026]
@@ -102,24 +110,12 @@ for y in YEARS:
     iqr = xs[n * 3 // 4] - xs[n // 4]
     rs = iqr / 1.349 if iqr else None
     o = {}
-    for c, v in vals.items():
-        b = sum(1 for w in xs if w > v)
-        e = sum(1 for w in xs if w == v)
-        r = b + (e + 1) / 2
-        o[c] = (1 - (r - 1) / (n - 1),
+    for c, r in midrank(list(vals.items())).items():
+        v = vals[c]
+        o[c] = (p_from_rank(r, n),
                 (v - mu) / sg if sg else None,
                 (v - med) / rs if rs else None)
     PZ[y] = o
-
-def _rank_avg_tie(pairs):
-    """当年位次 = **平均秩**（并列同名次），与 build_v3.py 的 rank_base4_{y} 一致。"""
-    xs = sorted(v for _, v in pairs)
-    out = {}
-    for c, v in pairs:
-        b = sum(1 for w in xs if w > v)
-        e = sum(1 for w in xs if w == v)
-        out[c] = b + (e + 1) / 2
-    return out
 
 
 RANK_Y = {y: _rank_avg_tie([(c, MEAN[(c, y, True)]) for c in schools

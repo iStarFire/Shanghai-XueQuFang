@@ -7,9 +7,12 @@
   · 民办 / exited / 短样本 一律不进固定样本
   · 名额已按 `merged_into` 排除（1.1），西校不独立计量
 
-检验力说明：n=5、df=3 ⇒ Mann-Kendall 最小 p≈0.028、OLS p 最小 ≈0.028，
-Bonferroni 校正后（×14）阈值 0.0036 ⇒ **预期 0 所显著**。这是检验力天花板，
-不是「无趋势」的证据，必须在报告中写明。
+检验力说明（精确值，非估计）：n=5 时 Mann-Kendall 的 |S| ≤ 10、Var(S) = 16.667
+⇒ |z| ≤ 2.205 ⇒ p ≥ 0.0275（完全单调时的理论下界，实测最小值恰为 0.0275）。
+Bonferroni 校正按**入榜校数 32** 项 ⇒ α = 0.05/32 = 0.0015625，需 |z| > 3.163。
+因 2.205 < 3.163，**0 所显著是数学上的必然**，与数据无关。
+这不是「无趋势」的证据，而是「无法判定」，必须在报告中如此写明。
+（断言 `检验力天花板` 会在该前提被破坏时直接失败，不靠文字约定。）
 
 写入策略：全部在内存拼装 + 断言通过后才落盘（规范陷阱 14）。
 """
@@ -22,7 +25,11 @@ from pathlib import Path
 D_A = Path('.')
 YEARS = [2022, 2023, 2024, 2025, 2026]
 MIN_YEARS_FIXED = 5
-N_MK_TESTS = 14          # 与嘉定一致：7 指标 + 7 方向检验
+# Bonferroni 校正项数：**按入榜校数计**（与嘉定 build_q2q3_jd.py L265 `m = len(RANKED)` 一致）。
+# ⚠️ 曾误抄嘉定的**注释**「7 指标 + 7 方向检验 = 14」—— 那是嘉定报告里的措辞，
+#    嘉定代码实际用 28（= 入榜校数）。普陀的 MK 是**每校一次**，故 m = len(rows4) = 32。
+# 实际值在 rows4 建成后覆盖（见 4.3 节），此处仅留占位以免误用。
+MK_M = None       # 占位，真正取值见下方 MK_M = len(FIXED)
 ALPHA = 0.05
 MEAN_COL = 'mean_score_base4_wq_{y}'
 
@@ -209,6 +216,9 @@ for k in ('sigma',) + METRICS:
 # ================= 4.3 趋势分类 =================
 # 阈值**预注册**（分析前固定，见 design.md 3.3）：|SEN| ≥ 1.0 视为明显上升/下降
 SEN_THRESH = 1.0
+# Bonferroni 校正项数 = **参与 MK 检验的学校数**（每校 1 次检验）。
+# 必须在 rows4 循环前确定：m = len(FIXED)（4.3 只对五年全勤的 FIXED 做分类）。
+MK_M = len(FIXED)
 rows4 = []
 for r in RANKED:
     name = r['junior_high_school']
@@ -218,7 +228,7 @@ for r in RANKED:
     sen3 = (pts3[-1][1] - pts3[0][1]) / (pts3[-1][0] - pts3[0][0]) if len(pts3) >= 2 else None
     ys = [v for _, v in rels]
     mkS, mkz, mkp = mk_test(ys)
-    mkp_b = min(1.0, mkp * N_MK_TESTS)
+    mkp_b = min(1.0, mkp * MK_M)
     d = rels[-1][1] - rels[0][1]
     cls = ('数据不足' if sen is None else
            '明显上升' if sen >= SEN_THRESH else
@@ -240,12 +250,40 @@ for r in rows4:
     _cls[r['trend_class']] = _cls.get(r['trend_class'], 0) + 1
 from collections import Counter
 print(f'4.3 分类（阈值预注册 |SEN|≥{SEN_THRESH}，'
-      f'MK 校正 ×{N_MK_TESTS}）：{dict(Counter(r["trend_class"] for r in rows4))}')
+      f'MK 校正 ×{MK_M}）：{dict(Counter(r["trend_class"] for r in rows4))}')
 print(f'   校正后显著：{sum(1 for r in rows4 if r["sig_bonferroni"] == "是")} 所'
       f'（n={len(rows4)}, df=3 ⇒ 检验力天花板，预期 0）')
 # 判定：分类只覆盖 years_included ≥ 4
 assert all(int(r['n_years']) >= 4 for r in rows4), '分类覆盖了 n<4 的学校'
 assert all(r['row_type'] == 'ranked' for r in rows4), '分类混入了非 ranked 行'
+assert {r['n_years'] for r in rows4} == {'5'}, \
+    f'普陀入榜 32 所应全部五年全勤，实际 {sorted({r["n_years"] for r in rows4})}'
+
+# ---- 检验力天花板的精确证明（不是「样本不够」这种模糊说法）----
+# MK 检验在 n 个点时 |S| 最大 = n(n-1)/2（完全单调），
+# Var(S) = n(n-1)(2n+5)/18（无结精确方差），z = (|S|-1)/sqrt(Var) 为连续性校正。
+# 故「校正后 0 所显著」是**数学上的必然**，与数据无关：
+# 只要 n 固定，即使趋势完美单调也达不到 Bonferroni 后的 α。
+_z = st.NormalDist()
+n_mk = int(rows4[0]['n_years'])
+S_max = n_mk * (n_mk - 1) / 2
+var_s = n_mk * (n_mk - 1) * (2 * n_mk + 5) / 18
+z_max = (S_max - 1) / math.sqrt(var_s)
+p_floor = 2 * (1 - _z.cdf(z_max))
+alpha_b = ALPHA / MK_M
+z_need = _z.inv_cdf(1 - alpha_b / 2)
+assert z_max < z_need, (
+    f'检验力天花板断言失效：|z|max={z_max:.3f} >= 所需 {z_need:.3f}，本可显著，'
+    f'「0 所显著」结论需重新评估')
+assert all(r['sig_bonferroni'] == '否' for r in rows4), \
+    '有学校通过 Bonferroni 校正，与天花板结论矛盾，须重新评估'
+_p_min = min(float(r['mk_p']) for r in rows4)
+assert _p_min >= p_floor - 1e-9, (
+    f'实测最小 mk_p={_p_min:.4f} < 理论下界 {p_floor:.4f}，MK 计算或 n 取值有误')
+print(f'   检验力天花板：n={n_mk} 时 |S|<={S_max:.0f}、Var(S)={var_s:.3f} ⇒ |z|<={z_max:.3f}'
+      f' ⇒ p>={p_floor:.4f}；Bonferroni α={alpha_b:.6f}（{MK_M} 项）需 |z|>{z_need:.3f}'
+      f' ⇒ 0 所显著是数学必然，非样本不足')
+print(f'   实测最小 mk_p={_p_min:.4f} >= 理论下界 {p_floor:.4f} ✓')
 
 # ================= 落盘（全部断言通过后）====================
 def dump(path, rows, cols):
