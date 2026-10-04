@@ -20,6 +20,8 @@ os.makedirs(OUT, exist_ok=True)
 YEARS = [2022, 2023, 2024, 2025, 2026]
 QL = ['142001', '142002', '142004']
 QNAME = {'142001': '嘉定一中', '142002': '交大附中嘉定分校', '142004': '上师嘉新'}
+# 宽表列名用的是**简称**，与上面的显示名不同，不可混用
+QCOL = {'142001': '嘉定一中', '142002': '交大嘉定', '142004': '上师嘉新'}
 
 C = dict(bg='#F0FDFA', card='#FFFFFF', main='#0F766E', accent='#14B8A6',
          light='#CCFBF1', pale='#F5FDFB', muted='#5F7A76', line='#D9EFEA',
@@ -49,12 +51,18 @@ h1.title{font-size:54px;line-height:1.18;font-weight:800;color:DEEP}
 .kv b{color:MAIN}
 table{width:100%;border-collapse:collapse;margin-top:14px}
 th{font-size:24px;color:MAIN;text-align:center;padding:12px 6px;
-  border-bottom:2px solid LIGHT;white-space:nowrap}
+  border-bottom:2px solid LIGHT;white-space:nowrap;line-height:1.3}
 td{font-size:26px;padding:10px 6px;border-bottom:1px solid #EFF7F5;text-align:center}
 td.c2{text-align:left}
 tr:nth-child(even) td{background:PALE}
 tr.top td{background:LIGHT;font-weight:800}
 tr.top td.c2{color:DEEP}
+/* 未参与主排序的新开办校行：与网页版保持同一语义（暖黄底 + 左侧色条） */
+tr.new td{background:#FFF8E6;color:#6B5410;font-size:23px}
+tr.new td.c2{font-weight:600}
+tr.new td:first-child{box-shadow:inset 4px 0 0 #E2A03F}
+span.tag{display:inline-block;background:#E2A03F;color:#fff;border-radius:8px;
+  padding:1px 8px;font-size:19px;font-weight:700;margin-left:6px;vertical-align:2px}
 .foot{font-size:22px;color:#93A5A2;line-height:1.6;margin-top:18px}
 .chip{background:PALE;border:1px solid LINE;border-radius:12px;
   padding:7px 14px;font-size:23px;color:#3c4a48}
@@ -114,7 +122,12 @@ SL = load('单线视角-嘉定区-2022-2026.csv')
 TB = sorted([r for r in W if r['ranked'] == '1'], key=lambda r: int(r['rank_P_wq']))
 RANK = [{'rk': int(r['rank_P_wq']), 'name': SH(r['junior_high_school']),
          'P': float(r['P_wq']), 'rel': float(r['rel_avg']),
-         'q': float(r['quota3_avg']), 'sen': float(r['SEN'])} for r in TB]
+         'q': float(r['quota3_avg']), 'sen': float(r['SEN']),
+         # 与主表对齐所需的两个额外列（2026-10-04 新增）
+         'years': '22–26',
+         'r3': r['rank_P_recent3'] or '—',
+         'r26': int(float(r['rank_base3_wq_2026'])) if r['rank_base3_wq_2026'] else '—'}
+        for r in TB]
 FULL5 = len([r for r in W if r['years_included'] == '5'])
 PRIV = len([r for r in W if r['ownership'] == '民办'])
 TOP5 = [r['name'] for r in RANK[:5]]
@@ -145,161 +158,244 @@ RESID = sorted([{'name': SH(k), 'sen': float(v['sen_ols']), 'rk': int(
 WEI_N = len([1 for r in SL if r['tier'] == '委属'])
 
 
+# ---------- 相关统计（2026-10-04 补齐：此前这些值**硬编码在文案里**，口径一改就错） ----------
+def spearman(xs, ys):
+    """平均秩（标准 Spearman）——与 build_v3_jd.py:252 的实现一致。
+
+    此前本脚本文案里的 rho 是手写常数（+0.509 / −0.211 / −0.271 …），
+    既与报告不符（报告为 +0.538 / −0.324 / −0.350 …），也违背脚本自身
+    「不硬编码」的声明。改为现算。
+    """
+    def rk(a):
+        s = sorted(a)
+        return [sum(1 for w in s if w < t) + (sum(1 for w in s if w == t) + 1) / 2 for t in a]
+    ra, rb = rk(xs), rk(ys)
+    ma, mb = st.fmean(ra), st.fmean(rb)
+    den = (sum((x - ma) ** 2 for x in ra) * sum((y - mb) ** 2 for y in rb)) ** 0.5
+    return sum((x - ma) * (y - mb) for x, y in zip(ra, rb)) / den if den else 0.0
+
+
+WQ = {r['junior_high_school']: r for r in W}
+RANKED = [k for k in WQ if WQ[k]['ranked'] == '1']
+
+# 跨样本：区属年均名额 vs P_wq（报告 3.1 第 1 行）
+RHO_CROSS = spearman([float(WQ[k]['quota3_avg']) for k in RANKED],
+                     [float(WQ[k]['P_wq']) for k in RANKED])
+# 同线内：该校该线名额 vs 该线名次（报告 3.1 第 3 行；口径 = 全区 40 所含民办）
+_IN = []
+for k, r in WQ.items():
+    for y in YEARS:
+        for c in QL:
+            q, rk_ = r.get(f'quota_{QCOL[c]}_{y}'), r.get(f'rank_base3_wq_{y}')
+            if q not in ('', None) and rk_ not in ('', None):
+                _IN.append((int(q), float(rk_), c))
+RHO_IN = spearman([x[0] for x in _IN], [x[1] for x in _IN])
+N_IN = len(_IN)
+RHO_LINE = {c: spearman([x[0] for x in _IN if x[2] == c], [x[1] for x in _IN if x[2] == c])
+            for c in QL}
+# 3.2 极差范围（口径 = 仅公办）
+_PUB = [r for r in W if r['ownership'] == '公办']
+_RNG = []
+for c in QL:
+    for y in YEARS:
+        v = [int(r[f'quota_{QCOL[c]}_{y}'] or 0) for r in _PUB]
+        tot = sum(v)
+        sh = [x / tot for x in v if x > 0] if tot else []
+        if sh:
+            _RNG.append(max(sh) - min(sh))
+RANGE_TXT = f'{min(_RNG):.3f}–{max(_RNG):.3f}' if _RNG else '—'
+# 逐年离散度的极值（报告 5.x 口径）
+IQR_LO = min(DISP[y]['iqr'] for y in YEARS)
+IQR_HI = max(DISP[y]['iqr'] for y in YEARS)
+IQR_SEQ = '、'.join(f'{y} {DISP[y]["iqr"]:.1f}' for y in YEARS)
+R2_LO = min(CONV[y][1] for y in CONV)
+R2_HI = max(CONV[y][1] for y in CONV)
+
+# 4 所新开办校（2025/2026 才有成绩，不参与主排序）——主图需与主表 32 行口径对齐
+# 行序与报告主表**完全一致**（报告 2 章末 4 行的顺序），便于图文对照
+NEW_ORDER = ['上海市嘉定区嘉一实验初级中学', '上海师范大学附属第五嘉定实验学校',
+             '交大附中附属嘉定洪德中学', '同济大学附属嘉定实验中学']
+_WN = {r['junior_high_school']: r for r in W}
+# ---- 第 4 章「差距是否缩小」：6 个归一化指标 + CI ----
+IND = {int(r['year']): r for r in load('收敛指标-嘉定区-2022-2026.csv')}
+TRD = {r['metric']: r for r in load('收敛趋势检验-嘉定区-2022-2026.csv')}
+GAP_METRICS = [('sigma', 'σ'), ('cv', 'CV'), ('iqr_norm', 'IQR'),
+               ('gini', 'Gini'), ('r90_10_norm', 'P90−P10'), ('range_norm', '极差'),
+               ('mad_norm', 'MAD')]
+GAP_CI = [(m, lab, float(TRD[m]['slope_b']), float(TRD[m]['ci_lo']), float(TRD[m]['ci_hi']))
+          for m, lab in GAP_METRICS if m in TRD]
+
+# ---- 第 5 章「谁升谁降」：28 所分类 ----
+CLS = list(load('趋势分类-嘉定区-2022-2026.csv'))
+CLASS_ORDER = ['明显上升', '温和上升', '方向不一', '温和下降', '明显下降']
+TRN = {SH(r['junior_high_school']): r for r in CLS}   # 校名 → 趋势分类行（sen_recent3 在此）
+BY_CLASS = {c: sorted([r for r in CLS if r['trend_class'] == c],
+                      key=lambda r: -float(r['sen'])) for c in CLASS_ORDER}
+N_SIG = sum(1 for r in CLS if r.get('sig_bonferroni') == '是')
+N_SIG10 = sum(1 for r in CLS if r.get('sig_uncorrected') == '是')
+FLIP = [r for r in CLS if r['sen_recent3'] and
+        float(r['sen']) * float(r['sen_recent3']) < 0]
+
+# ---- 第 8 章「代表性个案」：头部5 + 明显上升3 + 明显下降3 ----
+CASES_UP = [r['junior_high_school'] for r in
+            sorted(BY_CLASS['明显上升'], key=lambda r: -float(r['delta_rel']))[:3]]
+CASES_DOWN = [r['junior_high_school'] for r in
+              sorted(BY_CLASS['明显下降'], key=lambda r: float(r['sen']))[:3]]
+
+def _span(years_list):
+    """按实际年份生成跨度标签：'2026' → 26；'2025;2026' → 25–26。"""
+    ys = [int(x) % 100 for x in years_list.split(';') if x]   # 2025 -> 25，与入榜校「22–26」同格式
+    return str(ys[0]) if len(ys) == 1 else f'{ys[0]}–{ys[-1]}'
+
+
+NEW4 = [{'name': SH(k),
+         'years': _span(_WN[k]['years_list']),
+         'r2': _WN[k]['rank_P_recent2'] or '—',
+         'r26': int(float(_WN[k]['rank_base3_wq_2026'])) if _WN[k]['rank_base3_wq_2026'] else '—'}
+        for k in NEW_ORDER]
+assert len(NEW4) == 4, f'新开办校应为 4 所，实际 {len(NEW4)}'
+
+
 def fig_main():
     rows = ''
+    u = lambda v: f'{v:+.2f}'.replace('-', '−')   # 统一用 U+2212 减号
     for r in RANK:
         cls = ' class="top"' if r['rk'] <= 5 else ''
-        u = lambda v: f'{v:+.2f}'.replace('-', '−')   # 统一用 U+2212 减号
+        r2 = WQ[[k for k in WQ if SH(k) == r['name']][0]]['rank_P_recent2'] or '—'
         rows += (f'<tr{cls}><td>{r["rk"]}</td><td class="c2">{r["name"]}</td>'
+                 f'<td>{r["years"]}</td>'
                  f'<td>{r["P"]:.3f}</td><td>{u(r["rel"])}</td><td>{r["q"]:.1f}</td>'
-                 f'<td>{u(r["sen"])}</td></tr>')
+                 f'<td>{r["r3"]}</td><td>{r2}</td><td>{r["r26"]}</td></tr>')
+    # 新开办校（只有 1–2 年成绩，不参与主排序）：列值留「—」，仅披露近 2 年与 2026 位次
+    for n in NEW4:
+        rows += (f'<tr class="new"><td>—</td><td class="c2">{n["name"]} <span class="tag">新开办</span></td>'
+                 f'<td>{n["years"]}</td><td>—</td><td>—</td><td>—</td>'
+                 f'<td>—</td><td>{n["r2"]}</td><td>{n["r26"]}</td></tr>')
     inner = (head('嘉定区 · 初中「名额分配到校」',
-                  f'{len(RANK)} 所公办初中真实梯队',
+                  f'{len(RANK)} 所入榜 + {len(NEW4)} 所新开办',
                   '2022–2026 五年公开数据 · 名额加权区属市重点线口径 · 分位 P 主排序')
              + f'<div class="card"><div class="h2"><div class="num">1</div>排名表</div>'
-             '<table><tr><th>#</th><th>初中</th><th>P 分位</th><th>均名(分)</th>'
-             '<th>名额</th><th>趋势</th></tr>' + rows + '</table>'
+             '<table><tr><th>#</th><th>初中</th><th>数据跨度</th><th>P 分位</th>'
+             '<th>均名(分)</th><th>名额</th>'
+             '<th>近3年<br>排名</th><th>近2年<br>排名</th><th>26年<br>排名</th>'
+             '</tr>' + rows + '</table>'
              '<div class="kv">'
              f'<span>全区 <b>{len(W)}</b> 所初中</span>'
              f'<span>入榜（5 年全勤 / n≥4）<b>{len(RANK)}</b> 所</span>'
              f'<span>五年全勤 <b>{FULL5}</b> 所</span>'
+             f'<span>新开办（不参与主排序）<b>{len(NEW4)}</b> 所</span>'
              f'<span>民办未入榜 <b>{PRIV}</b> 所</span></div>'
              '<div class="note">读法：<b>P 分位</b>越大越强（位置可比，不是分值可比）；'
              '<b>均名</b>是高于当年全区中位多少分（跨年可比）；<b>名额</b>是招生规模，'
-             '不等于办学水平；<b>趋势</b>是 rel 的最小二乘斜率，负=持续下滑。</div>'
+             '<b>是学校规模的代理</b>，不等于办学水平。</div>'
+             '<div class="note">末 4 行<b>新开办校</b>只有 1–2 年成绩，<b>不参与主排序</b>，'
+             '聚合指标留「—」；<b>近2年</b>列为 31 所池（含新开办校），'
+             '与主排序的 28 所池不同，<b>不可直接比较</b>；嘉一实验仅 1 年，该列留空。</div>'
              '<div class="foot">数据：上海市教育考试院名额到校最低录取分 + 嘉定区教育局招生计划公示｜'
              '口径与局限见长图</div></div>')
     return page(inner, '嘉定名额到校排名')
 
 
-def fig_scale():
-    xs = [r['q'] for r in RANK]
-    x0, x1, y0, y1 = 0, 30, 0, 0.98
-    W_, H_, L_, T_ = 900, 400, 60, 34
-    px = lambda v: L_ + (v - x0) / (x1 - x0) * W_
-    py = lambda v: T_ + H_ - (v - y0) / (y1 - y0) * H_
-    dots = ''
-    for r in RANK:
-        big = r['rk'] <= 5
-        dots += (f'<circle cx="{px(r["q"]):.1f}" cy="{py(r["P"]):.1f}" '
-                 f'r="{8 if big else 6}" fill="{C["main"] if big else C["accent"]}" '
-                 f'opacity="{1 if big else .45}"/>')
-    placed = []
-    for r in sorted(RANK[:5], key=lambda r: -r['P']):
-        cx, cy = px(r['q']), py(r['P'])
-        off = 0.0
-        while any(abs(cx - q) < 46 and abs(cy + off - v) < 32 for q, v in placed):
-            off -= 36.0
-        ly = cy + off
-        placed.append((cx, ly))
-        if off:
-            dots += (f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{cx:.1f}" y2="{ly:.1f}" '
-                     f'stroke="{C["main"]}" stroke-width="2"/>')
-        dots += (f'<circle cx="{cx:.1f}" cy="{ly:.1f}" r="15" fill="{C["main"]}" '
-                 f'stroke="#fff" stroke-width="3"/>'
-                 f'<text x="{cx:.1f}" y="{ly+6:.1f}" font-size="18" fill="#fff" '
-                 f'text-anchor="middle" font-weight="800">{r["rk"]}</text>')
-    grid = ''
-    for gy in [0.2, 0.4, 0.6, 0.8]:
-        grid += (f'<line x1="{L_}" y1="{py(gy):.1f}" x2="{L_+W_}" y2="{py(gy):.1f}" '
-                 f'stroke="{C["line"]}" stroke-width="1"/>'
-                 f'<text x="{L_-12}" y="{py(gy)+7:.1f}" font-size="18" fill="{C["muted"]}" '
-                 f'text-anchor="end">{gy:.1f}</text>')
-    for gx in [0, 10, 20, 30]:
-        grid += (f'<line x1="{px(gx):.1f}" y1="{T_}" x2="{px(gx):.1f}" y2="{T_+H_}" '
-                 f'stroke="{C["line"]}" stroke-width="1"/>'
-                 f'<text x="{px(gx):.1f}" y="{T_+H_+30}" font-size="18" '
-                 f'fill="{C["muted"]}" text-anchor="middle">{gx}</text>')
-    svg = (f'<svg width="{W_+2*L_}" height="{H_+T_+52}" viewBox="0 0 {W_+2*L_} {H_+T_+52}">'
-           f'{grid}<line x1="{L_}" y1="{T_+H_}" x2="{L_+W_}" y2="{T_+H_}" stroke="{C["muted"]}"/>'
-           f'<line x1="{L_}" y1="{T_}" x2="{L_}" y2="{T_+H_}" stroke="{C["muted"]}"/>{dots}'
-           f'<text x="{L_+W_/2}" y="{H_+T_+48}" font-size="19" fill="{C["muted"]}" '
-           f'text-anchor="middle">区属年均名额（个）</text>'
-           f'<text x="18" y="{T_+H_/2:.0f}" font-size="19" fill="{C["muted"]}" '
-           f'text-anchor="middle" transform="rotate(-90 18 {T_+H_/2:.0f})">P 分位</text></svg>')
-    legend = ''.join(f'<span class="chip">{r["rk"]} {r["name"]}</span>' for r in RANK[:5])
-    inner = (head('子课题 01', '名额越多，位次越好吗？',
-                  '名额规模与位次的关系——两层检验，结论相反')
-             + f'<div class="card"><div class="h2"><div class="num">1</div>跨样本：名额多 → 名次好</div>'
-             f'{svg}<div class="kv" style="margin-top:8px">{legend}</div>'
-             f'<div class="kv"><span>Spearman(名额, P) = <b>+0.509</b></span>'
-             '<span>n = 28</span><span>深色 = 前 5 名</span></div>'
-             '<div class="lead" style="margin-top:14px">名额多的学校，分位普遍更高。</div></div>'
-             '<div class="card"><div class="h2"><div class="num">2</div>同线内：控制线难度后仍在，但强度大减</div>'
-             '<div class="two">'
-             '<div class="box"><div class="t">同线内 Spearman</div><div class="v">−0.211</div>'
-             '<div class="d">控制线难度后，名额多的校名次仍更靠前，但强度大幅衰减</div></div>'
-             '<div class="box"><div class="t">样本量</div><div class="v">411</div>'
-             '<div class="d">校 × 线 × 年 的配对数</div></div></div>'
-             '<div class="kv"><span>嘉定一中 −0.271</span><span>交大附中嘉定分校 −0.156</span>'
-             '<span>上师嘉新 −0.184</span></div>'
-             '<div class="note">名额按<b>志愿填报</b>分配（公告明文按中招报名人数占比测算），'
-             '所以名额在嘉定是「志愿热度」的代理，不是学校规模的代理——'
-             '不能读作「规模决定水平」。</div></div>')
-    return page(inner, '名额与位次')
+def fig_gap():
+    """子图 1 —— 对应报告第 4 章：差距是否随时间缩小。"""
+    inner = (head('子课题 01 · 对应报告第 4 章', '五年了，差距在缩小吗？',
+                  '固定样本 27 所 · <b>统计上无法判定</b>')
+             + '<div class="card"><div class="h2"><div class="num">1</div>六个归一化指标的五年斜率</div>')
+    mx = max(abs(b) for _, _, b, _, _ in GAP_CI) or 1
+    for m, lab, b, lo, hi in GAP_CI:
+        cross = lo <= 0 <= hi
+        inner += (f'<div class="bar"><div class="lb">{lab}</div>'
+                  f'<div class="tr"><div class="fl{" alt" if cross else ""}" '
+                  f'style="width:{max(2.0, abs(b) / mx * 100):.1f}%"></div></div>'
+                  f'<div class="vv">{b:+.5f}｜CI [{lo:+.5f}, {hi:+.5f}]</div></div>')
+    ncross = sum(1 for _, _, _, lo, hi in GAP_CI if lo <= 0 <= hi)
+    inner += ('<div class="note">判断规则：<b>置信区间跨 0 就不能说「有变化」</b>。'
+              f'本表 <b>{ncross}/{len(GAP_CI)}</b> 个指标 CI 跨 0，且方向不一致（4 正 2 负）。'
+              '因此结论是<b>「统计上无法判定」</b>，而不是「差距没有缩小」'
+              '——后者是把「测不出」当成「没有」。</div></div>'
+              '<div class="card"><div class="h2"><div class="num">2</div>但名次格局确实在收缩</div>'
+              '<div class="lead">Q-Q 回归（2022 分位 → 2026 分位）斜率 <b>0.170</b>，'
+              '检验 H0:β=1 得 <b>p=2.5e−05</b> —— 名次格局<b>显著向中心收缩</b>。</div>'
+              '<div class="note">两条并存：<b>分数差距测不出变化</b>，但'
+              '<b>名次格局在向中心靠拢</b>。两者不矛盾：前者比分差，后者比排序。</div></div>'
+              '<div class="card"><div class="h2"><div class="num">3</div>为什么不能用全池离散度</div>'
+              '<div class="lead">全区公办池逐年扩大（<b>27→32 所</b>），'
+              '新进入的学校<b>平均分位 0.69–0.83、明显偏强</b>，'
+              '会把中位抬高、相对离散度压低——这是<b>构成效应</b>，不是原有学校在靠近。</div></div>')
+    return page(inner, '差距是否缩小')
 
 
-def fig_depth():
-    inner = (head('子课题 02', '名额占多少？切点到底多深',
-                  '名额占比的校际离散——嘉定的切点深度<b>不恒定</b>')
-             + '<div class="card"><div class="h2"><div class="num">1</div>各线名额占本校区属名额的比例（中位数）</div>')
-    for nm, per in SHARE.items():
-        inner += f'<div class="sect">{nm}</div>'
-        mx = max(v[0] for v in per.values())
-        for y in sorted(per):
-            mid, rng = per[y]
-            inner += bar(f'{y} 年', mid / mx, f'中位 {mid:.2f}｜极差 {rng:.2f}')
-    inner += ('<div class="note">极差 = 该年各校名额占本校区属名额比例的<b>最大值 − 最小值</b>。'
-              '三条线的极差都在 <b>0.12–0.33</b>，意味着各校名额占比<b>差别很大</b>。</div></div>'
-              '<div class="card"><div class="h2"><div class="num">2</div>为什么会这样</div>'
-              '<div class="lead">名额按<b>志愿填报</b>分配：强校学生更愿意报低线，'
-              '于是强校的名额占比更高、分数线更高。嘉定一中占比中位数从 '
-              f'<b>{SHARE["嘉定一中"][2022][0]:.2f}</b>（2022）降到 '
-              f'<b>{SHARE["嘉定一中"][2026][0]:.2f}</b>（2026），'
-              '因为上师大附中嘉定新城分校正在吸走一部分低线名额。</div>'
-              '<div class="note">推论：正因为占比不恒定，「名额越多→切得越深→分数线越低」'
-              '这个机械效应在嘉定<b>不会被自动抵消</b>；但 01 图显示它被「生源强度」盖过了。</div></div>')
-    return page(inner, '切点深度')
+def fig_trend():
+    """子图 2 —— 对应报告第 5 章：谁在上升、谁在下降。"""
+    inner = (head('子课题 02 · 对应报告第 5 章', '谁在上升，谁在下降？',
+                  '28 所公办 · 五年斜率（SEN）方向分类')
+             + '<div class="card"><div class="h2"><div class="num">1</div>五类分布</div>'
+             '<div class="kv">')
+    for c in CLASS_ORDER:
+        inner += f'<span>{c} <b>{len(BY_CLASS[c])}</b> 所</span>'
+    inner += '</div><div class="h2" style="margin-top:24px"><div class="num">2</div>完整清单</div>'
+    mxsen = max(abs(float(x['sen'])) for x in CLS) or 1
+    for c in CLASS_ORDER:
+        if not BY_CLASS[c]:
+            continue
+        inner += f'<div class="sect">{c}（{len(BY_CLASS[c])} 所）</div>'
+        for r in BY_CLASS[c]:
+            inner += bar(SH(r['junior_high_school']), abs(float(r['sen'])) / mxsen,
+                         (f"{float(r['sen']):+.2f} 分/年｜Δrel {float(r['delta_rel']):+.1f}"
+                          ).replace('-', '−'),
+                         alt=(c in ('温和下降', '明显下降')))
+    inner += ('<div class="note">⚠ <b>没有一所学校达到统计显著</b>：'
+              f'Mann-Kendall 未校正 p&lt;0.05 有 <b>{N_SIG10} 所</b>，'
+              f'Bonferroni 校正后 <b>{N_SIG} 所</b>。这是<b>检验力天花板</b>——'
+              'n=5 时即使完全单调，最小 p 也只有 ≈0.028，大于校正阈值 0.0036。'
+              '所以本分类是<b>方向性描述</b>，不是「统计显著的结论」。</div></div>'
+              '<div class="card"><div class="h2"><div class="num">3</div>「五年」与「近三年」是两回事</div>'
+              f'<div class="lead">有 <b>{len(FLIP)}</b> 所学校五年方向与近三年方向<b>相反</b>'
+              '——只看五年会误导，只看近三年同样会误导。</div><div class="kv">')
+    for r in sorted(FLIP, key=lambda r: float(r['sen_recent3']))[:6]:
+        inner += (f'<span>{SH(r["junior_high_school"])} 五年{float(r["sen"]):+.1f}'
+                  f'／近3年{float(r["sen_recent3"]):+.1f}</span>').replace('-', '−')
+    inner += '</div></div>'
+    return page(inner, '谁在上升谁在下降')
 
 
-def fig_conv():
-    mx = max(v['iqr'] for v in DISP.values())
-    inner = (head('子课题 03', '五年了，差距在收敛吗？',
-                  '逐年离散度与收敛回归——答案是<b>没有</b>')
-             + '<div class="card"><div class="h2"><div class="num">1</div>校际离散度（IQR / σ）逐年</div>')
-    for y in YEARS:
-        inner += bar(f'{y} 年（n={DISP[y]["n"]}）', DISP[y]['iqr'] / mx,
-                     f'IQR {DISP[y]["iqr"]:.1f}｜σ {DISP[y]["sigma"]:.2f}', alt=y % 2 == 1)
-    inner += ('<div class="note">IQR 在 10.9–15.0 之间<b>无单调下降</b>：'
-              '2022→2023 回升（13.8→15.0），2025 因新增第 3 条区属线回升到 12.3，'
-              '2026 才降到最低 10.9。σ 同样没有持续收窄。</div></div>'
-              '<div class="card"><div class="h2"><div class="num">2</div>收敛回归：起点几乎不解释终点</div>')
-    for y in YEARS[1:]:
-        b, r2 = CONV[y]
-        inner += (f'<div class="sect">{y} 年名次 vs 2022 年名次</div>'
-                  + bar(f'b = {b:+.3f}｜R² = {r2:.3f}', max(r2, 0.02) / 0.35,
-                        '几乎无关' if r2 < 0.1 else '弱相关', alt=True))
-    inner += ('<div class="note">若真存在「强者恒强」的收敛，b 应为<b>负且接近 −1</b>。'
-              '实测四条系数<b>全为正</b>、R² 只有 0.008–0.086 —— '
-              '近三年名次与 2022 年名次几乎无关，甚至有轻微反转。'
-              '这不是全体停滞：残差 |z|≥1 的学校有 5–8 所，属于单校剧烈波动。</div></div>')
-    return page(inner, '趋势与收敛')
-
-
-def fig_resid():
-    inner = (head('子课题 04', '谁掉得最快？',
-                  'rel 的最小二乘斜率——五年相对位置变化最剧烈的 8 所')
-             + '<div class="card"><div class="h2"><div class="num">1</div>趋势斜率（分/年）</div>')
-    mx = max(abs(r['sen']) for r in RESID)
-    for r in RESID:
-        v = r['sen']
-        inner += bar(r['name'], abs(v) / mx,
-                     f'第 {r["rk"]} 名｜{v:+.2f} 分/年'.replace('-', '−'))
-    inner += ('<div class="note">负值=五年持续走低。'
-              f'<b>{RESID[0]["name"]}</b>与<b>{RESID[1]["name"]}</b>是最突出的下滑校，'
-              '也是 03 图里「起点几乎不解释终点」的主要来源。'
-              '注意：<b>趋势斜率不参与排名</b>，只描述变化方向与速度。</div></div>')
-    return page(inner, '残差个案')
+def fig_case():
+    """子图 3 —— 对应报告第 8 章：代表性公办初中个案。"""
+    u = lambda v: f'{v:+.2f}'.replace('-', '−')
+    inner = (head('子课题 03 · 对应报告第 8 章', '代表性个案',
+                  '选人标准在分析前预注册：头部 5 + 明显上升 3 + 明显下降 3')
+             + '<div class="card"><div class="h2"><div class="num">1</div>头部 5 所</div>'
+             '<table><tr><th>#</th><th>初中</th><th>P 分位</th><th>均名(分)</th>'
+             '<th>名额</th><th>五年斜率</th><th>近3年斜率</th></tr>')
+    for r in RANK[:5]:
+        t = TRN.get(r['name'], {})
+        r3 = (f"{float(t['sen_recent3']):+.2f}".replace('-', '−')
+              if t.get('sen_recent3') else '—')
+        inner += (f'<tr class="top"><td>{r["rk"]}</td><td class="c2">{r["name"]}</td>'
+                  f'<td>{r["P"]:.3f}</td><td>{u(r["rel"])}</td><td>{r["q"]:.1f}</td>'
+                  f'<td>{u(r["sen"])}</td><td>{r3}</td></tr>')
+    top5k = [k for k in WQ if SH(k) in TOP5]
+    inner += ('</table><div class="note">头部 5 所的五年斜率：'
+              + '、'.join(f'{SH(r["junior_high_school"])} {float(r["sen"]):+.2f}'
+                          for r in sorted([x for x in CLS if x['junior_high_school'] in top5k],
+                                          key=lambda r: float(r['sen']))).replace('-', '−')
+              + ' —— <b>名次高不等于趋势好</b>。</div></div>')
+    for title, keys in (('明显上升 3 所', CASES_UP), ('明显下降 3 所', CASES_DOWN)):
+        inner += (f'<div class="card"><div class="h2"><div class="num">'
+                  f'{"2" if keys is CASES_UP else "3"}</div>{title}</div><table>'
+                  '<tr><th>初中</th><th>主口径名次</th><th>Δrel(分)</th>'
+                  '<th>五年斜率</th><th>近3年斜率</th></tr>')
+        for k in keys:
+            r, tr = WQ[k], TRN.get(SH(k), {})
+            r3 = (f"{float(tr['sen_recent3']):+.2f}".replace('-', '−')
+                  if tr.get('sen_recent3') else '—')
+            inner += (f'<tr><td class="c2">{SH(k)}</td><td>{int(r["rank_P_wq"])}</td>'
+                      f'<td>{float(r["rel_avg"]):+.1f}</td><td>{u(float(r["SEN"]))}</td>'
+                      f'<td>{r3}</td></tr>')
+        inner += '</table></div>'
+    inner += ('<div class="note">⚠ 这些学校的名额基数普遍偏小，单年波动大；'
+              '<b>不要据此判定「学校变差」</b>——所有趋势都未达统计显著（见子课题 02）。</div>')
+    return page(inner, '代表性个案')
 
 
 def fig_bound():
@@ -339,42 +435,40 @@ def strip_head(inner):
 
 def fig_long():
     cover = (head('嘉定区 · 初中「名额分配到校」2022–2026',
-                  f'{len(RANK)} 所公办初中 · 5 年名额到校数据',
+                  f'{len(RANK)} 所入榜公办 · 另披露 {len(NEW4)} 所新开办',
                   '名额加权区属市重点线口径 · 分位 P 主排序 · 全部结论可回源')
-             + f'<div class="card"><div class="h2">五个子课题</div>'
+             + f'<div class="card"><div class="h2">四个研究问题</div>'
              '<div class="kv">'
-             '<span class="chip hot">01 名额越多位次越好吗</span>'
-             '<span class="chip">02 切点到底多深</span>'
-             '<span class="chip">03 五年没有收敛</span>'
-             '<span class="chip">04 谁掉得最快</span>'
-             '<span class="chip">05 这个榜测了哪一段</span></div>'
+             '<span class="chip hot">01 总排名（第 2 章）</span>'
+             '<span class="chip">02 差距是否缩小（第 4 章）</span>'
+             '<span class="chip">03 谁在上升、谁在下降（第 5 章）</span>'
+             '<span class="chip">04 代表性个案（第 8 章）</span>'
+             '<span class="chip">05 指标的有效边界（第 6 章）</span></div>'
              f'<div class="kv"><span>全区 <b>{len(W)}</b> 所</span>'
              f'<span>入榜 <b>{len(RANK)}</b> 所</span>'
              f'<span>五年全勤 <b>{FULL5}</b> 所</span>'
+             f'<span>新开办（披露不计入排名）<b>{len(NEW4)}</b> 所</span>'
              f'<span>民办 n&lt;4 <b>{PRIV}</b> 所</span></div></div>')
     body = (cover
-            + f'<div class="h2" style="margin-top:34px"><div class="num">1</div>排名表</div>'
+            + f'<div class="h2" style="margin-top:34px"><div class="num">1</div>总排名（第 2 章）</div>'
             + strip_head(inner_of(fig_main()))
-            + '<div class="h2" style="margin-top:34px"><div class="num">2</div>名额与位次</div>'
-            + strip_head(inner_of(fig_scale()))
-            + '<div class="h2" style="margin-top:34px"><div class="num">3</div>切点深度</div>'
-            + strip_head(inner_of(fig_depth()))
-            + '<div class="h2" style="margin-top:34px"><div class="num">4</div>趋势与收敛</div>'
-            + strip_head(inner_of(fig_conv()))
-            + '<div class="h2" style="margin-top:34px"><div class="num">5</div>残差个案</div>'
-            + strip_head(inner_of(fig_resid()))
-            + '<div class="h2" style="margin-top:34px"><div class="num">6</div>有效边界</div>'
+            + '<div class="h2" style="margin-top:34px"><div class="num">2</div>差距是否缩小（第 4 章）</div>'
+            + strip_head(inner_of(fig_gap()))
+            + '<div class="h2" style="margin-top:34px"><div class="num">3</div>谁在上升、谁在下降（第 5 章）</div>'
+            + strip_head(inner_of(fig_trend()))
+            + '<div class="h2" style="margin-top:34px"><div class="num">4</div>代表性个案（第 8 章）</div>'
+            + strip_head(inner_of(fig_case()))
+            + '<div class="h2" style="margin-top:34px"><div class="num">5</div>指标的有效边界（第 6 章）</div>'
             + strip_head(inner_of(fig_bound()))
-            + '<div class="foot2">完整数据与方法（宽表 191 列含逐线逐年原始分与名额）：'
+            + f'<div class="foot2">完整数据与方法（宽表 {len(W[0])} 列含逐线逐年原始分与名额）：'
               'https://istarfire.github.io/Shanghai-XueQuFang/<br>'
               '结论是统计推断，不是升学建议，择校请结合自身情况～</div>')
     return page(body, '嘉定名额到校长图')
 
 
-FIGS = [('主图-排名表', fig_main), ('子图1-名额与位次', fig_scale),
-        ('子图2-切点深度', fig_depth), ('子图3-无收敛', fig_conv),
-        ('子图4-残差个案', fig_resid), ('子图5-有效边界', fig_bound),
-        ('长图', fig_long)]
+FIGS = [('主图-排名表', fig_main), ('子图1-差距是否缩小', fig_gap),
+        ('子图2-谁升谁降', fig_trend), ('子图3-代表性个案', fig_case),
+        ('子图4-有效边界', fig_bound), ('长图', fig_long)]
 
 if __name__ == '__main__':
     import subprocess
