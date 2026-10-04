@@ -119,12 +119,24 @@ SH = lambda n: n.replace('上海市嘉定区', '').replace('上海市', '')
 W = load('宽表-初中水平-嘉定区-2022-2026.csv')
 TR = {r['junior_high_school']: r for r in load('趋势分析-嘉定区-2022-2026.csv')}
 SL = load('单线视角-嘉定区-2022-2026.csv')
+def _span(years_list):
+    """按实际年份生成跨度标签：'2026' → 26；'2025;2026' → 25–26。
+
+    必须由数据算出，不能硬编码：入榜 28 所里有 4 年校（缺 2022，如新城实验），
+    此前统一写死 '22–26' 会让读者以为每校都有 5 年成绩。
+    """
+    ys = [int(x) % 100 for x in (years_list or '').split(';') if x]
+    if not ys:
+        return '—'
+    return str(ys[0]) if len(ys) == 1 else f'{ys[0]}–{ys[-1]}'
+
+
 TB = sorted([r for r in W if r['ranked'] == '1'], key=lambda r: int(r['rank_P_wq']))
 RANK = [{'rk': int(r['rank_P_wq']), 'name': SH(r['junior_high_school']),
          'P': float(r['P_wq']), 'rel': float(r['rel_avg']),
          'q': float(r['quota3_avg']), 'sen': float(r['SEN']),
          # 与主表对齐所需的两个额外列（2026-10-04 新增）
-         'years': '22–26',
+         'years': _span(r['years_list']),
          'r3': r['rank_P_recent3'] or '—',
          'r26': int(float(r['rank_base3_wq_2026'])) if r['rank_base3_wq_2026'] else '—'}
         for r in TB]
@@ -177,6 +189,10 @@ def spearman(xs, ys):
 
 WQ = {r['junior_high_school']: r for r in W}
 RANKED = [k for k in WQ if WQ[k]['ranked'] == '1']
+# 入榜校中非 5 年全勤者（如缺 2022 的新城实验）——跨度列与下方 note 均由此现算，不写死校名
+RANK_SHORT = [f'{SH(k)}（{_span(WQ[k]["years_list"])}）' for k in RANKED
+              if WQ[k]['years_included'] != '5']
+RANK_SHORT_TXT = ('；'.join(RANK_SHORT) if RANK_SHORT else '无')
 
 # 跨样本：区属年均名额 vs P_wq（报告 3.1 第 1 行）
 RHO_CROSS = spearman([float(WQ[k]['quota3_avg']) for k in RANKED],
@@ -242,12 +258,6 @@ CASES_UP = [r['junior_high_school'] for r in
 CASES_DOWN = [r['junior_high_school'] for r in
               sorted(BY_CLASS['明显下降'], key=lambda r: float(r['sen']))[:3]]
 
-def _span(years_list):
-    """按实际年份生成跨度标签：'2026' → 26；'2025;2026' → 25–26。"""
-    ys = [int(x) % 100 for x in years_list.split(';') if x]   # 2025 -> 25，与入榜校「22–26」同格式
-    return str(ys[0]) if len(ys) == 1 else f'{ys[0]}–{ys[-1]}'
-
-
 NEW4 = [{'name': SH(k),
          'years': _span(_WN[k]['years_list']),
          'r2': _WN[k]['rank_P_recent2'] or '—',
@@ -273,7 +283,8 @@ def fig_main():
                  f'<td>—</td><td>{n["r2"]}</td><td>{n["r26"]}</td></tr>')
     inner = (head('嘉定区 · 初中「名额分配到校」',
                   f'{len(RANK)} 所入榜 + {len(NEW4)} 所新开办',
-                  '2022–2026 五年公开数据 · 名额加权区属市重点线口径 · 分位 P 主排序')
+                  '数据窗口 2022–2026（<b>各校实际跨度见「数据跨度」列</b>）'
+                  ' · 名额加权区属市重点线口径 · 分位 P 主排序')
              + '<div class="card"><div class="h2"><div class="num">1</div>排名表'
                '（浅绿底 = 主口径前 5）</div>'
              '<table><tr><th>#</th><th>初中</th><th>数据跨度</th><th>P 分位</th>'
@@ -293,6 +304,9 @@ def fig_main():
              '<div class="note">读法：<b>P 分位</b>越大越强（位置可比，不是分值可比）；'
              '<b>均名</b>是高于当年全区中位多少分（跨年可比）；<b>名额</b>是招生规模，'
              '<b>是学校规模的代理</b>，不等于办学水平。</div>'
+             f'<div class="note"><b>数据跨度</b>列按各校实际有成绩的年份逐年标注，'
+             f'并非一律五年：入榜校中非 5 年全勤的有 <b>{RANK_SHORT_TXT}</b>'
+             f'（该年无录取数据，<b>聚合指标按其有数据的年份计算</b>）。</div>'
              '<div class="note">末 4 行<b>新开办校</b>只有 1–2 年成绩，<b>不参与主排序</b>，'
              '聚合指标留「—」；<b>近2年</b>列为 31 所池（含新开办校），'
              '与主排序的 28 所池不同，<b>不可直接比较</b>；嘉一实验仅 1 年，该列留空。</div>'
